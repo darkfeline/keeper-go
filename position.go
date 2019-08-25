@@ -12,26 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package position
+package keeper
 
 import (
 	"fmt"
-
-	"go.felesatra.moe/keeper/fixed"
 )
 
 type Position struct {
-	Amount fixed.Fixed
+	Amount Fixed
 	Unit   Unit
 }
 
 type Unit string
 
+func NewPosition(value int64, point uint8, u Unit) Position {
+	return Position{
+		Amount: NewFixed(value, point),
+		Unit:   u,
+	}
+}
+
 func (p Position) String() string {
 	return fmt.Sprintf("%v %v", p.Amount, p.Unit)
 }
 
-func Add(ps []Position, f fixed.Fixed, u Unit) []Position {
+func AddUnits(ps []Position, f Fixed, u Unit) []Position {
 	for i, p := range ps {
 		if p.Unit == u {
 			ps[i].Amount = p.Amount.Add(f)
@@ -41,9 +46,9 @@ func Add(ps []Position, f fixed.Fixed, u Unit) []Position {
 	return append(ps, Position{Amount: f, Unit: u})
 }
 
-func Merge(p []Position, v []Position) []Position {
+func MergePositions(p []Position, v []Position) []Position {
 	for _, v := range v {
-		p = Add(p, v.Amount, v.Unit)
+		p = AddUnits(p, v.Amount, v.Unit)
 	}
 	return p
 }

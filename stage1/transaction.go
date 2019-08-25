@@ -18,15 +18,14 @@ import (
 	"fmt"
 	"strings"
 
-	"go.felesatra.moe/keeper/fixed"
-	"go.felesatra.moe/keeper/position"
+	"go.felesatra.moe/keeper"
 )
 
 type Transaction struct {
 	From   Account
 	To     Account
-	Amount fixed.Fixed
-	Unit   position.Unit
+	Amount keeper.Fixed
+	Unit   keeper.Unit
 }
 
 type Account struct {

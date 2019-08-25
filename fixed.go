@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fixed
+package keeper
 
 import (
 	"fmt"
@@ -27,14 +27,14 @@ type Fixed struct {
 	Point uint8
 }
 
-func New(value int64, point uint8) Fixed {
+func NewFixed(value int64, point uint8) Fixed {
 	return Fixed{
 		Value: value,
 		Point: point,
 	}
 }
 
-func Parse(s string) (Fixed, error) {
+func ParseFixed(s string) (Fixed, error) {
 	p := len(s)
 	for i, b := range s {
 		if b == '.' {

@@ -15,14 +15,11 @@
 package stage1
 
 import (
-	"go.felesatra.moe/keeper/fixed"
-	"go.felesatra.moe/keeper/position"
+	"go.felesatra.moe/keeper"
 )
 
-type Position = position.Position
-
 type Balance map[AccountType]TypeBalance
-type TypeBalance map[string][]Position
+type TypeBalance map[string][]keeper.Position
 
 func MakeBalance(ts []Transaction) Balance {
 	b := make(Balance)
@@ -38,10 +35,10 @@ func MakeBalance(ts []Transaction) Balance {
 	return b
 }
 
-func (b Balance) change(a Account, f fixed.Fixed, c position.Unit) {
+func (b Balance) change(a Account, f keeper.Fixed, c keeper.Unit) {
 	m, ok := b[a.Type]
 	if !ok {
 		panic(a.Type)
 	}
-	m[a.Name] = position.Add(m[a.Name], f, c)
+	m[a.Name] = keeper.AddUnits(m[a.Name], f, c)
 }

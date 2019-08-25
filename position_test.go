@@ -12,40 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package position
+package keeper
 
 import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"go.felesatra.moe/keeper/fixed"
 )
 
-func TestPosition_Add(t *testing.T) {
+func TestAddUnits(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		desc string
 		ps   []Position
-		f    fixed.Fixed
+		f    Fixed
 		u    Unit
 		want []Position
 	}{
 		{"empty", nil,
-			fixed.New(123, 1), "USD",
-			[]Position{{Amount: fixed.New(123, 1), Unit: "USD"}}},
-		{"existing", []Position{{Amount: fixed.New(123, 1), Unit: "USD"}},
-			fixed.New(9, 1), "USD",
-			[]Position{{Amount: fixed.New(132, 1), Unit: "USD"}}},
-		{"different currency", []Position{{Amount: fixed.New(123, 1), Unit: "JPY"}},
-			fixed.New(9, 1), "USD",
-			[]Position{{Amount: fixed.New(123, 1), Unit: "JPY"},
-				{Amount: fixed.New(9, 1), Unit: "USD"}}},
+			NewFixed(123, 1), "USD",
+			[]Position{NewPosition(123, 1, "USD")}},
+		{"existing", []Position{NewPosition(123, 1, "USD")},
+			NewFixed(9, 1), "USD",
+			[]Position{NewPosition(132, 1, "USD")}},
+		{"different currency", []Position{NewPosition(132, 1, "JPY")},
+			NewFixed(9, 1), "USD",
+			[]Position{
+				NewPosition(132, 1, "JPY"),
+				NewPosition(9, 1, "USD"),
+			}},
 	}
 	for _, c := range cases {
 		c := c
 		t.Run(c.desc, func(t *testing.T) {
 			t.Parallel()
-			got := Add(c.ps, c.f, c.u)
+			got := AddUnits(c.ps, c.f, c.u)
 			if diff := cmp.Diff(c.want, got); diff != "" {
 				t.Errorf("Add() mismatch (-want +got):\n%s", diff)
 			}

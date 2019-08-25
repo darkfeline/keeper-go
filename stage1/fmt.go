@@ -19,7 +19,7 @@ import (
 	"io"
 	"sort"
 
-	"go.felesatra.moe/keeper/position"
+	"go.felesatra.moe/keeper"
 )
 
 func WriteBalanceSheet(w io.Writer, b Balance) error {
@@ -32,11 +32,11 @@ func WriteBalanceSheet(w io.Writer, b Balance) error {
 }
 
 func writeAccounts(bw *bufio.Writer, m TypeBalance) {
-	var total []position.Position
+	var total []keeper.Position
 	for _, k := range getAccounts(m) {
 		bw.WriteString(k)
 		for _, p := range m[k] {
-			total = position.Add(total, p.Amount, p.Unit)
+			total = keeper.AddUnits(total, p.Amount, p.Unit)
 			bw.WriteByte('\t')
 			bw.WriteString(p.String())
 			bw.WriteByte('\t')

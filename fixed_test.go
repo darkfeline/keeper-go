@@ -12,26 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fixed
+package keeper
 
 import "testing"
 
-func TestParse(t *testing.T) {
+func TestParseFixed(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		desc string
 		s    string
 		want Fixed
 	}{
-		{"no dot", "123", New(123, 0)},
-		{"dot at end", "123.", New(123, 0)},
-		{"dot", "123.45", New(12345, 2)},
+		{"no dot", "123", NewFixed(123, 0)},
+		{"dot at end", "123.", NewFixed(123, 0)},
+		{"dot", "123.45", NewFixed(12345, 2)},
 	}
 	for _, c := range cases {
 		c := c
 		t.Run(c.desc, func(t *testing.T) {
 			t.Parallel()
-			got, err := Parse(c.s)
+			got, err := ParseFixed(c.s)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -50,9 +50,9 @@ func TestFixed_Add(t *testing.T) {
 		y    Fixed
 		want Fixed
 	}{
-		{"same", New(123, 1), New(234, 1), New(357, 1)},
-		{"first higher point", New(123, 2), New(234, 1), New(2463, 2)},
-		{"second higher point", New(234, 1), New(123, 2), New(2463, 2)},
+		{"same", NewFixed(123, 1), NewFixed(234, 1), NewFixed(357, 1)},
+		{"first higher point", NewFixed(123, 2), NewFixed(234, 1), NewFixed(2463, 2)},
+		{"second higher point", NewFixed(234, 1), NewFixed(123, 2), NewFixed(2463, 2)},
 	}
 	for _, c := range cases {
 		c := c
@@ -70,8 +70,8 @@ func TestFixed_RaisePoint(t *testing.T) {
 		n    uint8
 		want Fixed
 	}{
-		{"zero", New(1234, 2), 0, New(1234, 2)},
-		{"nonzero", New(1234, 2), 2, New(123400, 4)},
+		{"zero", NewFixed(1234, 2), 0, NewFixed(1234, 2)},
+		{"nonzero", NewFixed(1234, 2), 2, NewFixed(123400, 4)},
 	}
 	for _, c := range cases {
 		c := c
@@ -92,8 +92,8 @@ func TestFixed_String(t *testing.T) {
 		d    Fixed
 		want string
 	}{
-		{"zero point", New(1234, 0), "1234."},
-		{"nonzero point", New(12345, 3), "12.345"},
+		{"zero point", NewFixed(1234, 0), "1234."},
+		{"nonzero point", NewFixed(12345, 3), "12.345"},
 	}
 	for _, c := range cases {
 		c := c

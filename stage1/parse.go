@@ -20,8 +20,7 @@ import (
 	"io"
 	"strings"
 
-	"go.felesatra.moe/keeper/fixed"
-	"go.felesatra.moe/keeper/position"
+	"go.felesatra.moe/keeper"
 	"golang.org/x/xerrors"
 )
 
@@ -57,7 +56,7 @@ func parseTransaction(line string) (Transaction, error) {
 	if err != nil {
 		return Transaction{}, xerrors.Errorf("parse transaction %#v: %s", line, err)
 	}
-	d, err := fixed.Parse(parts[2])
+	d, err := keeper.ParseFixed(parts[2])
 	if err != nil {
 		return Transaction{}, xerrors.Errorf("parse transaction %#v: %s", line, err)
 	}
@@ -65,7 +64,7 @@ func parseTransaction(line string) (Transaction, error) {
 		From:   a1,
 		To:     a2,
 		Amount: d,
-		Unit:   position.Unit(parts[3]),
+		Unit:   keeper.Unit(parts[3]),
 	}, nil
 }
 

@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"go.felesatra.moe/keeper/fixed"
+	"go.felesatra.moe/keeper"
 )
 
 func TestMakeBalance(t *testing.T) {
@@ -27,44 +27,44 @@ func TestMakeBalance(t *testing.T) {
 		{
 			From:   Account{Type: Equity, Name: "Me"},
 			To:     Account{Type: Assets, Name: "Cash"},
-			Amount: fixed.Fixed{Value: 100},
+			Amount: keeper.Fixed{Value: 100},
 			Unit:   "USD",
 		},
 		{
 			From:   Account{Type: Liabilities, Name: "CreditCard"},
 			To:     Account{Type: Expenses, Name: "Food"},
-			Amount: fixed.Fixed{Value: 10},
+			Amount: keeper.Fixed{Value: 10},
 			Unit:   "USD",
 		},
 		{
 			From:   Account{Type: Assets, Name: "Cash"},
 			To:     Account{Type: Liabilities, Name: "CreditCard"},
-			Amount: fixed.Fixed{Value: 10},
+			Amount: keeper.Fixed{Value: 10},
 			Unit:   "USD",
 		},
 		{
 			From:   Account{Type: Revenues, Name: "Income"},
 			To:     Account{Type: Assets, Name: "Cash"},
-			Amount: fixed.Fixed{Value: 20},
+			Amount: keeper.Fixed{Value: 20},
 			Unit:   "USD",
 		},
 	}
 	got := MakeBalance(ts)
 	want := Balance{
 		Assets: TypeBalance{
-			"Cash": {{Amount: fixed.New(110, 0), Unit: "USD"}},
+			"Cash": {keeper.NewPosition(110, 0, "USD")},
 		},
 		Liabilities: TypeBalance{
-			"CreditCard": {{Amount: fixed.New(0, 0), Unit: "USD"}},
+			"CreditCard": {keeper.NewPosition(0, 0, "USD")},
 		},
 		Equity: TypeBalance{
-			"Me": {{Amount: fixed.New(-100, 0), Unit: "USD"}},
+			"Me": {keeper.NewPosition(-100, 0, "USD")},
 		},
 		Revenues: TypeBalance{
-			"Income": {{Amount: fixed.New(-20, 0), Unit: "USD"}},
+			"Income": {keeper.NewPosition(-20, 0, "USD")},
 		},
 		Expenses: TypeBalance{
-			"Food": {{Amount: fixed.New(10, 0), Unit: "USD"}},
+			"Food": {keeper.NewPosition(10, 0, "USD")},
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
