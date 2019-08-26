@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"unicode"
 )
 
 // tx 2001-02-03 "Some description"
@@ -31,7 +32,7 @@ type lexer struct {
 	r       *bufio.Reader
 	lastPos lexPos
 	pos     lexPos
-	partial []rune
+	pending []rune
 	state   stateFn
 	tokens  chan token
 }
@@ -41,7 +42,7 @@ func lex(r io.Reader) *lexer {
 		r:       bufio.NewReader(r),
 		lastPos: lexPos{line: 1},
 		pos:     lexPos{line: 1},
-		state:   stateStart,
+		state:   lexStart,
 		tokens:  make(chan token, 2),
 	}
 }
@@ -66,7 +67,7 @@ func (l *lexer) next() rune {
 	if err != nil {
 		panic(readErr{err: err})
 	}
-	l.partial = append(l.partial, r)
+	l.pending = append(l.pending, r)
 	l.lastPos = l.pos
 	if r == '\n' {
 		l.pos.line++
@@ -82,6 +83,7 @@ func (l *lexer) unread() {
 		panic(l.pos)
 	}
 	_ = l.r.UnreadRune()
+	l.pending = l.pending[:len(l.pending)-1]
 	l.pos = l.lastPos
 }
 
@@ -102,12 +104,24 @@ func (l *lexer) accept(valid string) bool {
 	return false
 }
 
+func (l *lexer) acceptRun(valid string) {
+	for strings.IndexRune(valid, l.next()) >= 0 {
+	}
+	l.unread()
+}
+
+// emit pending runes as a token.
 func (l *lexer) emit(typ tokenType) {
 	l.tokens <- token{
 		typ: typ,
-		val: string(l.partial),
+		val: string(l.pending),
 	}
-	l.partial = l.partial[:0]
+	l.pending = l.pending[:0]
+}
+
+// ignore all pending runes.
+func (l *lexer) ignore() {
+	l.pending = l.pending[:0]
 }
 
 func (l *lexer) errorf(format string, v ...interface{}) stateFn {
@@ -171,16 +185,58 @@ const (
 	tokDot
 )
 
-func stateStart(l *lexer) stateFn {
-	switch r := l.peek(); r {
+func lexStart(l *lexer) stateFn {
+	switch r := l.next(); r {
 	case '"':
-		return stateString
+		l.unread()
+		return lexString
+	case '.':
+		l.emit(tokDot)
+		return lexStart
+	case '-':
+		l.unread()
+		return lexDigit
+	default:
+		switch {
+		case unicode.IsSpace(r):
+			l.ignore()
+			return lexStart
+		case unicode.IsLetter(r):
+			l.unread()
+			return lexLetter
+		case unicode.IsDigit(r):
+			l.unread()
+			return lexDigit
+		}
+		return l.errorf("unexpected char %v", r)
 	}
+}
+
+func lexDigit(l *lexer) stateFn {
+	for {
+		// switch r := l.next(); {
+		// 	case
+		// }
+		// XXXXXXXXXXXXXx
+		return nil
+	}
+}
+
+func lexLetter(l *lexer) stateFn {
 	// XXXXXXXXXXXXXx
 	return nil
 }
 
-func stateString(l *lexer) stateFn {
-	// XXXXXXXXXXXXXx
-	return nil
+func lexString(l *lexer) stateFn {
+	for {
+		switch r := l.next(); r {
+		case '"':
+			l.emit(tokString)
+			return lexStart
+		case '/':
+			_ = l.next()
+		case '\n':
+			return l.errorf("unclosed string")
+		}
+	}
 }
