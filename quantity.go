@@ -19,7 +19,7 @@ import (
 )
 
 type Quantity struct {
-	Amount Fixed
+	Amount Decimal
 	Unit   Unit
 }
 
@@ -27,7 +27,7 @@ type Unit string
 
 func NewQuantity(value int64, point uint8, u Unit) Quantity {
 	return Quantity{
-		Amount: NewFixed(value, point),
+		Amount: NewDecimal(value, point),
 		Unit:   u,
 	}
 }
@@ -41,7 +41,7 @@ func (q Quantity) String() string {
 	return fmt.Sprintf("%v %v", q.Amount, q.Unit)
 }
 
-func (q *Quantity) Increase(f Fixed) {
+func (q *Quantity) Increase(f Decimal) {
 	q.Amount = q.Amount.Add(f)
 }
 

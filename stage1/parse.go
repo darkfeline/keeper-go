@@ -50,7 +50,7 @@ func parseTransaction(line string) (Transaction, error) {
 	}
 	a1 := keeper.Account(parts[0])
 	a2 := keeper.Account(parts[1])
-	d, err := keeper.ParseFixed(parts[2])
+	d, err := keeper.ParseDecimal(parts[2])
 	if err != nil {
 		return Transaction{}, xerrors.Errorf("parse transaction %#v: %s", line, err)
 	}

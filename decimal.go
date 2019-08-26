@@ -22,19 +22,19 @@ import (
 	"golang.org/x/xerrors"
 )
 
-type Fixed struct {
-	Value int64
-	Point uint8
+type Decimal struct {
+	Sig int64
+	Exp uint8
 }
 
-func NewFixed(value int64, point uint8) Fixed {
-	return Fixed{
-		Value: value,
-		Point: point,
+func NewDecimal(sig int64, exp uint8) Decimal {
+	return Decimal{
+		Sig: sig,
+		Exp: exp,
 	}
 }
 
-func ParseFixed(s string) (Fixed, error) {
+func ParseDecimal(s string) (Decimal, error) {
 	p := len(s)
 	for i, b := range s {
 		if b == '.' {
@@ -44,52 +44,52 @@ func ParseFixed(s string) (Fixed, error) {
 	}
 	x, err := strconv.ParseInt(s[:p], 10, 64)
 	if err != nil {
-		return Fixed{}, xerrors.Errorf("parse decimal %#v: %s", s, err)
+		return Decimal{}, xerrors.Errorf("parse decimal %#v: %s", s, err)
 	}
 	var y int64
 	if p+1 < len(s) {
 		y, err = strconv.ParseInt(s[p+1:], 10, 64)
 		if err != nil {
-			return Fixed{}, xerrors.Errorf("parse decimal %#v: %s", s, err)
+			return Decimal{}, xerrors.Errorf("parse decimal %#v: %s", s, err)
 		}
 	}
 	p = len(s) - p
 	if p > 0 {
 		p--
 	}
-	return Fixed{
-		Value: x*int64(math.Pow10(p)) + y,
-		Point: uint8(p),
+	return Decimal{
+		Sig: x*int64(math.Pow10(p)) + y,
+		Exp: uint8(p),
 	}, nil
 }
 
-func (f Fixed) Add(f2 Fixed) Fixed {
-	if f2.Point < f.Point {
-		f, f2 = f2, f
+func (d Decimal) Add(d2 Decimal) Decimal {
+	if d2.Exp < d.Exp {
+		d, d2 = d2, d
 	}
-	f = f.RaisePoint(f2.Point - f.Point)
-	return Fixed{
-		Value: f.Value + f2.Value,
-		Point: f.Point,
-	}
-}
-
-func (f Fixed) Neg() Fixed {
-	f.Value = -f.Value
-	return f
-}
-
-func (f Fixed) RaisePoint(n uint8) Fixed {
-	return Fixed{
-		Value: f.Value * int64(math.Pow10(int(n))),
-		Point: f.Point + n,
+	d = d.RaiseExp(d2.Exp - d.Exp)
+	return Decimal{
+		Sig: d.Sig + d2.Sig,
+		Exp: d.Exp,
 	}
 }
 
-func (f Fixed) String() string {
-	if f.Point == 0 {
-		return fmt.Sprintf("%d.", f.Value)
+func (d Decimal) Neg() Decimal {
+	d.Sig = -d.Sig
+	return d
+}
+
+func (d Decimal) RaiseExp(n uint8) Decimal {
+	return Decimal{
+		Sig: d.Sig * int64(math.Pow10(int(n))),
+		Exp: d.Exp + n,
 	}
-	scale := int64(math.Pow10(int(f.Point)))
-	return fmt.Sprintf("%d.%d", f.Value/scale, f.Value%scale)
+}
+
+func (d Decimal) String() string {
+	if d.Exp == 0 {
+		return fmt.Sprintf("%d.", d.Sig)
+	}
+	scale := int64(math.Pow10(int(d.Exp)))
+	return fmt.Sprintf("%d.%d", d.Sig/scale, d.Sig%scale)
 }

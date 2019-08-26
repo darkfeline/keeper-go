@@ -16,43 +16,43 @@ package keeper
 
 import "testing"
 
-func TestParseFixed(t *testing.T) {
+func TestParseDecimal(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		desc string
 		s    string
-		want Fixed
+		want Decimal
 	}{
-		{"no dot", "123", NewFixed(123, 0)},
-		{"dot at end", "123.", NewFixed(123, 0)},
-		{"dot", "123.45", NewFixed(12345, 2)},
+		{"no dot", "123", NewDecimal(123, 0)},
+		{"dot at end", "123.", NewDecimal(123, 0)},
+		{"dot", "123.45", NewDecimal(12345, 2)},
 	}
 	for _, c := range cases {
 		c := c
 		t.Run(c.desc, func(t *testing.T) {
 			t.Parallel()
-			got, err := ParseFixed(c.s)
+			got, err := ParseDecimal(c.s)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if got != c.want {
-				t.Errorf("ParseFixed(%#v) = %#v, want %#v", c.s, got, c.want)
+				t.Errorf("ParseDecimal(%#v) = %#v, want %#v", c.s, got, c.want)
 			}
 		})
 	}
 }
 
-func TestFixed_Add(t *testing.T) {
+func TestDecimal_Add(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		desc string
-		x    Fixed
-		y    Fixed
-		want Fixed
+		x    Decimal
+		y    Decimal
+		want Decimal
 	}{
-		{"same", NewFixed(123, 1), NewFixed(234, 1), NewFixed(357, 1)},
-		{"first higher point", NewFixed(123, 2), NewFixed(234, 1), NewFixed(2463, 2)},
-		{"second higher point", NewFixed(234, 1), NewFixed(123, 2), NewFixed(2463, 2)},
+		{"same", NewDecimal(123, 1), NewDecimal(234, 1), NewDecimal(357, 1)},
+		{"first higher point", NewDecimal(123, 2), NewDecimal(234, 1), NewDecimal(2463, 2)},
+		{"second higher point", NewDecimal(234, 1), NewDecimal(123, 2), NewDecimal(2463, 2)},
 	}
 	for _, c := range cases {
 		c := c
@@ -62,22 +62,22 @@ func TestFixed_Add(t *testing.T) {
 	}
 }
 
-func TestFixed_RaisePoint(t *testing.T) {
+func TestDecimal_RaiseExp(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		desc string
-		d    Fixed
+		d    Decimal
 		n    uint8
-		want Fixed
+		want Decimal
 	}{
-		{"zero", NewFixed(1234, 2), 0, NewFixed(1234, 2)},
-		{"nonzero", NewFixed(1234, 2), 2, NewFixed(123400, 4)},
+		{"zero", NewDecimal(1234, 2), 0, NewDecimal(1234, 2)},
+		{"nonzero", NewDecimal(1234, 2), 2, NewDecimal(123400, 4)},
 	}
 	for _, c := range cases {
 		c := c
 		t.Run(c.desc, func(t *testing.T) {
 			t.Parallel()
-			got := c.d.RaisePoint(c.n)
+			got := c.d.RaiseExp(c.n)
 			if got != c.want {
 				t.Errorf("Got %#v; want %#v", got, c.want)
 			}
@@ -85,15 +85,15 @@ func TestFixed_RaisePoint(t *testing.T) {
 	}
 }
 
-func TestFixed_String(t *testing.T) {
+func TestDecimal_String(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		desc string
-		d    Fixed
+		d    Decimal
 		want string
 	}{
-		{"zero point", NewFixed(1234, 0), "1234."},
-		{"nonzero point", NewFixed(12345, 3), "12.345"},
+		{"zero point", NewDecimal(1234, 0), "1234."},
+		{"nonzero point", NewDecimal(12345, 3), "12.345"},
 	}
 	for _, c := range cases {
 		c := c
