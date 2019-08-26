@@ -22,6 +22,9 @@ import (
 	"golang.org/x/xerrors"
 )
 
+// Decimal is a decimal floating point number specialized for
+// bookkeeping use cases.
+// This represents the number Sig * 10 ** -Exp.
 type Decimal struct {
 	Sig int64
 	Exp uint8
