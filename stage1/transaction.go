@@ -19,9 +19,9 @@ import (
 )
 
 type Transaction struct {
-	From keeper.Account
-	To   keeper.Account
-	keeper.Quantity
+	From     keeper.Account
+	To       keeper.Account
+	Quantity keeper.Quantity
 }
 
 func NewTx(from, to keeper.Account, q keeper.Quantity) Transaction {
