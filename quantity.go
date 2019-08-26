@@ -18,35 +18,35 @@ import (
 	"fmt"
 )
 
-type Position struct {
+type Quantity struct {
 	Amount Fixed
 	Unit   Unit
 }
 
 type Unit string
 
-func NewPosition(value int64, point uint8, u Unit) Position {
-	return Position{
+func NewQuantity(value int64, point uint8, u Unit) Quantity {
+	return Quantity{
 		Amount: NewFixed(value, point),
 		Unit:   u,
 	}
 }
 
-func (p Position) String() string {
+func (p Quantity) String() string {
 	return fmt.Sprintf("%v %v", p.Amount, p.Unit)
 }
 
-func AddUnits(ps []Position, f Fixed, u Unit) []Position {
+func AddUnits(ps []Quantity, f Fixed, u Unit) []Quantity {
 	for i, p := range ps {
 		if p.Unit == u {
 			ps[i].Amount = p.Amount.Add(f)
 			return ps
 		}
 	}
-	return append(ps, Position{Amount: f, Unit: u})
+	return append(ps, Quantity{Amount: f, Unit: u})
 }
 
-func MergePositions(p []Position, v []Position) []Position {
+func MergeQuantities(p []Quantity, v []Quantity) []Quantity {
 	for _, v := range v {
 		p = AddUnits(p, v.Amount, v.Unit)
 	}

@@ -52,19 +52,19 @@ func TestMakeBalance(t *testing.T) {
 	got := MakeBalance(ts)
 	want := Balance{
 		Assets: TypeBalance{
-			"Cash": {keeper.NewPosition(110, 0, "USD")},
+			"Cash": {keeper.NewQuantity(110, 0, "USD")},
 		},
 		Liabilities: TypeBalance{
-			"CreditCard": {keeper.NewPosition(0, 0, "USD")},
+			"CreditCard": {keeper.NewQuantity(0, 0, "USD")},
 		},
 		Equity: TypeBalance{
-			"Me": {keeper.NewPosition(-100, 0, "USD")},
+			"Me": {keeper.NewQuantity(-100, 0, "USD")},
 		},
 		Revenues: TypeBalance{
-			"Income": {keeper.NewPosition(-20, 0, "USD")},
+			"Income": {keeper.NewQuantity(-20, 0, "USD")},
 		},
 		Expenses: TypeBalance{
-			"Food": {keeper.NewPosition(10, 0, "USD")},
+			"Food": {keeper.NewQuantity(10, 0, "USD")},
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {

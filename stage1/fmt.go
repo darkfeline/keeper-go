@@ -32,7 +32,7 @@ func WriteBalanceSheet(w io.Writer, b Balance) error {
 }
 
 func writeAccounts(bw *bufio.Writer, m TypeBalance) {
-	var total []keeper.Position
+	var total []keeper.Quantity
 	for _, k := range getAccounts(m) {
 		bw.WriteString(k)
 		for _, p := range m[k] {

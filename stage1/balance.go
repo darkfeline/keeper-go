@@ -19,7 +19,7 @@ import (
 )
 
 type Balance map[AccountType]TypeBalance
-type TypeBalance map[string][]keeper.Position
+type TypeBalance map[string][]keeper.Quantity
 
 func MakeBalance(ts []Transaction) Balance {
 	b := make(Balance)

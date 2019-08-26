@@ -24,22 +24,22 @@ func TestAddUnits(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		desc string
-		ps   []Position
+		ps   []Quantity
 		f    Fixed
 		u    Unit
-		want []Position
+		want []Quantity
 	}{
 		{"empty", nil,
 			NewFixed(123, 1), "USD",
-			[]Position{NewPosition(123, 1, "USD")}},
-		{"existing", []Position{NewPosition(123, 1, "USD")},
+			[]Quantity{NewQuantity(123, 1, "USD")}},
+		{"existing", []Quantity{NewQuantity(123, 1, "USD")},
 			NewFixed(9, 1), "USD",
-			[]Position{NewPosition(132, 1, "USD")}},
-		{"different currency", []Position{NewPosition(132, 1, "JPY")},
+			[]Quantity{NewQuantity(132, 1, "USD")}},
+		{"different currency", []Quantity{NewQuantity(132, 1, "JPY")},
 			NewFixed(9, 1), "USD",
-			[]Position{
-				NewPosition(132, 1, "JPY"),
-				NewPosition(9, 1, "USD"),
+			[]Quantity{
+				NewQuantity(132, 1, "JPY"),
+				NewQuantity(9, 1, "USD"),
 			}},
 	}
 	for _, c := range cases {
