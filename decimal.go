@@ -30,6 +30,7 @@ type Decimal struct {
 	Exp uint8
 }
 
+// NewDecimal creates a Decimal.
 func NewDecimal(sig int64, exp uint8) Decimal {
 	return Decimal{
 		Sig: sig,
@@ -37,6 +38,7 @@ func NewDecimal(sig int64, exp uint8) Decimal {
 	}
 }
 
+// ParseDecimal parses a Decimal from the string.
 func ParseDecimal(s string) (Decimal, error) {
 	p := len(s)
 	for i, b := range s {
@@ -66,6 +68,7 @@ func ParseDecimal(s string) (Decimal, error) {
 	}, nil
 }
 
+// Add adds two Decimals.
 func (d Decimal) Add(d2 Decimal) Decimal {
 	if d2.Exp < d.Exp {
 		d, d2 = d2, d
@@ -77,11 +80,14 @@ func (d Decimal) Add(d2 Decimal) Decimal {
 	}
 }
 
+// Neg negates the Decimal (returns the arithmetic inverse).
 func (d Decimal) Neg() Decimal {
 	d.Sig = -d.Sig
 	return d
 }
 
+// RaiseExp increases the exponent of the Decimal.
+// This increases the precision/number of digits after the decimal point.
 func (d Decimal) RaiseExp(n uint8) Decimal {
 	return Decimal{
 		Sig: d.Sig * int64(math.Pow10(int(n))),

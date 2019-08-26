@@ -42,7 +42,7 @@ func TestConcat(t *testing.T) {
 	}
 }
 
-func TestMapAccountTree(t *testing.T) {
+func TestWalkAccountTree(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		desc string
@@ -85,7 +85,7 @@ func TestMapAccountTree(t *testing.T) {
 				got = append(got, n)
 				return nil
 			}
-			if err := MapAccountTree(c.a, f); err != nil {
+			if err := WalkAccountTree(c.a, f); err != nil {
 				t.Fatal(err)
 			}
 			if diff := cmp.Diff(c.want, got); diff != "" {

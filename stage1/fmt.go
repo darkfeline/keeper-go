@@ -40,7 +40,7 @@ func writeAccountTree(bw *bufio.Writer, b Balances, parent keeper.Account) {
 	bw.WriteString("\t\t\n")
 	var total []keeper.Quantity
 	pflen := len(parent.Parts())
-	_ = keeper.MapAccountTree(as, func(n keeper.AccountNode) error {
+	_ = keeper.WalkAccountTree(as, func(n keeper.AccountNode) error {
 		a := n.Account
 		for _ = range a.Parts()[pflen:] {
 			bw.WriteString("    ")
