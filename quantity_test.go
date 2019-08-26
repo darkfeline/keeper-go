@@ -20,23 +20,22 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestAddUnits(t *testing.T) {
+func TestAddQuantity(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		desc string
 		ps   []Quantity
-		f    Fixed
-		u    Unit
+		q    Quantity
 		want []Quantity
 	}{
 		{"empty", nil,
-			NewFixed(123, 1), "USD",
+			NewQuantity(123, 1, "USD"),
 			[]Quantity{NewQuantity(123, 1, "USD")}},
 		{"existing", []Quantity{NewQuantity(123, 1, "USD")},
-			NewFixed(9, 1), "USD",
+			NewQuantity(9, 1, "USD"),
 			[]Quantity{NewQuantity(132, 1, "USD")}},
 		{"different currency", []Quantity{NewQuantity(132, 1, "JPY")},
-			NewFixed(9, 1), "USD",
+			NewQuantity(9, 1, "USD"),
 			[]Quantity{
 				NewQuantity(132, 1, "JPY"),
 				NewQuantity(9, 1, "USD"),
@@ -46,7 +45,7 @@ func TestAddUnits(t *testing.T) {
 		c := c
 		t.Run(c.desc, func(t *testing.T) {
 			t.Parallel()
-			got := AddUnits(c.ps, c.f, c.u)
+			got := AddQuantity(c.ps, c.q)
 			if diff := cmp.Diff(c.want, got); diff != "" {
 				t.Errorf("Add() mismatch (-want +got):\n%s", diff)
 			}

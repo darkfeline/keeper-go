@@ -32,23 +32,32 @@ func NewQuantity(value int64, point uint8, u Unit) Quantity {
 	}
 }
 
-func (p Quantity) String() string {
-	return fmt.Sprintf("%v %v", p.Amount, p.Unit)
+func (q Quantity) Neg() Quantity {
+	q.Amount = q.Amount.Neg()
+	return q
 }
 
-func AddUnits(ps []Quantity, f Fixed, u Unit) []Quantity {
-	for i, p := range ps {
-		if p.Unit == u {
-			ps[i].Amount = p.Amount.Add(f)
-			return ps
+func (q Quantity) String() string {
+	return fmt.Sprintf("%v %v", q.Amount, q.Unit)
+}
+
+func (q *Quantity) Increase(f Fixed) {
+	q.Amount = q.Amount.Add(f)
+}
+
+func AddQuantity(qs []Quantity, q Quantity) []Quantity {
+	for i, _ := range qs {
+		if qs[i].Unit == q.Unit {
+			qs[i].Increase(q.Amount)
+			return qs
 		}
 	}
-	return append(ps, Quantity{Amount: f, Unit: u})
+	return append(qs, q)
 }
 
-func MergeQuantities(p []Quantity, v []Quantity) []Quantity {
-	for _, v := range v {
-		p = AddUnits(p, v.Amount, v.Unit)
+func MergeQuantities(q1 []Quantity, q2 []Quantity) []Quantity {
+	for _, q := range q2 {
+		q1 = AddQuantity(q1, q)
 	}
-	return p
+	return q1
 }
