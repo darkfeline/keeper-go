@@ -22,36 +22,36 @@ import (
 	"go.felesatra.moe/keeper"
 )
 
-func TestParse(t *testing.T) {
+func TestParseTransactions(t *testing.T) {
 	t.Parallel()
 	r := strings.NewReader(`Equity:Me Assets:Cash 100 USD
 Liabilities:CreditCard Expenses:Food 10 USD
 Assets:Cash Liabilities:CreditCard 10 USD
 Revenues:Income Assets:Cash 20 USD
 `)
-	got, err := Parse(r)
+	got, err := ParseTransactions(r)
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := []Transaction{
 		{
-			From:     Account{Type: Equity, Name: "Me"},
-			To:       Account{Type: Assets, Name: "Cash"},
+			From:     "Equity:Me",
+			To:       "Assets:Cash",
 			Quantity: keeper.NewQuantity(100, 0, "USD"),
 		},
 		{
-			From:     Account{Type: Liabilities, Name: "CreditCard"},
-			To:       Account{Type: Expenses, Name: "Food"},
+			From:     "Liabilities:CreditCard",
+			To:       "Expenses:Food",
 			Quantity: keeper.NewQuantity(10, 0, "USD"),
 		},
 		{
-			From:     Account{Type: Assets, Name: "Cash"},
-			To:       Account{Type: Liabilities, Name: "CreditCard"},
+			From:     "Assets:Cash",
+			To:       "Liabilities:CreditCard",
 			Quantity: keeper.NewQuantity(10, 0, "USD"),
 		},
 		{
-			From:     Account{Type: Revenues, Name: "Income"},
-			To:       Account{Type: Assets, Name: "Cash"},
+			From:     "Revenues:Income",
+			To:       "Assets:Cash",
 			Quantity: keeper.NewQuantity(20, 0, "USD"),
 		},
 	}

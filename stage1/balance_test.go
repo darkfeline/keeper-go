@@ -25,43 +25,33 @@ func TestMakeBalance(t *testing.T) {
 	t.Parallel()
 	ts := []Transaction{
 		{
-			From:     Account{Type: Equity, Name: "Me"},
-			To:       Account{Type: Assets, Name: "Cash"},
+			From:     "Equity:Me",
+			To:       "Assets:Cash",
 			Quantity: keeper.NewQuantity(100, 0, "USD"),
 		},
 		{
-			From:     Account{Type: Liabilities, Name: "CreditCard"},
-			To:       Account{Type: Expenses, Name: "Food"},
+			From:     "Liabilities:CreditCard",
+			To:       "Expenses:Food",
 			Quantity: keeper.NewQuantity(10, 0, "USD"),
 		},
 		{
-			From:     Account{Type: Assets, Name: "Cash"},
-			To:       Account{Type: Liabilities, Name: "CreditCard"},
+			From:     "Assets:Cash",
+			To:       "Liabilities:CreditCard",
 			Quantity: keeper.NewQuantity(10, 0, "USD"),
 		},
 		{
-			From:     Account{Type: Revenues, Name: "Income"},
-			To:       Account{Type: Assets, Name: "Cash"},
+			From:     "Revenues:Income",
+			To:       "Assets:Cash",
 			Quantity: keeper.NewQuantity(20, 0, "USD"),
 		},
 	}
 	got := MakeBalance(ts)
-	want := Balance{
-		Assets: TypeBalance{
-			"Cash": {keeper.NewQuantity(110, 0, "USD")},
-		},
-		Liabilities: TypeBalance{
-			"CreditCard": {keeper.NewQuantity(0, 0, "USD")},
-		},
-		Equity: TypeBalance{
-			"Me": {keeper.NewQuantity(-100, 0, "USD")},
-		},
-		Revenues: TypeBalance{
-			"Income": {keeper.NewQuantity(-20, 0, "USD")},
-		},
-		Expenses: TypeBalance{
-			"Food": {keeper.NewQuantity(10, 0, "USD")},
-		},
+	want := Balances{
+		"Assets:Cash":            {keeper.NewQuantity(110, 0, "USD")},
+		"Liabilities:CreditCard": {keeper.NewQuantity(0, 0, "USD")},
+		"Equity:Me":              {keeper.NewQuantity(-100, 0, "USD")},
+		"Revenues:Income":        {keeper.NewQuantity(-20, 0, "USD")},
+		"Expenses:Food":          {keeper.NewQuantity(10, 0, "USD")},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("foo() mismatch (-want +got):\n%s", diff)

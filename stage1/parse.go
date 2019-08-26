@@ -24,7 +24,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func Parse(r io.Reader) ([]Transaction, error) {
+func ParseTransactions(r io.Reader) ([]Transaction, error) {
 	var ts []Transaction
 	s := bufio.NewScanner(r)
 	linum := 0
@@ -48,25 +48,20 @@ func parseTransaction(line string) (Transaction, error) {
 	if len(parts) != 4 {
 		return Transaction{}, fmt.Errorf("parse transaction %#v: invalid", line)
 	}
-	a1, err := ParseAccount(parts[0])
-	if err != nil {
-		return Transaction{}, xerrors.Errorf("parse transaction %#v: %s", line, err)
-	}
-	a2, err := ParseAccount(parts[1])
-	if err != nil {
-		return Transaction{}, xerrors.Errorf("parse transaction %#v: %s", line, err)
-	}
+	a1 := keeper.Account(parts[0])
+	a2 := keeper.Account(parts[1])
 	d, err := keeper.ParseFixed(parts[2])
 	if err != nil {
 		return Transaction{}, xerrors.Errorf("parse transaction %#v: %s", line, err)
 	}
-	return NewTx(a1, a2, keeper.Quantity{Amount: d, Unit: keeper.Unit(parts[3])}), nil
+	q := keeper.Quantity{Amount: d, Unit: keeper.Unit(parts[3])}
+	return NewTx(a1, a2, q), nil
 }
 
 func WriteTransactions(w io.Writer, ts []Transaction) error {
 	bw := bufio.NewWriter(w)
 	for _, t := range ts {
-		fmt.Fprintf(bw, "%s %s %s %s", t.From, t.To, t.Amount, t.Unit)
+		fmt.Fprintf(bw, "%s %s %s", t.From, t.To, t.Quantity)
 	}
 	if err := bw.Flush(); err != nil {
 		return xerrors.Errorf("write transactions: %w", err)

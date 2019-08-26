@@ -15,30 +15,27 @@
 package stage1
 
 import (
+	"sort"
+
 	"go.felesatra.moe/keeper"
 )
 
-type Balance map[AccountType]TypeBalance
-type TypeBalance map[string][]keeper.Quantity
+type Balances map[keeper.Account][]keeper.Quantity
 
-func MakeBalance(ts []Transaction) Balance {
-	b := make(Balance)
-	b[Assets] = make(TypeBalance)
-	b[Liabilities] = make(TypeBalance)
-	b[Equity] = make(TypeBalance)
-	b[Revenues] = make(TypeBalance)
-	b[Expenses] = make(TypeBalance)
+func MakeBalance(ts []Transaction) Balances {
+	b := make(Balances)
 	for _, t := range ts {
-		b.change(t.From, t.Amount.Neg(), t.Unit)
-		b.change(t.To, t.Amount, t.Unit)
+		b[t.From] = keeper.AddQuantity(b[t.From], t.Quantity.Neg())
+		b[t.To] = keeper.AddQuantity(b[t.To], t.Quantity)
 	}
 	return b
 }
 
-func (b Balance) change(a Account, f keeper.Fixed, c keeper.Unit) {
-	m, ok := b[a.Type]
-	if !ok {
-		panic(a.Type)
+func (b Balances) Accounts() []keeper.Account {
+	as := make([]keeper.Account, 0, len(b))
+	for a := range b {
+		as = append(as, a)
 	}
-	m[a.Name] = keeper.AddUnits(m[a.Name], f, c)
+	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
+	return as
 }

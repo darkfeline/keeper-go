@@ -15,66 +15,19 @@
 package stage1
 
 import (
-	"fmt"
-	"strings"
-
 	"go.felesatra.moe/keeper"
 )
 
 type Transaction struct {
-	From Account
-	To   Account
+	From keeper.Account
+	To   keeper.Account
 	keeper.Quantity
 }
 
-func NewTx(from, to Account, q keeper.Quantity) Transaction {
+func NewTx(from, to keeper.Account, q keeper.Quantity) Transaction {
 	return Transaction{
 		From:     from,
 		To:       to,
 		Quantity: q,
 	}
-}
-
-type Account struct {
-	Type AccountType
-	Name string
-}
-
-func ParseAccount(s string) (Account, error) {
-	parts := strings.SplitN(s, ":", 2)
-	if len(parts) != 2 {
-		return Account{}, fmt.Errorf("parse account %#v: invalid", s)
-	}
-	t, ok := types[parts[0]]
-	if !ok {
-		return Account{}, fmt.Errorf("parse account %#v: invalid account type %v", s, parts[0])
-	}
-	return Account{
-		Type: t,
-		Name: parts[1],
-	}, nil
-}
-
-func (a Account) String() string {
-	return fmt.Sprintf("%s:%s", a.Type, a.Name)
-}
-
-type AccountType int
-
-//go:generate stringer -type=AccountType
-
-const (
-	Assets AccountType = iota
-	Liabilities
-	Equity
-	Revenues
-	Expenses
-)
-
-var types = map[string]AccountType{
-	"Assets":      Assets,
-	"Liabilities": Liabilities,
-	"Equity":      Equity,
-	"Revenues":    Revenues,
-	"Expenses":    Expenses,
 }

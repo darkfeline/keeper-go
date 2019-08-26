@@ -17,57 +17,55 @@ package stage1
 import (
 	"bufio"
 	"io"
-	"sort"
 
 	"go.felesatra.moe/keeper"
 )
 
-func WriteBalanceSheet(w io.Writer, b Balance) error {
+func WriteBalanceSheet(w io.Writer, b Balances) error {
 	bw := bufio.NewWriter(w)
-	bw.WriteString("Assets\n")
-	writeAccounts(bw, b[Assets])
-	bw.WriteString("\nLiabilities\n")
-	writeAccounts(bw, b[Liabilities])
+	writeAccountTree(bw, b, "Assets")
+	writeAccountTree(bw, b, "Liabilities")
 	return bw.Flush()
 }
 
-func writeAccounts(bw *bufio.Writer, m TypeBalance) {
-	var total []keeper.Quantity
-	for _, k := range getAccounts(m) {
-		bw.WriteString(k)
-		for _, p := range m[k] {
-			total = keeper.AddUnits(total, p.Amount, p.Unit)
-			bw.WriteByte('\t')
-			bw.WriteString(p.String())
-			bw.WriteByte('\t')
-			bw.WriteByte('\n')
+func writeAccountTree(bw *bufio.Writer, b Balances, parent keeper.Account) {
+	var as []keeper.Account
+	for _, a := range b.Accounts() {
+		if a.Under(parent) {
+			as = append(as, a)
 		}
 	}
-	bw.WriteByte('\n')
-	bw.WriteString("Total")
-	for _, p := range total {
+
+	bw.WriteString(string(parent))
+	bw.WriteString("\t\t\n")
+	var total []keeper.Quantity
+	pflen := len(parent.Parts())
+	_ = keeper.MapAccountTree(as, func(n keeper.AccountNode) error {
+		a := n.Account
+		for _ = range a.Parts()[pflen:] {
+			bw.WriteString("    ")
+		}
+		bw.WriteString(a.Leaf())
+		bw.WriteString("\t\t\n")
+		for _, q := range b[a] {
+			bw.WriteByte('\t')
+			bw.WriteString(q.String())
+			bw.WriteString("\t\n")
+			total = keeper.AddQuantity(total, q)
+		}
+		return nil
+	})
+	bw.WriteString("\nTotal")
+	for _, q := range total {
 		bw.WriteByte('\t')
-		bw.WriteString(p.String())
-		bw.WriteByte('\t')
-		bw.WriteByte('\n')
+		bw.WriteString(q.String())
+		bw.WriteString("\t\n")
 	}
-	bw.WriteByte('\n')
 }
 
-func getAccounts(m TypeBalance) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
-}
-
-func WriteIncomeStatement(w io.Writer, b Balance) error {
+func WriteIncomeStatement(w io.Writer, b Balances) error {
 	bw := bufio.NewWriter(w)
-	bw.WriteString("Revenues\n")
-	writeAccounts(bw, b[Revenues])
-	bw.WriteString("\nExpenses\n")
-	writeAccounts(bw, b[Expenses])
+	writeAccountTree(bw, b, "Revenues")
+	writeAccountTree(bw, b, "Expenses")
 	return bw.Flush()
 }
