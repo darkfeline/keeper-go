@@ -60,12 +60,7 @@ func parseTransaction(line string) (Transaction, error) {
 	if err != nil {
 		return Transaction{}, xerrors.Errorf("parse transaction %#v: %s", line, err)
 	}
-	return Transaction{
-		From:   a1,
-		To:     a2,
-		Amount: d,
-		Unit:   keeper.Unit(parts[3]),
-	}, nil
+	return NewTx(a1, a2, keeper.Quantity{Amount: d, Unit: keeper.Unit(parts[3])}), nil
 }
 
 func WriteTransactions(w io.Writer, ts []Transaction) error {

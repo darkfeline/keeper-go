@@ -35,28 +35,24 @@ Revenues:Income Assets:Cash 20 USD
 	}
 	want := []Transaction{
 		{
-			From:   Account{Type: Equity, Name: "Me"},
-			To:     Account{Type: Assets, Name: "Cash"},
-			Amount: keeper.Fixed{Value: 100},
-			Unit:   "USD",
+			From:     Account{Type: Equity, Name: "Me"},
+			To:       Account{Type: Assets, Name: "Cash"},
+			Quantity: keeper.NewQuantity(100, 0, "USD"),
 		},
 		{
-			From:   Account{Type: Liabilities, Name: "CreditCard"},
-			To:     Account{Type: Expenses, Name: "Food"},
-			Amount: keeper.Fixed{Value: 10},
-			Unit:   "USD",
+			From:     Account{Type: Liabilities, Name: "CreditCard"},
+			To:       Account{Type: Expenses, Name: "Food"},
+			Quantity: keeper.NewQuantity(10, 0, "USD"),
 		},
 		{
-			From:   Account{Type: Assets, Name: "Cash"},
-			To:     Account{Type: Liabilities, Name: "CreditCard"},
-			Amount: keeper.Fixed{Value: 10},
-			Unit:   "USD",
+			From:     Account{Type: Assets, Name: "Cash"},
+			To:       Account{Type: Liabilities, Name: "CreditCard"},
+			Quantity: keeper.NewQuantity(10, 0, "USD"),
 		},
 		{
-			From:   Account{Type: Revenues, Name: "Income"},
-			To:     Account{Type: Assets, Name: "Cash"},
-			Amount: keeper.Fixed{Value: 20},
-			Unit:   "USD",
+			From:     Account{Type: Revenues, Name: "Income"},
+			To:       Account{Type: Assets, Name: "Cash"},
+			Quantity: keeper.NewQuantity(20, 0, "USD"),
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {

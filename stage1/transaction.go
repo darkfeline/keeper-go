@@ -22,10 +22,17 @@ import (
 )
 
 type Transaction struct {
-	From   Account
-	To     Account
-	Amount keeper.Fixed
-	Unit   keeper.Unit
+	From Account
+	To   Account
+	keeper.Quantity
+}
+
+func NewTx(from, to Account, q keeper.Quantity) Transaction {
+	return Transaction{
+		From:     from,
+		To:       to,
+		Quantity: q,
+	}
 }
 
 type Account struct {
