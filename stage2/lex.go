@@ -124,6 +124,7 @@ func (l *lexer) ignore() {
 	l.pending = l.pending[:0]
 }
 
+// errorf emits an error token and returns an exit stateFn.
 func (l *lexer) errorf(format string, v ...interface{}) stateFn {
 	l.tokens <- token{
 		typ: tokError,
@@ -186,45 +187,115 @@ const (
 )
 
 func lexStart(l *lexer) stateFn {
-	switch r := l.next(); r {
-	case '"':
-		l.unread()
+	switch r := l.next(); {
+	case r == '"':
 		return lexString
-	case '.':
+	case r == '.':
 		l.emit(tokDot)
 		return lexStart
-	case '-':
-		l.unread()
+	case r == '-':
+		return lexDecimal
+	case unicode.IsSpace(r):
+		l.ignore()
+		return lexStart
+	case unicode.IsUpper(r):
+		return lexUpper
+	case unicode.IsLower(r):
+		return lexLower
+	case unicode.IsDigit(r):
 		return lexDigit
 	default:
-		switch {
-		case unicode.IsSpace(r):
-			l.ignore()
-			return lexStart
-		case unicode.IsLetter(r):
-			l.unread()
-			return lexLetter
-		case unicode.IsDigit(r):
-			l.unread()
-			return lexDigit
-		}
-		return l.errorf("unexpected char %v", r)
+		return l.errorf("unexpected char %v at %v", r, l.pos)
 	}
+}
+
+const (
+	digits  = "0123456789"
+	lower   = "abcdefghijklmnopqrstuvwxyz"
+	upper   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	letters = lower + upper
+)
+
+func lexDecimal(l *lexer) stateFn {
+	l.acceptRun(digits)
+	l.accept(".")
+	return lexDecimalAfterPoint
+}
+
+func lexDecimalAfterPoint(l *lexer) stateFn {
+	l.acceptRun(digits)
+	if r := l.peek(); !unicode.IsSpace(r) {
+		return l.errorf("unexpected char %v at %v", r, l.pos)
+	}
+	l.emit(tokDecimal)
+	return lexStart
 }
 
 func lexDigit(l *lexer) stateFn {
-	for {
-		// switch r := l.next(); {
-		// 	case
-		// }
-		// XXXXXXXXXXXXXx
-		return nil
+	l.acceptRun(digits)
+	switch r := l.next(); {
+	case r == '.':
+		return lexDecimalAfterPoint
+	case r == '-':
+		return lexOrdering
+	case unicode.IsSpace(r):
+		l.unread()
+		l.emit(tokDecimal)
+		return lexStart
+	default:
+		return l.errorf("unexpected char %v at %v", r, l.pos)
 	}
 }
 
-func lexLetter(l *lexer) stateFn {
-	// XXXXXXXXXXXXXx
-	return nil
+func lexOrdering(l *lexer) stateFn {
+	l.acceptRun(digits + "-E")
+	if r := l.peek(); !unicode.IsSpace(r) {
+		return l.errorf("unexpected %v at %v", r, l.pos)
+	}
+	l.emit(tokOrdering)
+	return lexStart
+}
+
+func lexUpper(l *lexer) stateFn {
+	for {
+		switch r := l.next(); {
+		case r == ':':
+			return lexAccount
+		case unicode.IsUpper(r):
+			continue
+		case unicode.IsLower(r):
+			return lexLower
+		case unicode.IsSpace(r):
+			l.unread()
+			l.emit(tokUnit)
+			return lexStart
+		default:
+			return l.errorf("unexpected char %v at %v", r, l.pos)
+		}
+	}
+}
+
+func lexLower(l *lexer) stateFn {
+	l.acceptRun(letters)
+	switch r := l.next(); {
+	case r == ':':
+		return lexAccount
+	case unicode.IsSpace(r):
+		l.unread()
+		l.emit(tokKeyword)
+		return lexStart
+	default:
+		return l.errorf("unexpected char %v at %v", r, l.pos)
+	}
+}
+
+func lexAccount(l *lexer) stateFn {
+	l.acceptRun(letters + ":")
+	if r := l.peek(); !unicode.IsSpace(r) {
+		return l.errorf("unexpected %v at %v", r, l.pos)
+	}
+	l.emit(tokAccount)
+	return lexStart
 }
 
 func lexString(l *lexer) stateFn {
@@ -233,10 +304,10 @@ func lexString(l *lexer) stateFn {
 		case '"':
 			l.emit(tokString)
 			return lexStart
-		case '/':
+		case '\\':
 			_ = l.next()
 		case '\n':
-			return l.errorf("unclosed string")
+			return l.errorf("unclosed string at %v", l.pos)
 		}
 	}
 }
