@@ -47,15 +47,15 @@ func lex(r io.Reader) *lexer {
 	}
 }
 
-func (l *lexer) nextToken() token {
-	defer l.recover()
+func (l *lexer) nextToken() (t token) {
+	defer l.recover(&t)
 	for {
 		select {
 		case tok := <-l.tokens:
 			return tok
 		default:
 			if l.state == nil {
-				return token{typ: tokEOF}
+				return token{Typ: tokEOF}
 			}
 			l.state = l.state(l)
 		}
@@ -113,8 +113,8 @@ func (l *lexer) acceptRun(valid string) {
 // emit pending runes as a token.
 func (l *lexer) emit(typ tokenType) {
 	l.tokens <- token{
-		typ: typ,
-		val: string(l.pending),
+		Typ: typ,
+		Val: string(l.pending),
 	}
 	l.pending = l.pending[:0]
 }
@@ -127,21 +127,29 @@ func (l *lexer) ignore() {
 // errorf emits an error token and returns an exit stateFn.
 func (l *lexer) errorf(format string, v ...interface{}) stateFn {
 	l.tokens <- token{
-		typ: tokError,
-		val: fmt.Sprintf(format, v...),
+		Typ: tokError,
+		Val: fmt.Sprintf(format, v...),
 	}
 	return nil
 }
 
 // recover recovers from readErr panics.
 // This simplifies internal error handling.
-func (l *lexer) recover() {
+func (l *lexer) recover(t *token) {
 	v := recover()
 	if v == nil {
 		return
 	}
 	if v, ok := v.(readErr); ok {
-		l.state = l.errorf("%v: %v", l.pos, v.err)
+		l.state = nil
+		if v.err == io.EOF {
+			*t = token{Typ: tokEOF}
+		} else {
+			*t = token{
+				Typ: tokError,
+				Val: fmt.Sprintf("Read error: %v", v.err),
+			}
+		}
 		return
 	}
 	panic(v)
@@ -165,8 +173,8 @@ type readErr struct {
 }
 
 type token struct {
-	typ tokenType
-	val string
+	Typ tokenType
+	Val string
 }
 
 // go:generate stringer -type=tokenType
@@ -176,23 +184,27 @@ type tokenType uint8
 const (
 	tokError tokenType = iota
 	tokEOF
-	tokKeyword
 
-	tokOrdering
-	tokAccount
-	tokString
-	tokDecimal
-	tokUnit
+	tokNewline
 	tokDot
+	tokDecimal
+	tokOrdering
+	tokKeyword
+	tokAccount
+	tokUnit
+	tokString
 )
 
 func lexStart(l *lexer) stateFn {
 	switch r := l.next(); {
-	case r == '"':
-		return lexString
 	case r == '.':
 		l.emit(tokDot)
 		return lexStart
+	case r == '\n':
+		l.emit(tokNewline)
+		return lexStart
+	case r == '"':
+		return lexString
 	case r == '-':
 		return lexDecimal
 	case unicode.IsSpace(r):
