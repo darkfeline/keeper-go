@@ -17,6 +17,7 @@ package lex
 type Token struct {
 	Typ TokenType
 	Val string
+	Pos Pos
 }
 
 // go:generate stringer -type=TokenType

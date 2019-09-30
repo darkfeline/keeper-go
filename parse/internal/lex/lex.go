@@ -23,21 +23,23 @@ import (
 )
 
 type Lexer struct {
-	r       *bufio.Reader
-	lastPos lexPos
-	pos     lexPos
-	pending []rune
-	state   stateFn
-	tokens  chan Token
+	r        *bufio.Reader
+	startPos Pos
+	lastPos  Pos
+	pos      Pos
+	pending  []rune
+	state    stateFn
+	tokens   chan Token
 }
 
 func Lex(r io.Reader) *Lexer {
 	return &Lexer{
-		r:       bufio.NewReader(r),
-		lastPos: lexPos{line: 1},
-		pos:     lexPos{line: 1},
-		state:   lexStart,
-		tokens:  make(chan Token, 2),
+		r:        bufio.NewReader(r),
+		startPos: Pos{Line: 1},
+		lastPos:  Pos{Line: 1},
+		pos:      Pos{Line: 1},
+		state:    lexStart,
+		tokens:   make(chan Token, 2),
 	}
 }
 
@@ -65,10 +67,10 @@ func (l *Lexer) next() rune {
 	l.pending = append(l.pending, r)
 	l.lastPos = l.pos
 	if r == '\n' {
-		l.pos.line++
-		l.pos.col = 0
+		l.pos.Line++
+		l.pos.Col = 0
 	} else {
-		l.pos.col++
+		l.pos.Col++
 	}
 	return r
 }
@@ -111,13 +113,15 @@ func (l *Lexer) emit(typ TokenType) {
 	l.tokens <- Token{
 		Typ: typ,
 		Val: string(l.pending),
+		Pos: l.startPos,
 	}
-	l.pending = l.pending[:0]
+	l.ignore()
 }
 
-// ignore all pending runes.
+// ignore throws away all pending runes.
 func (l *Lexer) ignore() {
 	l.pending = l.pending[:0]
+	l.startPos = l.pos
 }
 
 // errorf emits an error token and returns an exit stateFn.
@@ -125,6 +129,7 @@ func (l *Lexer) errorf(format string, v ...interface{}) stateFn {
 	l.tokens <- Token{
 		Typ: TokError,
 		Val: fmt.Sprintf(format, v...),
+		Pos: l.startPos,
 	}
 	return nil
 }
@@ -151,13 +156,13 @@ func (l *Lexer) recover(t *Token) {
 	panic(v)
 }
 
-type lexPos struct {
-	line int
-	col  int
+type Pos struct {
+	Line int
+	Col  int
 }
 
-func (p lexPos) String() string {
-	return fmt.Sprintf("line %v col %v", p.line, p.col)
+func (p Pos) String() string {
+	return fmt.Sprintf("line %v col %v", p.Line, p.Col)
 }
 
 type stateFn func(*Lexer) stateFn

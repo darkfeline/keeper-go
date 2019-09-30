@@ -48,9 +48,3 @@ type UnitType struct {
 	Symbol string
 	Scale  int64
 }
-
-type Balance struct {
-	Date    civil.Date
-	Account Account
-	Amounts []Amount
-}
