@@ -85,15 +85,45 @@ func parseBalance(l *lex.Lexer) (balance, error) {
 		return b, xerrors.Errorf("parse balance: %v", err)
 	}
 	b.Account = book.Account(tok.Val)
-	// XXXXXXXXXXX single and multi
+	tok = l.NextToken()
+	switch tok.Typ {
+	case lex.TokDecimal:
+		if err := parseBalanceSingleAmount(l, &b, tok); err != nil {
+			return b, xerrors.Errorf("parse balance: %v", err)
+		}
+	case lex.TokNewline:
+		if err := parseBalanceMultipleAmounts(l, &b); err != nil {
+			return b, xerrors.Errorf("parse balance: %v", err)
+		}
+	default:
+		return b, unexpected(tok)
+	}
 	return b, nil
+}
+
+type balance struct {
+	Date    civil.Date
+	Account book.Account
+	Amounts []book.Amount
+}
+
+func parseBalanceSingleAmount(l *lex.Lexer, b *balance, tok lex.Token) error {
+	panic(nil)
+}
+
+func parseBalanceMultipleAmounts(l *lex.Lexer, b *balance) error {
+	panic(nil)
 }
 
 func expect(tok lex.Token, t lex.TokenType) error {
 	if tok.Typ != t {
-		return xerrors.Errorf("unexpected token %v at %v", tok.Val, tok.Pos)
+		return unexpected(tok)
 	}
 	return nil
+}
+
+func unexpected(tok lex.Token) error {
+	return xerrors.Errorf("unexpected token %v at %v", tok.Val, tok.Pos)
 }
 
 func parseDate(tok lex.Token) (civil.Date, error) {
@@ -105,10 +135,4 @@ func parseDate(tok lex.Token) (civil.Date, error) {
 		return d, xerrors.Errorf("parse date at %v: %v", tok.Pos, err)
 	}
 	return d, nil
-}
-
-type balance struct {
-	Date    civil.Date
-	Account book.Account
-	Amounts []book.Amount
 }
