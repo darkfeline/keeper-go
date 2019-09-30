@@ -30,13 +30,18 @@ func TestLexer(t *testing.T) {
 	}{
 		{
 			desc: "simple",
-			text: `tx 2001-02-03 "Some description"
+			text: `unit USD 100
+tx 2001-02-03 "Some description"
 some:account 123.45 USD
 some:account -123.45 USD
 .
 bal 2001-02-03 some:account 123.45 USD
 `,
 			want: []Token{
+				{TokKeyword, `unit`},
+				{TokUnit, `USD`},
+				{TokDecimal, `100`},
+				{TokNewline, "\n"},
 				{TokKeyword, `tx`},
 				{TokDate, `2001-02-03`},
 				{TokString, `"Some description"`},
