@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package stage2
+package lex
 
 import (
 	"strings"
@@ -26,7 +26,7 @@ func TestLexer(t *testing.T) {
 	cases := []struct {
 		desc string
 		text string
-		want []token
+		want []Token
 	}{
 		{
 			desc: "simple",
@@ -36,27 +36,27 @@ some:account -123.45 USD
 .
 bal 2001-02-03E4 some:account 123.45 USD
 `,
-			want: []token{
-				{tokKeyword, `tx`},
-				{tokOrdering, `2001-02-03`},
-				{tokString, `"Some description"`},
-				{tokNewline, "\n"},
-				{tokAccount, `some:account`},
-				{tokDecimal, `123.45`},
-				{tokUnit, `USD`},
-				{tokNewline, "\n"},
-				{tokAccount, `some:account`},
-				{tokDecimal, `-123.45`},
-				{tokUnit, `USD`},
-				{tokNewline, "\n"},
-				{tokDot, `.`},
-				{tokNewline, "\n"},
-				{tokKeyword, `bal`},
-				{tokOrdering, `2001-02-03E4`},
-				{tokAccount, `some:account`},
-				{tokDecimal, `123.45`},
-				{tokUnit, `USD`},
-				{tokNewline, "\n"},
+			want: []Token{
+				{TokKeyword, `tx`},
+				{TokOrdering, `2001-02-03`},
+				{TokString, `"Some description"`},
+				{TokNewline, "\n"},
+				{TokAccount, `some:account`},
+				{TokDecimal, `123.45`},
+				{TokUnit, `USD`},
+				{TokNewline, "\n"},
+				{TokAccount, `some:account`},
+				{TokDecimal, `-123.45`},
+				{TokUnit, `USD`},
+				{TokNewline, "\n"},
+				{TokDot, `.`},
+				{TokNewline, "\n"},
+				{TokKeyword, `bal`},
+				{TokOrdering, `2001-02-03E4`},
+				{TokAccount, `some:account`},
+				{TokDecimal, `123.45`},
+				{TokUnit, `USD`},
+				{TokNewline, "\n"},
 			},
 		},
 	}
@@ -72,16 +72,16 @@ bal 2001-02-03E4 some:account 123.45 USD
 	}
 }
 
-func lexTestString(t *testing.T, s string) []token {
+func lexTestString(t *testing.T, s string) []Token {
 	t.Helper()
-	l := lex(strings.NewReader(s))
-	var got []token
+	l := Lex(strings.NewReader(s))
+	var got []Token
 pump:
 	for {
-		switch tok := l.nextToken(); tok.Typ {
-		case tokEOF:
+		switch tok := l.NextToken(); tok.Typ {
+		case TokEOF:
 			break pump
-		case tokError:
+		case TokError:
 			t.Fatalf("Lexer returned error: %+v", tok)
 		default:
 			got = append(got, tok)

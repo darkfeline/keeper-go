@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package stage2
+package lex
 
 import (
 	"bufio"
@@ -22,32 +22,26 @@ import (
 	"unicode"
 )
 
-// tx 2001-02-03 "Some description"
-// some:account 123.45 USD
-// some:account -123.45 USD
-// .
-// bal 2001-02-03E4 some:account 123.45 USD
-
-type lexer struct {
+type Lexer struct {
 	r       *bufio.Reader
 	lastPos lexPos
 	pos     lexPos
 	pending []rune
 	state   stateFn
-	tokens  chan token
+	tokens  chan Token
 }
 
-func lex(r io.Reader) *lexer {
-	return &lexer{
+func Lex(r io.Reader) *Lexer {
+	return &Lexer{
 		r:       bufio.NewReader(r),
 		lastPos: lexPos{line: 1},
 		pos:     lexPos{line: 1},
 		state:   lexStart,
-		tokens:  make(chan token, 2),
+		tokens:  make(chan Token, 2),
 	}
 }
 
-func (l *lexer) nextToken() (t token) {
+func (l *Lexer) NextToken() (t Token) {
 	defer l.recover(&t)
 	for {
 		select {
@@ -55,14 +49,14 @@ func (l *lexer) nextToken() (t token) {
 			return tok
 		default:
 			if l.state == nil {
-				return token{Typ: tokEOF}
+				return Token{Typ: TokEOF}
 			}
 			l.state = l.state(l)
 		}
 	}
 }
 
-func (l *lexer) next() rune {
+func (l *Lexer) next() rune {
 	r, _, err := l.r.ReadRune()
 	if err != nil {
 		panic(readErr{err: err})
@@ -78,7 +72,7 @@ func (l *lexer) next() rune {
 	return r
 }
 
-func (l *lexer) unread() {
+func (l *Lexer) unread() {
 	if l.pos == l.lastPos {
 		panic(l.pos)
 	}
@@ -87,7 +81,7 @@ func (l *lexer) unread() {
 	l.pos = l.lastPos
 }
 
-func (l *lexer) peek() rune {
+func (l *Lexer) peek() rune {
 	r, _, err := l.r.ReadRune()
 	if err != nil {
 		panic(readErr{err: err})
@@ -96,7 +90,7 @@ func (l *lexer) peek() rune {
 	return r
 }
 
-func (l *lexer) accept(valid string) bool {
+func (l *Lexer) accept(valid string) bool {
 	if strings.IndexRune(valid, l.next()) >= 0 {
 		return true
 	}
@@ -104,15 +98,15 @@ func (l *lexer) accept(valid string) bool {
 	return false
 }
 
-func (l *lexer) acceptRun(valid string) {
+func (l *Lexer) acceptRun(valid string) {
 	for strings.IndexRune(valid, l.next()) >= 0 {
 	}
 	l.unread()
 }
 
 // emit pending runes as a token.
-func (l *lexer) emit(typ tokenType) {
-	l.tokens <- token{
+func (l *Lexer) emit(typ TokenType) {
+	l.tokens <- Token{
 		Typ: typ,
 		Val: string(l.pending),
 	}
@@ -120,14 +114,14 @@ func (l *lexer) emit(typ tokenType) {
 }
 
 // ignore all pending runes.
-func (l *lexer) ignore() {
+func (l *Lexer) ignore() {
 	l.pending = l.pending[:0]
 }
 
 // errorf emits an error token and returns an exit stateFn.
-func (l *lexer) errorf(format string, v ...interface{}) stateFn {
-	l.tokens <- token{
-		Typ: tokError,
+func (l *Lexer) errorf(format string, v ...interface{}) stateFn {
+	l.tokens <- Token{
+		Typ: TokError,
 		Val: fmt.Sprintf(format, v...),
 	}
 	return nil
@@ -135,7 +129,7 @@ func (l *lexer) errorf(format string, v ...interface{}) stateFn {
 
 // recover recovers from readErr panics.
 // This simplifies internal error handling.
-func (l *lexer) recover(t *token) {
+func (l *Lexer) recover(t *Token) {
 	v := recover()
 	if v == nil {
 		return
@@ -143,10 +137,10 @@ func (l *lexer) recover(t *token) {
 	if v, ok := v.(readErr); ok {
 		l.state = nil
 		if v.err == io.EOF {
-			*t = token{Typ: tokEOF}
+			*t = Token{Typ: TokEOF}
 		} else {
-			*t = token{
-				Typ: tokError,
+			*t = Token{
+				Typ: TokError,
 				Val: fmt.Sprintf("Read error: %v", v.err),
 			}
 		}
@@ -164,7 +158,7 @@ func (p lexPos) String() string {
 	return fmt.Sprintf("line %v col %v", p.line, p.col)
 }
 
-type stateFn func(*lexer) stateFn
+type stateFn func(*Lexer) stateFn
 
 // readErr is passed to panic to signal read errors.
 // This is caught by lexer.recover.
@@ -172,36 +166,13 @@ type readErr struct {
 	err error
 }
 
-type token struct {
-	Typ tokenType
-	Val string
-}
-
-// go:generate stringer -type=tokenType
-
-type tokenType uint8
-
-const (
-	tokError tokenType = iota
-	tokEOF
-
-	tokNewline
-	tokDot
-	tokDecimal
-	tokOrdering
-	tokKeyword
-	tokAccount
-	tokUnit
-	tokString
-)
-
-func lexStart(l *lexer) stateFn {
+func lexStart(l *Lexer) stateFn {
 	switch r := l.next(); {
 	case r == '.':
-		l.emit(tokDot)
+		l.emit(TokDot)
 		return lexStart
 	case r == '\n':
-		l.emit(tokNewline)
+		l.emit(TokNewline)
 		return lexStart
 	case r == '"':
 		return lexString
@@ -228,22 +199,22 @@ const (
 	letters = lower + upper
 )
 
-func lexDecimal(l *lexer) stateFn {
+func lexDecimal(l *Lexer) stateFn {
 	l.acceptRun(digits)
 	l.accept(".")
 	return lexDecimalAfterPoint
 }
 
-func lexDecimalAfterPoint(l *lexer) stateFn {
+func lexDecimalAfterPoint(l *Lexer) stateFn {
 	l.acceptRun(digits)
 	if r := l.peek(); !unicode.IsSpace(r) {
 		return l.errorf("unexpected char %v at %v", r, l.pos)
 	}
-	l.emit(tokDecimal)
+	l.emit(TokDecimal)
 	return lexStart
 }
 
-func lexDigit(l *lexer) stateFn {
+func lexDigit(l *Lexer) stateFn {
 	l.acceptRun(digits)
 	switch r := l.next(); {
 	case r == '.':
@@ -252,23 +223,23 @@ func lexDigit(l *lexer) stateFn {
 		return lexOrdering
 	case unicode.IsSpace(r):
 		l.unread()
-		l.emit(tokDecimal)
+		l.emit(TokDecimal)
 		return lexStart
 	default:
 		return l.errorf("unexpected char %v at %v", r, l.pos)
 	}
 }
 
-func lexOrdering(l *lexer) stateFn {
+func lexOrdering(l *Lexer) stateFn {
 	l.acceptRun(digits + "-E")
 	if r := l.peek(); !unicode.IsSpace(r) {
 		return l.errorf("unexpected %v at %v", r, l.pos)
 	}
-	l.emit(tokOrdering)
+	l.emit(TokOrdering)
 	return lexStart
 }
 
-func lexUpper(l *lexer) stateFn {
+func lexUpper(l *Lexer) stateFn {
 	for {
 		switch r := l.next(); {
 		case r == ':':
@@ -279,7 +250,7 @@ func lexUpper(l *lexer) stateFn {
 			return lexLower
 		case unicode.IsSpace(r):
 			l.unread()
-			l.emit(tokUnit)
+			l.emit(TokUnit)
 			return lexStart
 		default:
 			return l.errorf("unexpected char %v at %v", r, l.pos)
@@ -287,34 +258,34 @@ func lexUpper(l *lexer) stateFn {
 	}
 }
 
-func lexLower(l *lexer) stateFn {
+func lexLower(l *Lexer) stateFn {
 	l.acceptRun(letters)
 	switch r := l.next(); {
 	case r == ':':
 		return lexAccount
 	case unicode.IsSpace(r):
 		l.unread()
-		l.emit(tokKeyword)
+		l.emit(TokKeyword)
 		return lexStart
 	default:
 		return l.errorf("unexpected char %v at %v", r, l.pos)
 	}
 }
 
-func lexAccount(l *lexer) stateFn {
+func lexAccount(l *Lexer) stateFn {
 	l.acceptRun(letters + ":")
 	if r := l.peek(); !unicode.IsSpace(r) {
 		return l.errorf("unexpected %v at %v", r, l.pos)
 	}
-	l.emit(tokAccount)
+	l.emit(TokAccount)
 	return lexStart
 }
 
-func lexString(l *lexer) stateFn {
+func lexString(l *Lexer) stateFn {
 	for {
 		switch r := l.next(); r {
 		case '"':
-			l.emit(tokString)
+			l.emit(TokString)
 			return lexStart
 		case '\\':
 			_ = l.next()
