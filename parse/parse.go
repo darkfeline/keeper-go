@@ -27,10 +27,6 @@ func Parse(r io.Reader) []book.Transaction {
 	return nil
 }
 
-type parser struct {
-	l *lex.Lexer
-}
-
 func parse(r io.Reader) ([]interface{}, error) {
 	var items []interface{}
 	l := lex.Lex(r)
