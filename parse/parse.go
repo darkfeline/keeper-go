@@ -35,11 +35,76 @@ func parse(r io.Reader) ([]interface{}, error) {
 		case lex.TokEOF:
 			return items, nil
 		case lex.TokError:
-			return nil, xerrors.Errorf("keeper/parse: lex error: %v", tok.Val)
+			return nil, xerrors.Errorf("keeper/parse: lex error: %v at %v", tok.Val, tok.Pos)
+		case lex.TokKeyword:
+			v, err := parseItem(l, tok)
+			if err != nil {
+				return nil, xerrors.Errorf("keeper/parse: %v", err)
+			}
+			items = append(items, v)
 		default:
-			return nil, xerrors.Errorf("keeper/parse: unexpected token: %v", tok.Val)
+			return nil, xerrors.Errorf("keeper/parse: unexpected token: %v at %v", tok.Val, tok.Pos)
 		}
 	}
+}
+
+func parseItem(l *lex.Lexer, tok lex.Token) (interface{}, error) {
+	switch tok.Val {
+	case "tx":
+		return parseTransaction(l)
+	case "unit":
+		return parseUnit(l)
+	case "balance":
+		return parseBalance(l)
+	default:
+		return nil, xerrors.Errorf("unknown keyword %v at %v", tok.Val, tok.Pos)
+	}
+}
+
+func parseTransaction(l *lex.Lexer) (interface{}, error) {
+	panic(nil)
+}
+
+func parseUnit(l *lex.Lexer) (interface{}, error) {
+	panic(nil)
+}
+
+func parseBalance(l *lex.Lexer) (balance, error) {
+	var b balance
+	tok := l.NextToken()
+	if err := expect(tok, lex.TokDate); err != nil {
+		return b, xerrors.Errorf("parse balance: %v", err)
+	}
+	var err error
+	b.Date, err = parseDate(tok)
+	if err != nil {
+		return b, xerrors.Errorf("parse balance: %v", err)
+	}
+	tok = l.NextToken()
+	if err := expect(tok, lex.TokAccount); err != nil {
+		return b, xerrors.Errorf("parse balance: %v", err)
+	}
+	b.Account = book.Account(tok.Val)
+	// XXXXXXXXXXX single and multi
+	return b, nil
+}
+
+func expect(tok lex.Token, t lex.TokenType) error {
+	if tok.Typ != t {
+		return xerrors.Errorf("unexpected token %v at %v", tok.Val, tok.Pos)
+	}
+	return nil
+}
+
+func parseDate(tok lex.Token) (civil.Date, error) {
+	if tok.Typ != lex.TokDate {
+		panic(tok)
+	}
+	d, err := civil.ParseDate(tok.Val)
+	if err != nil {
+		return d, xerrors.Errorf("parse date at %v: %v", tok.Pos, err)
+	}
+	return d, nil
 }
 
 type balance struct {
