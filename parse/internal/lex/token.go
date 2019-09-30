@@ -30,7 +30,7 @@ const (
 	TokNewline
 	TokDot
 	TokDecimal
-	TokOrdering
+	TokDate
 	TokKeyword
 	TokAccount
 	TokUnit

@@ -56,6 +56,7 @@ func (l *Lexer) NextToken() (t Token) {
 	}
 }
 
+// next reads and returns the next rune.
 func (l *Lexer) next() rune {
 	r, _, err := l.r.ReadRune()
 	if err != nil {
@@ -72,6 +73,7 @@ func (l *Lexer) next() rune {
 	return r
 }
 
+// unread unreads the last rune returned by next.
 func (l *Lexer) unread() {
 	if l.pos == l.lastPos {
 		panic(l.pos)
@@ -220,7 +222,7 @@ func lexDigit(l *Lexer) stateFn {
 	case r == '.':
 		return lexDecimalAfterPoint
 	case r == '-':
-		return lexOrdering
+		return lexDate
 	case unicode.IsSpace(r):
 		l.unread()
 		l.emit(TokDecimal)
@@ -230,12 +232,12 @@ func lexDigit(l *Lexer) stateFn {
 	}
 }
 
-func lexOrdering(l *Lexer) stateFn {
-	l.acceptRun(digits + "-E")
+func lexDate(l *Lexer) stateFn {
+	l.acceptRun(digits + "-")
 	if r := l.peek(); !unicode.IsSpace(r) {
 		return l.errorf("unexpected %v at %v", r, l.pos)
 	}
-	l.emit(TokOrdering)
+	l.emit(TokDate)
 	return lexStart
 }
 

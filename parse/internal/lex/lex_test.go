@@ -34,11 +34,11 @@ func TestLexer(t *testing.T) {
 some:account 123.45 USD
 some:account -123.45 USD
 .
-bal 2001-02-03E4 some:account 123.45 USD
+bal 2001-02-03 some:account 123.45 USD
 `,
 			want: []Token{
 				{TokKeyword, `tx`},
-				{TokOrdering, `2001-02-03`},
+				{TokDate, `2001-02-03`},
 				{TokString, `"Some description"`},
 				{TokNewline, "\n"},
 				{TokAccount, `some:account`},
@@ -52,7 +52,7 @@ bal 2001-02-03E4 some:account 123.45 USD
 				{TokDot, `.`},
 				{TokNewline, "\n"},
 				{TokKeyword, `bal`},
-				{TokOrdering, `2001-02-03E4`},
+				{TokDate, `2001-02-03`},
 				{TokAccount, `some:account`},
 				{TokDecimal, `123.45`},
 				{TokUnit, `USD`},
