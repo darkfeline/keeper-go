@@ -126,10 +126,10 @@ func (p *parser) parseBalanceSingleAmount(b *balance, tok lex.Token) error {
 		return err
 	}
 	// XXXXXXXXXXX scale decimal to unit
-	b.Amounts = []book.Amount{{
+	b.Amounts = append(b.Amounts, book.Amount{
 		Number:   d.number,
 		UnitType: u,
-	}}
+	})
 	return nil
 }
 
