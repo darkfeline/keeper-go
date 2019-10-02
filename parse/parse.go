@@ -130,6 +130,10 @@ func (p *parser) parseBalanceSingleAmount(b *balance, tok lex.Token) error {
 		return xerrors.Errorf("at %v, %v", tok.Pos, err)
 	}
 	b.Amounts = append(b.Amounts, a)
+	tok = p.l.NextToken()
+	if tok.Typ != lex.TokNewline {
+		return unexpected(tok)
+	}
 	return nil
 }
 
@@ -144,7 +148,24 @@ func convertAmount(d decimal, u book.UnitType) (book.Amount, error) {
 }
 
 func (p *parser) parseBalanceMultipleAmounts(b *balance) error {
-	panic(nil)
+	for {
+		switch tok := p.l.NextToken(); tok.Typ {
+		case lex.TokDecimal:
+			if err := p.parseBalanceSingleAmount(b, tok); err != nil {
+				return err
+			}
+		case lex.TokNewline:
+			continue
+		case lex.TokDot:
+			tok = p.l.NextToken()
+			if tok.Typ != lex.TokNewline {
+				return unexpected(tok)
+			}
+			return nil
+		default:
+			return unexpected(tok)
+		}
+	}
 }
 
 func (p *parser) parseUnitTok(tok lex.Token) (book.UnitType, error) {
