@@ -33,7 +33,7 @@ type Split struct {
 
 type Amount struct {
 	Number   int64
-	UnitType *UnitType
+	UnitType UnitType
 }
 
 func (a Amount) String() string {
@@ -47,4 +47,8 @@ func (a Amount) String() string {
 type UnitType struct {
 	Symbol string
 	Scale  int64
+}
+
+func (u UnitType) String() string {
+	return fmt.Sprintf("%v (1/%v)", u.Symbol, u.Scale)
 }

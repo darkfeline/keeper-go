@@ -29,13 +29,13 @@ func Parse(r io.Reader) []book.Transaction {
 
 type parser struct {
 	l     *lex.Lexer
-	units map[string]*book.UnitType
+	units map[string]book.UnitType
 }
 
 func newParser(r io.Reader) *parser {
 	return &parser{
 		l:     lex.Lex(r),
-		units: make(map[string]*book.UnitType),
+		units: make(map[string]book.UnitType),
 	}
 }
 
@@ -120,30 +120,40 @@ func (p *parser) parseBalanceSingleAmount(b *balance, tok lex.Token) error {
 	if err != nil {
 		return err
 	}
-	tok = p.l.NextToken()
-	u, err := p.parseUnitTok(tok)
+	unitTok := p.l.NextToken()
+	u, err := p.parseUnitTok(unitTok)
 	if err != nil {
 		return err
 	}
-	// XXXXXXXXXXX scale decimal to unit
-	b.Amounts = append(b.Amounts, book.Amount{
-		Number:   d.number,
-		UnitType: u,
-	})
+	a, err := convertAmount(d, u)
+	if err != nil {
+		return xerrors.Errorf("at %v, %v", tok.Pos, err)
+	}
+	b.Amounts = append(b.Amounts, a)
 	return nil
+}
+
+func convertAmount(d decimal, u book.UnitType) (book.Amount, error) {
+	if d.scale > u.Scale {
+		return book.Amount{}, xerrors.Errorf("amount %v for unit %v divisions too small", d, u)
+	}
+	return book.Amount{
+		Number:   d.number * u.Scale / d.scale,
+		UnitType: u,
+	}, nil
 }
 
 func (p *parser) parseBalanceMultipleAmounts(b *balance) error {
 	panic(nil)
 }
 
-func (p *parser) parseUnitTok(tok lex.Token) (*book.UnitType, error) {
+func (p *parser) parseUnitTok(tok lex.Token) (book.UnitType, error) {
 	if tok.Typ != lex.TokUnit {
-		return nil, unexpected(tok)
+		return book.UnitType{}, unexpected(tok)
 	}
 	u, ok := p.units[tok.Val]
 	if !ok {
-		return nil, xerrors.Errorf("parse unit %v at %v: unit not declared yet", tok.Val, tok.Pos)
+		return book.UnitType{}, xerrors.Errorf("parse unit %v at %v: unit not declared yet", tok.Val, tok.Pos)
 	}
 	return u, nil
 }

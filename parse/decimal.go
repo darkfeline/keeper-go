@@ -15,6 +15,7 @@
 package parse
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 
@@ -60,4 +61,11 @@ func parseDecimal(s string) (decimal, error) {
 		number: x*scale + y,
 		scale:  scale,
 	}, nil
+}
+
+func (d decimal) String() string {
+	if d.scale <= 1 {
+		return fmt.Sprintf("%d", d.number)
+	}
+	return fmt.Sprintf("%d.%d", d.number/d.scale, d.number%d.scale)
 }
