@@ -29,13 +29,13 @@ func Parse(r io.Reader) []book.Transaction {
 
 type parser struct {
 	l     *lex.Lexer
-	units map[string]book.UnitType
+	units map[string]*book.UnitType
 }
 
 func newParser(r io.Reader) *parser {
 	return &parser{
 		l:     lex.Lex(r),
-		units: make(map[string]book.UnitType),
+		units: make(map[string]*book.UnitType),
 	}
 }
 
@@ -83,17 +83,14 @@ func (p *parser) parseUnit() (interface{}, error) {
 func (p *parser) parseBalance() (balance, error) {
 	var b balance
 	tok := p.l.NextToken()
-	if err := expect(tok, lex.TokDate); err != nil {
-		return b, xerrors.Errorf("parse balance: %v", err)
-	}
 	var err error
-	b.Date, err = parseDate(tok)
+	b.Date, err = parseDateTok(tok)
 	if err != nil {
 		return b, xerrors.Errorf("parse balance: %v", err)
 	}
 	tok = p.l.NextToken()
-	if err := expect(tok, lex.TokAccount); err != nil {
-		return b, xerrors.Errorf("parse balance: %v", err)
+	if tok.Typ != lex.TokAccount {
+		return b, xerrors.Errorf("parse balance: %v", unexpected(tok))
 	}
 	b.Account = book.Account(tok.Val)
 	tok = p.l.NextToken()
@@ -119,27 +116,56 @@ type balance struct {
 }
 
 func (p *parser) parseBalanceSingleAmount(b *balance, tok lex.Token) error {
-	panic(nil)
+	d, err := parseDecimalTok(tok)
+	if err != nil {
+		return err
+	}
+	tok = p.l.NextToken()
+	u, err := p.parseUnitTok(tok)
+	if err != nil {
+		return err
+	}
+	// XXXXXXXXXXX scale decimal to unit
+	b.Amounts = []book.Amount{{
+		Number:   d.number,
+		UnitType: u,
+	}}
+	return nil
 }
 
 func (p *parser) parseBalanceMultipleAmounts(b *balance) error {
 	panic(nil)
 }
 
-func expect(tok lex.Token, t lex.TokenType) error {
-	if tok.Typ != t {
-		return unexpected(tok)
+func (p *parser) parseUnitTok(tok lex.Token) (*book.UnitType, error) {
+	if tok.Typ != lex.TokUnit {
+		return nil, unexpected(tok)
 	}
-	return nil
+	u, ok := p.units[tok.Val]
+	if !ok {
+		return nil, xerrors.Errorf("parse unit %v at %v: unit not declared yet", tok.Val, tok.Pos)
+	}
+	return u, nil
 }
 
 func unexpected(tok lex.Token) error {
-	return xerrors.Errorf("unexpected token %v at %v", tok.Val, tok.Pos)
+	return xerrors.Errorf("unexpected %v token %v at %v", tok.Typ, tok.Val, tok.Pos)
 }
 
-func parseDate(tok lex.Token) (civil.Date, error) {
+func parseDecimalTok(tok lex.Token) (decimal, error) {
+	if tok.Typ != lex.TokDecimal {
+		return decimal{}, unexpected(tok)
+	}
+	d, err := parseDecimal(tok.Val)
+	if err != nil {
+		return d, xerrors.Errorf("parse decimal at %v: %v", tok.Pos, err)
+	}
+	return d, nil
+}
+
+func parseDateTok(tok lex.Token) (civil.Date, error) {
 	if tok.Typ != lex.TokDate {
-		panic(tok)
+		return civil.Date{}, unexpected(tok)
 	}
 	d, err := civil.ParseDate(tok.Val)
 	if err != nil {
