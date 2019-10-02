@@ -28,12 +28,14 @@ func Parse(r io.Reader) []book.Transaction {
 }
 
 type parser struct {
-	l *lex.Lexer
+	l     *lex.Lexer
+	units map[string]book.UnitType
 }
 
 func newParser(r io.Reader) *parser {
 	return &parser{
-		l: lex.Lex(r),
+		l:     lex.Lex(r),
+		units: make(map[string]book.UnitType),
 	}
 }
 
