@@ -12,18 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package stage2
-
-import (
-	"io"
-)
-
-func ParseEntries(r io.Reader) ([]interface{}, error) {
-	panic("")
-}
-
-// tx 2001-02-03 "Some description"
-// some:account 123.45 USD
-// some:account -123.45 USD
-// .
-// bal 2001-02-03E4 some:account 123.45 USD
+package parse

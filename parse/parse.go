@@ -27,17 +27,26 @@ func Parse(r io.Reader) []book.Transaction {
 	return nil
 }
 
-func parse(r io.Reader) ([]interface{}, error) {
+type parser struct {
+	l *lex.Lexer
+}
+
+func newParser(r io.Reader) *parser {
+	return &parser{
+		l: lex.Lex(r),
+	}
+}
+
+func (p *parser) parse(r io.Reader) ([]interface{}, error) {
 	var items []interface{}
-	l := lex.Lex(r)
 	for {
-		switch tok := l.NextToken(); tok.Typ {
+		switch tok := p.l.NextToken(); tok.Typ {
 		case lex.TokEOF:
 			return items, nil
 		case lex.TokError:
 			return nil, xerrors.Errorf("keeper/parse: lex error: %v at %v", tok.Val, tok.Pos)
 		case lex.TokKeyword:
-			v, err := parseItem(l, tok)
+			v, err := p.parseItem(tok)
 			if err != nil {
 				return nil, xerrors.Errorf("keeper/parse: %v", err)
 			}
@@ -48,30 +57,30 @@ func parse(r io.Reader) ([]interface{}, error) {
 	}
 }
 
-func parseItem(l *lex.Lexer, tok lex.Token) (interface{}, error) {
+func (p *parser) parseItem(tok lex.Token) (interface{}, error) {
 	switch tok.Val {
 	case "tx":
-		return parseTransaction(l)
+		return p.parseTransaction()
 	case "unit":
-		return parseUnit(l)
+		return p.parseUnit()
 	case "balance":
-		return parseBalance(l)
+		return p.parseBalance()
 	default:
 		return nil, xerrors.Errorf("unknown keyword %v at %v", tok.Val, tok.Pos)
 	}
 }
 
-func parseTransaction(l *lex.Lexer) (interface{}, error) {
+func (p *parser) parseTransaction() (interface{}, error) {
 	panic(nil)
 }
 
-func parseUnit(l *lex.Lexer) (interface{}, error) {
+func (p *parser) parseUnit() (interface{}, error) {
 	panic(nil)
 }
 
-func parseBalance(l *lex.Lexer) (balance, error) {
+func (p *parser) parseBalance() (balance, error) {
 	var b balance
-	tok := l.NextToken()
+	tok := p.l.NextToken()
 	if err := expect(tok, lex.TokDate); err != nil {
 		return b, xerrors.Errorf("parse balance: %v", err)
 	}
@@ -80,19 +89,19 @@ func parseBalance(l *lex.Lexer) (balance, error) {
 	if err != nil {
 		return b, xerrors.Errorf("parse balance: %v", err)
 	}
-	tok = l.NextToken()
+	tok = p.l.NextToken()
 	if err := expect(tok, lex.TokAccount); err != nil {
 		return b, xerrors.Errorf("parse balance: %v", err)
 	}
 	b.Account = book.Account(tok.Val)
-	tok = l.NextToken()
+	tok = p.l.NextToken()
 	switch tok.Typ {
 	case lex.TokDecimal:
-		if err := parseBalanceSingleAmount(l, &b, tok); err != nil {
+		if err := p.parseBalanceSingleAmount(&b, tok); err != nil {
 			return b, xerrors.Errorf("parse balance: %v", err)
 		}
 	case lex.TokNewline:
-		if err := parseBalanceMultipleAmounts(l, &b); err != nil {
+		if err := p.parseBalanceMultipleAmounts(&b); err != nil {
 			return b, xerrors.Errorf("parse balance: %v", err)
 		}
 	default:
@@ -107,11 +116,11 @@ type balance struct {
 	Amounts []book.Amount
 }
 
-func parseBalanceSingleAmount(l *lex.Lexer, b *balance, tok lex.Token) error {
+func (p *parser) parseBalanceSingleAmount(b *balance, tok lex.Token) error {
 	panic(nil)
 }
 
-func parseBalanceMultipleAmounts(l *lex.Lexer, b *balance) error {
+func (p *parser) parseBalanceMultipleAmounts(b *balance) error {
 	panic(nil)
 }
 
