@@ -46,7 +46,9 @@ func (a Amount) String() string {
 
 type UnitType struct {
 	Symbol string
-	Scale  int64
+	// Scale indicates the minimum fractional unit amount,
+	// e.g. 100 means 0.01 is the smallest amount.
+	Scale int64
 }
 
 func (u UnitType) String() string {
