@@ -133,7 +133,7 @@ func (l *Lexer) ignore() {
 func (l *Lexer) errorf(format string, v ...interface{}) stateFn {
 	l.tokens <- Token{
 		Typ: TokError,
-		Val: fmt.Sprintf("%s (%s)", fmt.Sprintf(format, v...), l.pos),
+		Val: fmt.Sprintf(format, v...),
 		Pos: l.pos,
 	}
 	return nil
