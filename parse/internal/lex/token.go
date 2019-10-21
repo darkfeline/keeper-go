@@ -14,6 +14,7 @@
 
 package lex
 
+// Token is a lexed token.
 type Token struct {
 	Typ TokenType
 	Val string
@@ -25,7 +26,10 @@ type Token struct {
 type TokenType uint8
 
 const (
+	// TokError is emitted for lex errors.  The error string is
+	// stored in the Val field.
 	TokError TokenType = iota
+	// TokEOF is emitted when lexing terminates.
 	TokEOF
 
 	TokNewline
