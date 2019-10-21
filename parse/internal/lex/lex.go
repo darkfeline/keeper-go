@@ -23,20 +23,23 @@ import (
 )
 
 type Lexer struct {
-	r        *bufio.Reader
+	r *bufio.Reader
+	// startPos is the starting position of the current pending runes.
 	startPos Pos
-	lastPos  Pos
-	pos      Pos
-	pending  []rune
-	state    stateFn
-	tokens   chan Token
+	// endPos is the ending position of the current pending runes.
+	endPos Pos
+	// pos is the current position of lexing.
+	pos     Pos
+	pending []rune
+	state   stateFn
+	tokens  chan Token
 }
 
 func Lex(r io.Reader) *Lexer {
 	return &Lexer{
 		r:        bufio.NewReader(r),
 		startPos: Pos{Line: 1},
-		lastPos:  Pos{Line: 1},
+		endPos:   Pos{Line: 1},
 		pos:      Pos{Line: 1},
 		state:    lexStart,
 		tokens:   make(chan Token, 2),
@@ -65,7 +68,7 @@ func (l *Lexer) next() rune {
 		panic(readErr{err: err})
 	}
 	l.pending = append(l.pending, r)
-	l.lastPos = l.pos
+	l.endPos = l.pos
 	if r == '\n' {
 		l.pos.Line++
 		l.pos.Col = 0
@@ -77,12 +80,12 @@ func (l *Lexer) next() rune {
 
 // unread unreads the last rune returned by next.
 func (l *Lexer) unread() {
-	if l.pos == l.lastPos {
+	if l.pos == l.endPos {
 		panic(l.pos)
 	}
 	_ = l.r.UnreadRune()
 	l.pending = l.pending[:len(l.pending)-1]
-	l.pos = l.lastPos
+	l.pos = l.endPos
 }
 
 func (l *Lexer) peek() rune {
