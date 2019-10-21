@@ -133,8 +133,8 @@ func (l *Lexer) ignore() {
 func (l *Lexer) errorf(format string, v ...interface{}) stateFn {
 	l.tokens <- Token{
 		Typ: TokError,
-		Val: fmt.Sprintf(format, v...),
-		Pos: l.startPos,
+		Val: fmt.Sprintf("%s (%s)", fmt.Sprintf(format, v...), l.pos),
+		Pos: l.pos,
 	}
 	return nil
 }
@@ -200,7 +200,7 @@ func lexStart(l *Lexer) stateFn {
 	case unicode.IsDigit(r):
 		return lexDigit
 	default:
-		return l.errorf("unexpected char %v at %v", r, l.pos)
+		return l.errorf("unexpected char %v", r)
 	}
 }
 
@@ -220,7 +220,7 @@ func lexDecimal(l *Lexer) stateFn {
 func lexDecimalAfterPoint(l *Lexer) stateFn {
 	l.acceptRun(digits)
 	if r := l.peek(); !unicode.IsSpace(r) {
-		return l.errorf("unexpected char %v at %v", r, l.pos)
+		return l.errorf("unexpected char %v", r)
 	}
 	l.emit(TokDecimal)
 	return lexStart
@@ -238,14 +238,14 @@ func lexDigit(l *Lexer) stateFn {
 		l.emit(TokDecimal)
 		return lexStart
 	default:
-		return l.errorf("unexpected char %v at %v", r, l.pos)
+		return l.errorf("unexpected char %v", r)
 	}
 }
 
 func lexDate(l *Lexer) stateFn {
 	l.acceptRun(digits + "-")
 	if r := l.peek(); !unicode.IsSpace(r) {
-		return l.errorf("unexpected %v at %v", r, l.pos)
+		return l.errorf("unexpected char %v", r)
 	}
 	l.emit(TokDate)
 	return lexStart
@@ -265,7 +265,7 @@ func lexUpper(l *Lexer) stateFn {
 			l.emit(TokUnit)
 			return lexStart
 		default:
-			return l.errorf("unexpected char %v at %v", r, l.pos)
+			return l.errorf("unexpected char %v", r)
 		}
 	}
 }
@@ -280,14 +280,14 @@ func lexLower(l *Lexer) stateFn {
 		l.emit(TokKeyword)
 		return lexStart
 	default:
-		return l.errorf("unexpected char %v at %v", r, l.pos)
+		return l.errorf("unexpected char %v", r)
 	}
 }
 
 func lexAccount(l *Lexer) stateFn {
 	l.acceptRun(letters + ":")
 	if r := l.peek(); !unicode.IsSpace(r) {
-		return l.errorf("unexpected %v at %v", r, l.pos)
+		return l.errorf("unexpected char %v", r)
 	}
 	l.emit(TokAccount)
 	return lexStart
@@ -302,7 +302,7 @@ func lexString(l *Lexer) stateFn {
 		case '\\':
 			_ = l.next()
 		case '\n':
-			return l.errorf("unclosed string at %v", l.pos)
+			return l.errorf("unclosed string")
 		}
 	}
 }
