@@ -94,6 +94,7 @@ func (l *Lexer) peek() rune {
 	return r
 }
 
+// accept reads the next rune if it is in the valid string.
 func (l *Lexer) accept(valid string) bool {
 	if strings.IndexRune(valid, l.next()) >= 0 {
 		return true
@@ -102,6 +103,7 @@ func (l *Lexer) accept(valid string) bool {
 	return false
 }
 
+// acceptRun reads all contiguous runes in the valid string.
 func (l *Lexer) acceptRun(valid string) {
 	for strings.IndexRune(valid, l.next()) >= 0 {
 	}
