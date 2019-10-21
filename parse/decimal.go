@@ -24,7 +24,9 @@ import (
 
 type decimal struct {
 	number int64
-	scale  int64
+	// Scale indicates the minimum fractional unit amount,
+	// e.g. 100 means 0.01 is the smallest amount.
+	scale int64
 }
 
 func parseDecimal(s string) (decimal, error) {
