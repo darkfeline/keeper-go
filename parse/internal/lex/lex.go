@@ -129,7 +129,7 @@ func (l *Lexer) ignore() {
 	l.startPos = l.pos
 }
 
-// errorf emits an error token and returns an exit stateFn.
+// errorf emits an error token and returns a terminating stateFn.
 func (l *Lexer) errorf(format string, v ...interface{}) stateFn {
 	l.tokens <- Token{
 		Typ: TokError,
