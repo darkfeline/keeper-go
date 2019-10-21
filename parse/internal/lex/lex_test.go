@@ -32,10 +32,10 @@ func TestLexer(t *testing.T) {
 			desc: "simple",
 			text: `unit USD 100
 tx 2001-02-03 "Some description"
-some:account 123.45 USD
-some:account -123.45 USD
+Some:account 123.45 USD
+Some:account -123.45 USD
 .
-bal 2001-02-03 some:account 123.45 USD
+bal 2001-02-03 Some:account 123.45 USD
 `,
 			want: []Token{
 				{TokKeyword, `unit`, Pos{1, 0}},
@@ -46,11 +46,11 @@ bal 2001-02-03 some:account 123.45 USD
 				{TokDate, `2001-02-03`, Pos{2, 3}},
 				{TokString, `"Some description"`, Pos{2, 14}},
 				{TokNewline, "\n", Pos{2, 32}},
-				{TokAccount, `some:account`, Pos{3, 0}},
+				{TokAccount, `Some:account`, Pos{3, 0}},
 				{TokDecimal, `123.45`, Pos{3, 13}},
 				{TokUnit, `USD`, Pos{3, 20}},
 				{TokNewline, "\n", Pos{3, 23}},
-				{TokAccount, `some:account`, Pos{4, 0}},
+				{TokAccount, `Some:account`, Pos{4, 0}},
 				{TokDecimal, `-123.45`, Pos{4, 13}},
 				{TokUnit, `USD`, Pos{4, 21}},
 				{TokNewline, "\n", Pos{4, 24}},
@@ -58,7 +58,7 @@ bal 2001-02-03 some:account 123.45 USD
 				{TokNewline, "\n", Pos{5, 1}},
 				{TokKeyword, `bal`, Pos{6, 0}},
 				{TokDate, `2001-02-03`, Pos{6, 4}},
-				{TokAccount, `some:account`, Pos{6, 15}},
+				{TokAccount, `Some:account`, Pos{6, 15}},
 				{TokDecimal, `123.45`, Pos{6, 28}},
 				{TokUnit, `USD`, Pos{6, 35}},
 				{TokNewline, "\n", Pos{6, 38}},

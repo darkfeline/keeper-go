@@ -139,6 +139,10 @@ func (l *Lexer) errorf(format string, v ...interface{}) stateFn {
 	return nil
 }
 
+func (l *Lexer) unexpected(r rune) stateFn {
+	return l.errorf("unexpected char %s", string(r))
+}
+
 // recover recovers from readErr panics.
 // This simplifies internal error handling.
 func (l *Lexer) recover(t *Token) {
@@ -196,11 +200,11 @@ func lexStart(l *Lexer) stateFn {
 	case unicode.IsUpper(r):
 		return lexUpper
 	case unicode.IsLower(r):
-		return lexLower
+		return lexKeyword
 	case unicode.IsDigit(r):
 		return lexDigit
 	default:
-		return l.errorf("unexpected char %v", r)
+		return l.unexpected(r)
 	}
 }
 
@@ -220,7 +224,7 @@ func lexDecimal(l *Lexer) stateFn {
 func lexDecimalAfterPoint(l *Lexer) stateFn {
 	l.acceptRun(digits)
 	if r := l.peek(); !unicode.IsSpace(r) {
-		return l.errorf("unexpected char %v", r)
+		return l.unexpected(r)
 	}
 	l.emit(TokDecimal)
 	return lexStart
@@ -238,14 +242,14 @@ func lexDigit(l *Lexer) stateFn {
 		l.emit(TokDecimal)
 		return lexStart
 	default:
-		return l.errorf("unexpected char %v", r)
+		return l.unexpected(r)
 	}
 }
 
 func lexDate(l *Lexer) stateFn {
 	l.acceptRun(digits + "-")
 	if r := l.peek(); !unicode.IsSpace(r) {
-		return l.errorf("unexpected char %v", r)
+		return l.unexpected(r)
 	}
 	l.emit(TokDate)
 	return lexStart
@@ -256,38 +260,33 @@ func lexUpper(l *Lexer) stateFn {
 		switch r := l.next(); {
 		case r == ':':
 			return lexAccount
+		case unicode.IsLower(r):
+			return lexAccount
 		case unicode.IsUpper(r):
 			continue
-		case unicode.IsLower(r):
-			return lexLower
 		case unicode.IsSpace(r):
 			l.unread()
 			l.emit(TokUnit)
 			return lexStart
 		default:
-			return l.errorf("unexpected char %v", r)
+			return l.unexpected(r)
 		}
 	}
 }
 
-func lexLower(l *Lexer) stateFn {
-	l.acceptRun(letters)
-	switch r := l.next(); {
-	case r == ':':
-		return lexAccount
-	case unicode.IsSpace(r):
-		l.unread()
-		l.emit(TokKeyword)
-		return lexStart
-	default:
-		return l.errorf("unexpected char %v", r)
+func lexKeyword(l *Lexer) stateFn {
+	l.acceptRun(lower)
+	if r := l.peek(); !unicode.IsSpace(r) {
+		return l.unexpected(r)
 	}
+	l.emit(TokKeyword)
+	return lexStart
 }
 
 func lexAccount(l *Lexer) stateFn {
 	l.acceptRun(letters + ":")
 	if r := l.peek(); !unicode.IsSpace(r) {
-		return l.errorf("unexpected char %v", r)
+		return l.unexpected(r)
 	}
 	l.emit(TokAccount)
 	return lexStart
