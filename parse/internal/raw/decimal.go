@@ -21,16 +21,16 @@ import (
 	"strconv"
 )
 
-type decimal struct {
-	number int64
+type Decimal struct {
+	Number int64
 	// Scale indicates the minimum fractional unit amount,
 	// e.g. 100 means 0.01 is the smallest amount.
-	scale int64
+	Scale int64
 }
 
-func parseDecimal(s string) (decimal, error) {
+func parseDecimal(s string) (Decimal, error) {
 	if len(s) == 0 {
-		return decimal{}, errors.New("parse decimal: empty string")
+		return Decimal{}, errors.New("parse decimal: empty string")
 	}
 	p := len(s)
 	for i, b := range s {
@@ -41,13 +41,13 @@ func parseDecimal(s string) (decimal, error) {
 	}
 	x, err := strconv.ParseInt(s[:p], 10, 64)
 	if err != nil {
-		return decimal{}, fmt.Errorf("parse decimal %#v: %s", s, err)
+		return Decimal{}, fmt.Errorf("parse decimal %#v: %s", s, err)
 	}
 	var y int64
 	if p+1 < len(s) {
 		y, err = strconv.ParseInt(s[p+1:], 10, 64)
 		if err != nil {
-			return decimal{}, fmt.Errorf("parse decimal %#v: %s", s, err)
+			return Decimal{}, fmt.Errorf("parse decimal %#v: %s", s, err)
 		}
 	}
 	p = len(s) - p
@@ -58,15 +58,15 @@ func parseDecimal(s string) (decimal, error) {
 		y = -y
 	}
 	scale := int64(math.Pow10(p))
-	return decimal{
-		number: x*scale + y,
-		scale:  scale,
+	return Decimal{
+		Number: x*scale + y,
+		Scale:  scale,
 	}, nil
 }
 
-func (d decimal) String() string {
-	if d.scale <= 1 {
-		return fmt.Sprintf("%d", d.number)
+func (d Decimal) String() string {
+	if d.Scale <= 1 {
+		return fmt.Sprintf("%d", d.Number)
 	}
-	return fmt.Sprintf("%d.%d", d.number/d.scale, d.number%d.scale)
+	return fmt.Sprintf("%d.%d", d.Number/d.Scale, d.Number%d.Scale)
 }

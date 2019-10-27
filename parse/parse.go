@@ -15,11 +15,23 @@
 package parse
 
 import (
+	"fmt"
 	"io"
 
 	"go.felesatra.moe/keeper/book"
+	"go.felesatra.moe/keeper/parse/internal/raw"
 )
 
 func Parse(r io.Reader) []book.Transaction {
 	return nil
+}
+
+func convertAmount(d raw.Decimal, u book.UnitType) (book.Amount, error) {
+	if d.Scale > u.Scale {
+		return book.Amount{}, fmt.Errorf("amount %v for unit %v divisions too small", d, u)
+	}
+	return book.Amount{
+		Number:   d.Number * u.Scale / d.Scale,
+		UnitType: u,
+	}, nil
 }

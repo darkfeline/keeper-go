@@ -23,15 +23,17 @@ import (
 	"go.felesatra.moe/keeper/parse/internal/lex"
 )
 
+func Parse(r io.Reader) ([]interface{}, error) {
+	panic("Not implemented")
+}
+
 type parser struct {
-	l     *lex.Lexer
-	units map[string]book.UnitType
+	l *lex.Lexer
 }
 
 func newParser(r io.Reader) *parser {
 	return &parser{
-		l:     lex.Lex(r),
-		units: make(map[string]book.UnitType),
+		l: lex.Lex(r),
 	}
 }
 
@@ -42,15 +44,15 @@ func (p *parser) parse(r io.Reader) ([]interface{}, error) {
 		case lex.TokEOF:
 			return items, nil
 		case lex.TokError:
-			return nil, fmt.Errorf("keeper/parse: lex error: %v at %v", tok.Val, tok.Pos)
+			return items, fmt.Errorf("raw: lex error: %v at %v", tok.Val, tok.Pos)
 		case lex.TokKeyword:
 			v, err := p.parseItem(tok)
 			if err != nil {
-				return nil, fmt.Errorf("keeper/parse: %v", err)
+				return nil, fmt.Errorf("raw: %v", err)
 			}
 			items = append(items, v)
 		default:
-			return nil, fmt.Errorf("keeper/parse: unexpected token: %v at %v", tok.Val, tok.Pos)
+			return nil, fmt.Errorf("raw: %v", unexpected(tok))
 		}
 	}
 }
@@ -76,19 +78,22 @@ func (p *parser) parseUnit() (interface{}, error) {
 	panic(nil)
 }
 
-func (p *parser) parseBalance() (balance, error) {
-	var b balance
-	tok := p.l.NextToken()
+func (p *parser) parseBalance() (Balance, error) {
+	var b Balance
 	var err error
+
+	tok := p.l.NextToken()
 	b.Date, err = parseDateTok(tok)
 	if err != nil {
 		return b, fmt.Errorf("parse balance: %v", err)
 	}
+
 	tok = p.l.NextToken()
 	if tok.Typ != lex.TokAccount {
 		return b, fmt.Errorf("parse balance: %v", unexpected(tok))
 	}
 	b.Account = book.Account(tok.Val)
+
 	tok = p.l.NextToken()
 	switch tok.Typ {
 	case lex.TokDecimal:
@@ -105,27 +110,18 @@ func (p *parser) parseBalance() (balance, error) {
 	return b, nil
 }
 
-type balance struct {
-	Date    civil.Date
-	Account book.Account
-	Amounts []book.Amount
-}
-
-func (p *parser) parseBalanceSingleAmount(b *balance, tok lex.Token) error {
+func (p *parser) parseBalanceSingleAmount(b *Balance, tok lex.Token) error {
 	d, err := parseDecimalTok(tok)
 	if err != nil {
 		return err
 	}
+
 	unitTok := p.l.NextToken()
-	u, err := p.parseUnitTok(unitTok)
-	if err != nil {
-		return err
-	}
-	a, err := convertAmount(d, u)
-	if err != nil {
-		return fmt.Errorf("at %v, %v", tok.Pos, err)
-	}
-	b.Amounts = append(b.Amounts, a)
+	b.Amounts = append(b.Amounts, Amount{
+		Number: d,
+		Unit:   unitTok.Val,
+	})
+
 	tok = p.l.NextToken()
 	if tok.Typ != lex.TokNewline {
 		return unexpected(tok)
@@ -133,17 +129,7 @@ func (p *parser) parseBalanceSingleAmount(b *balance, tok lex.Token) error {
 	return nil
 }
 
-func convertAmount(d decimal, u book.UnitType) (book.Amount, error) {
-	if d.scale > u.Scale {
-		return book.Amount{}, fmt.Errorf("amount %v for unit %v divisions too small", d, u)
-	}
-	return book.Amount{
-		Number:   d.number * u.Scale / d.scale,
-		UnitType: u,
-	}, nil
-}
-
-func (p *parser) parseBalanceMultipleAmounts(b *balance) error {
+func (p *parser) parseBalanceMultipleAmounts(b *Balance) error {
 	for {
 		switch tok := p.l.NextToken(); tok.Typ {
 		case lex.TokDecimal:
@@ -164,24 +150,13 @@ func (p *parser) parseBalanceMultipleAmounts(b *balance) error {
 	}
 }
 
-func (p *parser) parseUnitTok(tok lex.Token) (book.UnitType, error) {
-	if tok.Typ != lex.TokUnit {
-		return book.UnitType{}, unexpected(tok)
-	}
-	u, ok := p.units[tok.Val]
-	if !ok {
-		return book.UnitType{}, fmt.Errorf("parse unit %v at %v: unit not declared yet", tok.Val, tok.Pos)
-	}
-	return u, nil
-}
-
 func unexpected(tok lex.Token) error {
 	return fmt.Errorf("unexpected %v token %v at %v", tok.Typ, tok.Val, tok.Pos)
 }
 
-func parseDecimalTok(tok lex.Token) (decimal, error) {
+func parseDecimalTok(tok lex.Token) (Decimal, error) {
 	if tok.Typ != lex.TokDecimal {
-		return decimal{}, unexpected(tok)
+		return Decimal{}, unexpected(tok)
 	}
 	d, err := parseDecimal(tok.Val)
 	if err != nil {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package raw
+package parse
 
 import (
 	"fmt"
@@ -20,17 +20,18 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"go.felesatra.moe/keeper/book"
+	"go.felesatra.moe/keeper/parse/internal/raw"
 )
 
 func TestConvertAmount(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		d    decimal
+		d    raw.Decimal
 		u    book.UnitType
 		want int64
 	}{
-		{decimal{5, 1000}, book.UnitType{Symbol: "Foo", Scale: 1000}, 5},
-		{decimal{5, 10}, book.UnitType{Symbol: "Foo", Scale: 1000}, 500},
+		{raw.Decimal{5, 1000}, book.UnitType{Symbol: "Foo", Scale: 1000}, 5},
+		{raw.Decimal{5, 10}, book.UnitType{Symbol: "Foo", Scale: 1000}, 500},
 	}
 	for _, c := range cases {
 		c := c

@@ -21,12 +21,12 @@ func TestParseDecimal(t *testing.T) {
 	cases := []struct {
 		desc string
 		s    string
-		want decimal
+		want Decimal
 	}{
-		{"no dot", "123", decimal{123, 1}},
-		{"dot at end", "123.", decimal{123, 1}},
-		{"dot", "123.45", decimal{12345, 100}},
-		{"negative", "-123.45", decimal{-12345, 100}},
+		{"no dot", "123", Decimal{123, 1}},
+		{"dot at end", "123.", Decimal{123, 1}},
+		{"dot", "123.45", Decimal{12345, 100}},
+		{"negative", "-123.45", Decimal{-12345, 100}},
 	}
 	for _, c := range cases {
 		c := c
