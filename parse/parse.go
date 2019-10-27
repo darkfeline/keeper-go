@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package parse implements parsing of keeper entries.
 package parse
 
 import (
@@ -26,6 +27,10 @@ import (
 	"go.felesatra.moe/keeper/parse/internal/raw"
 )
 
+// Parse parses keeper format entries.
+// See the module description for the format.
+// Only the final transactions are returned.
+// The transactions are sorted by date and checked for correctness.
 func Parse(r io.Reader) ([]book.Transaction, error) {
 	entries, err := raw.Parse(r)
 	if err != nil {
@@ -42,6 +47,7 @@ func Parse(r io.Reader) ([]book.Transaction, error) {
 	return p.transactions, nil
 }
 
+// ProcessError is returned for errors processing parsed entries.
 type ProcessError struct {
 	Errors []error
 }
