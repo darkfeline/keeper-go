@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"sort"
-	"strings"
 	"time"
 
 	"cloud.google.com/go/civil"
@@ -38,39 +37,22 @@ func Parse(r io.Reader) ([]book.Transaction, error) {
 	}
 	sortEntries(entries)
 	p := newProcessor()
+	var errs []error
 	for _, e := range entries {
-		p.processEntry(e)
+		if err := p.processEntry(e); err != nil {
+			errs = append(errs, err)
+		}
 	}
-	if len(p.errs) != 0 {
-		return p.transactions, ProcessError{Errors: p.errs}
+	if len(errs) != 0 {
+		return p.transactions, processError{errs}
 	}
 	return p.transactions, nil
-}
-
-// ProcessError is returned for errors processing parsed entries.
-type ProcessError struct {
-	Errors []error
-}
-
-func (e ProcessError) Error() string {
-	n := len(e.Errors)
-	if n == 0 {
-		return "error while processing"
-	}
-	s := make([]string, n)
-	for i, e := range e.Errors {
-		s[i] = e.Error()
-	}
-	return fmt.Sprintf("%d errors while processing:\n  -%v",
-		len(e.Errors),
-		strings.Join(s, "\n  -"))
 }
 
 type processor struct {
 	units        map[string]book.UnitType
 	balances     map[book.Account]acctBalance
 	transactions []book.Transaction
-	errs         []error
 }
 
 func newProcessor() *processor {
@@ -79,20 +61,14 @@ func newProcessor() *processor {
 	}
 }
 
-func (p *processor) processEntry(e interface{}) {
+func (p *processor) processEntry(e interface{}) error {
 	switch e := e.(type) {
 	case raw.UnitEntry:
-		if err := p.processUnit(e); err != nil {
-			p.errs = append(p.errs, err)
-		}
+		return p.processUnit(e)
 	case raw.BalanceEntry:
-		if err := p.processBalance(e); err != nil {
-			p.errs = append(p.errs, err)
-		}
+		return p.processBalance(e)
 	case raw.TransactionEntry:
-		if err := p.processTransaction(e); err != nil {
-			p.errs = append(p.errs, err)
-		}
+		return p.processTransaction(e)
 	default:
 		panic(fmt.Sprintf("unknown entry: %#v", e))
 	}

@@ -15,34 +15,25 @@
 package parse
 
 import (
-	"sort"
-
-	"go.felesatra.moe/keeper/book"
+	"fmt"
+	"strings"
 )
 
-type acctBalance []book.Amount
-
-func (b *acctBalance) Add(a book.Amount) {
-	for _, a2 := range *b {
-		if a2.UnitType == a.UnitType {
-			a2.Number += a.Number
-			return
-		}
-	}
-	*b = append(*b, a)
+// processError is returned for errors processing parsed entries.
+type processError struct {
+	errs []error
 }
 
-func (b acctBalance) Equal(b2 acctBalance) bool {
-	b.Sort()
-	b2.Sort()
-	for i, a := range b {
-		if a != b2[i] {
-			return false
-		}
+func (e processError) Error() string {
+	n := len(e.errs)
+	if n == 0 {
+		return "error while processing"
 	}
-	return true
-}
-
-func (b acctBalance) Sort() {
-	sort.Slice(b, func(i, j int) bool { return b[i].UnitType.Symbol < b[j].UnitType.Symbol })
+	s := make([]string, n)
+	for i, e := range e.errs {
+		s[i] = e.Error()
+	}
+	return fmt.Sprintf("%d errors while processing:\n  -%v",
+		len(e.errs),
+		strings.Join(s, "\n  -"))
 }
