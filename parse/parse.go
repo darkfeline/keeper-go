@@ -39,7 +39,7 @@ func Parse(r io.Reader) ([]book.Transaction, error) {
 	if len(p.errs) != 0 {
 		return p.transactions, ProcessError{Errors: p.errs}
 	}
-	panic("Not implemented")
+	return p.transactions, nil
 }
 
 type ProcessError struct {
@@ -72,7 +72,18 @@ func newProcessor() *processor {
 	}
 }
 
-func (p *processor) processEntry(e interface{}) {}
+func (p *processor) processEntry(e interface{}) {
+	switch e := e.(type) {
+	case raw.UnitEntry:
+		panic("Not implemented")
+	case raw.TransactionEntry:
+		panic("Not implemented")
+	case raw.BalanceEntry:
+		panic("Not implemented")
+	default:
+		panic(fmt.Sprintf("unknown entry: %#v", e))
+	}
+}
 
 func sortEntries(e []interface{}) {
 	type keyed struct {
