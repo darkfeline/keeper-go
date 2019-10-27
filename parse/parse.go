@@ -16,6 +16,7 @@
 package parse
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -38,9 +39,13 @@ func Parse(r io.Reader) ([]book.Transaction, error) {
 	sortEntries(entries)
 	p := newProcessor()
 	var errs []error
+process:
 	for _, e := range entries {
 		if err := p.processEntry(e); err != nil {
 			errs = append(errs, err)
+			if errors.Is(err, fatalError{}) {
+				break process
+			}
 		}
 	}
 	if len(errs) != 0 {
@@ -90,11 +95,28 @@ func (p *processor) processUnit(u raw.UnitEntry) error {
 }
 
 func (p *processor) processBalance(u raw.BalanceEntry) error {
+	want, err := p.convertBalances(u.Amounts)
+	if err != nil {
+		return fmt.Errorf("")
+	}
+	got := p.balances[u.Account]
 	panic("Not implemented")
 }
 
 func (p *processor) processTransaction(u raw.TransactionEntry) error {
 	panic("Not implemented")
+}
+
+func (p *processor) convertBalances(a []raw.Amount) (acctBalance, error) {
+	var b acctBalance
+	for _, a := range a {
+		a2, err := p.convertAmount(a)
+		if err != nil {
+			return nil, err
+		}
+		b = append(b, a2)
+	}
+	return b, nil
 }
 
 func (p *processor) convertAmount(a raw.Amount) (book.Amount, error) {

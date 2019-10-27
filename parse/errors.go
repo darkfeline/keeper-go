@@ -51,3 +51,10 @@ func (e fatalError) Error() string {
 func (e fatalError) Unwrap() error {
 	return e.err
 }
+
+func (e fatalError) Is(err error) bool {
+	if _, ok := err.(fatalError); ok {
+		return true
+	}
+	return false
+}
