@@ -18,10 +18,47 @@ import (
 	"fmt"
 	"testing"
 
+	"cloud.google.com/go/civil"
 	"github.com/google/go-cmp/cmp"
 	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/parse/internal/raw"
 )
+
+func TestSortEntries(t *testing.T) {
+	t.Parallel()
+	d1 := civil.Date{2001, 2, 3}
+	d2 := civil.Date{2001, 2, 4}
+	et1 := raw.TransactionEntry{
+		Date:        d1,
+		Description: "Buy stuff",
+		Splits:      []raw.Split{},
+	}
+	eb1 := raw.BalanceEntry{
+		Date:    d1,
+		Account: "Some:account",
+		Amounts: []raw.Amount{
+			{Number: raw.Decimal{12345, 100}, Unit: "USD"},
+		},
+	}
+	eb2 := raw.BalanceEntry{
+		Date:    d2,
+		Account: "Some:account",
+		Amounts: []raw.Amount{
+			{Number: raw.Decimal{22345, 100}, Unit: "USD"},
+		},
+	}
+	eu := raw.UnitEntry{
+		Symbol: "USD",
+		Scale:  raw.Decimal{100, 1},
+	}
+
+	got := []interface{}{et1, eb2, eb1, eu}
+	sortEntries(got)
+	want := []interface{}{eu, et1, eb1, eb2}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
 
 func TestConvertAmount(t *testing.T) {
 	t.Parallel()

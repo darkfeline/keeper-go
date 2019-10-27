@@ -17,13 +17,55 @@ package parse
 import (
 	"fmt"
 	"io"
+	"sort"
+	"time"
 
+	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/parse/internal/raw"
 )
 
-func Parse(r io.Reader) []book.Transaction {
-	return nil
+func Parse(r io.Reader) ([]book.Transaction, error) {
+	entries, err := raw.Parse(r)
+	if err != nil {
+		return nil, fmt.Errorf("keeper parse: %v", err)
+	}
+	sortEntries(entries)
+	panic("Not implemented")
+}
+
+func sortEntries(e []interface{}) {
+	type keyed struct {
+		k int64
+		v interface{}
+	}
+	ks := make([]keyed, len(e))
+	for i, e := range e {
+		ks[i] = keyed{entryKey(e), e}
+	}
+	sort.Slice(ks, func(i, j int) bool {
+		return ks[i].k < ks[j].k
+	})
+	for i, k := range ks {
+		e[i] = k.v
+	}
+}
+
+// entryKey returns a sort key corresponding to an entry.
+func entryKey(e interface{}) int64 {
+	switch e := e.(type) {
+	case raw.TransactionEntry:
+		return dateKey(e.Date)
+	case raw.BalanceEntry:
+		return dateKey(e.Date) + 1
+	default:
+		return 0
+	}
+}
+
+// dateKey returns a sort key corresponding to a Date.
+func dateKey(d civil.Date) int64 {
+	return d.In(time.UTC).Unix()
 }
 
 func convertAmount(d raw.Decimal, u book.UnitType) (book.Amount, error) {
