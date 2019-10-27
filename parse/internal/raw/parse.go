@@ -15,12 +15,12 @@
 package raw
 
 import (
+	"fmt"
 	"io"
 
 	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/parse/internal/lex"
-	"golang.org/x/xerrors"
 )
 
 type parser struct {
@@ -42,15 +42,15 @@ func (p *parser) parse(r io.Reader) ([]interface{}, error) {
 		case lex.TokEOF:
 			return items, nil
 		case lex.TokError:
-			return nil, xerrors.Errorf("keeper/parse: lex error: %v at %v", tok.Val, tok.Pos)
+			return nil, fmt.Errorf("keeper/parse: lex error: %v at %v", tok.Val, tok.Pos)
 		case lex.TokKeyword:
 			v, err := p.parseItem(tok)
 			if err != nil {
-				return nil, xerrors.Errorf("keeper/parse: %v", err)
+				return nil, fmt.Errorf("keeper/parse: %v", err)
 			}
 			items = append(items, v)
 		default:
-			return nil, xerrors.Errorf("keeper/parse: unexpected token: %v at %v", tok.Val, tok.Pos)
+			return nil, fmt.Errorf("keeper/parse: unexpected token: %v at %v", tok.Val, tok.Pos)
 		}
 	}
 }
@@ -64,7 +64,7 @@ func (p *parser) parseItem(tok lex.Token) (interface{}, error) {
 	case "balance":
 		return p.parseBalance()
 	default:
-		return nil, xerrors.Errorf("unknown keyword %v at %v", tok.Val, tok.Pos)
+		return nil, fmt.Errorf("unknown keyword %v at %v", tok.Val, tok.Pos)
 	}
 }
 
@@ -82,22 +82,22 @@ func (p *parser) parseBalance() (balance, error) {
 	var err error
 	b.Date, err = parseDateTok(tok)
 	if err != nil {
-		return b, xerrors.Errorf("parse balance: %v", err)
+		return b, fmt.Errorf("parse balance: %v", err)
 	}
 	tok = p.l.NextToken()
 	if tok.Typ != lex.TokAccount {
-		return b, xerrors.Errorf("parse balance: %v", unexpected(tok))
+		return b, fmt.Errorf("parse balance: %v", unexpected(tok))
 	}
 	b.Account = book.Account(tok.Val)
 	tok = p.l.NextToken()
 	switch tok.Typ {
 	case lex.TokDecimal:
 		if err := p.parseBalanceSingleAmount(&b, tok); err != nil {
-			return b, xerrors.Errorf("parse balance: %v", err)
+			return b, fmt.Errorf("parse balance: %v", err)
 		}
 	case lex.TokNewline:
 		if err := p.parseBalanceMultipleAmounts(&b); err != nil {
-			return b, xerrors.Errorf("parse balance: %v", err)
+			return b, fmt.Errorf("parse balance: %v", err)
 		}
 	default:
 		return b, unexpected(tok)
@@ -123,7 +123,7 @@ func (p *parser) parseBalanceSingleAmount(b *balance, tok lex.Token) error {
 	}
 	a, err := convertAmount(d, u)
 	if err != nil {
-		return xerrors.Errorf("at %v, %v", tok.Pos, err)
+		return fmt.Errorf("at %v, %v", tok.Pos, err)
 	}
 	b.Amounts = append(b.Amounts, a)
 	tok = p.l.NextToken()
@@ -135,7 +135,7 @@ func (p *parser) parseBalanceSingleAmount(b *balance, tok lex.Token) error {
 
 func convertAmount(d decimal, u book.UnitType) (book.Amount, error) {
 	if d.scale > u.Scale {
-		return book.Amount{}, xerrors.Errorf("amount %v for unit %v divisions too small", d, u)
+		return book.Amount{}, fmt.Errorf("amount %v for unit %v divisions too small", d, u)
 	}
 	return book.Amount{
 		Number:   d.number * u.Scale / d.scale,
@@ -170,13 +170,13 @@ func (p *parser) parseUnitTok(tok lex.Token) (book.UnitType, error) {
 	}
 	u, ok := p.units[tok.Val]
 	if !ok {
-		return book.UnitType{}, xerrors.Errorf("parse unit %v at %v: unit not declared yet", tok.Val, tok.Pos)
+		return book.UnitType{}, fmt.Errorf("parse unit %v at %v: unit not declared yet", tok.Val, tok.Pos)
 	}
 	return u, nil
 }
 
 func unexpected(tok lex.Token) error {
-	return xerrors.Errorf("unexpected %v token %v at %v", tok.Typ, tok.Val, tok.Pos)
+	return fmt.Errorf("unexpected %v token %v at %v", tok.Typ, tok.Val, tok.Pos)
 }
 
 func parseDecimalTok(tok lex.Token) (decimal, error) {
@@ -185,7 +185,7 @@ func parseDecimalTok(tok lex.Token) (decimal, error) {
 	}
 	d, err := parseDecimal(tok.Val)
 	if err != nil {
-		return d, xerrors.Errorf("parse decimal at %v: %v", tok.Pos, err)
+		return d, fmt.Errorf("parse decimal at %v: %v", tok.Pos, err)
 	}
 	return d, nil
 }
@@ -196,7 +196,7 @@ func parseDateTok(tok lex.Token) (civil.Date, error) {
 	}
 	d, err := civil.ParseDate(tok.Val)
 	if err != nil {
-		return d, xerrors.Errorf("parse date at %v: %v", tok.Pos, err)
+		return d, fmt.Errorf("parse date at %v: %v", tok.Pos, err)
 	}
 	return d, nil
 }
