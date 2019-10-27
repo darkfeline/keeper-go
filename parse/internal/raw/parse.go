@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"io"
 
-	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/parse/internal/lex"
 )
@@ -76,7 +75,21 @@ func (p *parser) parseTransaction() (interface{}, error) {
 }
 
 func (p *parser) parseUnit() (interface{}, error) {
-	panic(nil)
+	var u UnitEntry
+	var err error
+
+	tok := p.l.NextToken()
+	u.Symbol, err = parseUnitTok(tok)
+	if err != nil {
+		return u, err
+	}
+
+	tok = p.l.NextToken()
+	u.Scale, err = parseDecimalTok(tok)
+	if err != nil {
+		return u, err
+	}
+	return u, nil
 }
 
 func (p *parser) parseBalance() (BalanceEntry, error) {
@@ -117,10 +130,14 @@ func (p *parser) parseBalanceSingleAmount(b *BalanceEntry, tok lex.Token) error 
 		return err
 	}
 
-	unitTok := p.l.NextToken()
+	tok = p.l.NextToken()
+	u, err := parseUnitTok(tok)
+	if err != nil {
+		return err
+	}
 	b.Amounts = append(b.Amounts, Amount{
 		Number: d,
-		Unit:   unitTok.Val,
+		Unit:   u,
 	})
 
 	tok = p.l.NextToken()
@@ -149,30 +166,4 @@ func (p *parser) parseBalanceMultipleAmounts(b *BalanceEntry) error {
 			return unexpected(tok)
 		}
 	}
-}
-
-func unexpected(tok lex.Token) error {
-	return fmt.Errorf("unexpected %v token %v at %v", tok.Typ, tok.Val, tok.Pos)
-}
-
-func parseDecimalTok(tok lex.Token) (Decimal, error) {
-	if tok.Typ != lex.TokDecimal {
-		return Decimal{}, unexpected(tok)
-	}
-	d, err := parseDecimal(tok.Val)
-	if err != nil {
-		return d, fmt.Errorf("parse decimal at %v: %v", tok.Pos, err)
-	}
-	return d, nil
-}
-
-func parseDateTok(tok lex.Token) (civil.Date, error) {
-	if tok.Typ != lex.TokDate {
-		return civil.Date{}, unexpected(tok)
-	}
-	d, err := civil.ParseDate(tok.Val)
-	if err != nil {
-		return d, fmt.Errorf("parse date at %v: %v", tok.Pos, err)
-	}
-	return d, nil
 }

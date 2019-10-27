@@ -17,4 +17,6 @@ type Amount struct {
 }
 
 type UnitEntry struct {
+	Symbol string
+	Scale  Decimal
 }
