@@ -24,9 +24,9 @@ import (
 type acctBalance []book.Amount
 
 func (b *acctBalance) Add(a book.Amount) {
-	for _, a2 := range *b {
-		if a2.UnitType == a.UnitType {
-			a2.Number += a.Number
+	for i := range *b {
+		if (*b)[i].UnitType == a.UnitType {
+			(*b)[i].Number += a.Number
 			return
 		}
 	}
