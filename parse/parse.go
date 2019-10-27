@@ -81,14 +81,30 @@ func newProcessor() *processor {
 func (p *processor) processEntry(e interface{}) {
 	switch e := e.(type) {
 	case raw.UnitEntry:
-		panic("Not implemented")
+		if err := p.processUnit(e); err != nil {
+			p.errs = append(p.errs, err)
+		}
 	case raw.TransactionEntry:
-		panic("Not implemented")
+		if err := p.processTransaction(e); err != nil {
+			p.errs = append(p.errs, err)
+		}
 	case raw.BalanceEntry:
-		panic("Not implemented")
+		if err := p.processBalance(e); err != nil {
+			p.errs = append(p.errs, err)
+		}
 	default:
 		panic(fmt.Sprintf("unknown entry: %#v", e))
 	}
+}
+
+func (p *processor) processUnit(u raw.UnitEntry) error {
+	panic("Not implemented")
+}
+func (p *processor) processTransaction(u raw.TransactionEntry) error {
+	panic("Not implemented")
+}
+func (p *processor) processBalance(u raw.BalanceEntry) error {
+	panic("Not implemented")
 }
 
 func sortEntries(e []interface{}) {
