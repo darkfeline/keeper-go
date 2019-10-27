@@ -82,3 +82,36 @@ Expenses:Stuff -1.2 USD
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
+
+func TestParse_split_without_amount(t *testing.T) {
+	t.Parallel()
+	const input = `tx 2001-02-03 "Buy stuff"
+Some:account 1.2 USD
+Expenses:Stuff
+.
+`
+	got, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []EntryCommon{
+		TransactionEntry{
+			Common:      Common{Line: 1},
+			Date:        civil.Date{2001, 2, 3},
+			Description: "Buy stuff",
+			Splits: []Split{
+				{
+					Account: "Some:account",
+					Amount:  Amount{Number: Decimal{12, 10}, Unit: "USD"},
+				},
+				{
+					Account: "Expenses:Stuff",
+					Amount:  Amount{},
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}

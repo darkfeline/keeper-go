@@ -125,12 +125,14 @@ func (p *parser) parseSplit(t *TransactionEntry, tok lex.Token) error {
 	s.Account = book.Account(tok.Val)
 
 	tok = p.l.NextToken()
-	s.Amount, err = p.parseAmount(tok)
-	if err != nil {
-		return err
+	if tok.Typ == lex.TokDecimal {
+		s.Amount, err = p.parseAmount(tok)
+		if err != nil {
+			return err
+		}
+		tok = p.l.NextToken()
 	}
 
-	tok = p.l.NextToken()
 	if tok.Typ != lex.TokNewline {
 		return unexpected(tok)
 	}
