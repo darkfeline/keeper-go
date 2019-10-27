@@ -64,6 +64,30 @@ bal 2001-02-03 Some:account 123.45 USD
 				{TokNewline, "\n", Pos{6, 38}},
 			},
 		},
+		{
+			desc: "comment",
+			text: `tx 2001-02-03 "Some description"  # blah
+Some:account 123.45 USD #gascogne is cute
+Some:account -123.45 USD
+.
+`,
+			want: []Token{
+				{TokKeyword, `tx`, Pos{1, 0}},
+				{TokDate, `2001-02-03`, Pos{1, 3}},
+				{TokString, `"Some description"`, Pos{1, 14}},
+				{TokNewline, "\n", Pos{1, 40}},
+				{TokAccount, `Some:account`, Pos{2, 0}},
+				{TokDecimal, `123.45`, Pos{2, 13}},
+				{TokUnit, `USD`, Pos{2, 20}},
+				{TokNewline, "\n", Pos{2, 41}},
+				{TokAccount, `Some:account`, Pos{3, 0}},
+				{TokDecimal, `-123.45`, Pos{3, 13}},
+				{TokUnit, `USD`, Pos{3, 21}},
+				{TokNewline, "\n", Pos{3, 24}},
+				{TokDot, `.`, Pos{4, 0}},
+				{TokNewline, "\n", Pos{4, 1}},
+			},
+		},
 	}
 	for _, c := range cases {
 		c := c

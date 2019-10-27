@@ -184,6 +184,8 @@ type readErr struct {
 
 func lexStart(l *Lexer) stateFn {
 	switch r := l.next(); {
+	case r == '#':
+		return lexComment
 	case r == '.':
 		l.emit(TokDot)
 		return lexStart
@@ -214,6 +216,19 @@ const (
 	upper   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	letters = lower + upper
 )
+
+func lexComment(l *Lexer) stateFn {
+	for {
+		r := l.next()
+		if r == '\n' {
+			l.unread()
+			l.ignore()
+			l.next()
+			l.emit(TokNewline)
+			return lexStart
+		}
+	}
+}
 
 func lexDecimal(l *Lexer) stateFn {
 	l.acceptRun(digits)
