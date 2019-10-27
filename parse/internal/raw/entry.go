@@ -20,3 +20,14 @@ type UnitEntry struct {
 	Symbol string
 	Scale  Decimal
 }
+
+type TransactionEntry struct {
+	Date        civil.Date
+	Description string
+	Splits      []Split
+}
+
+type Split struct {
+	Account book.Account
+	Amount  Amount
+}

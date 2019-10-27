@@ -70,11 +70,67 @@ func (p *parser) parseItem(tok lex.Token) (interface{}, error) {
 	}
 }
 
-func (p *parser) parseTransaction() (interface{}, error) {
-	panic(nil)
+func (p *parser) parseTransaction() (TransactionEntry, error) {
+	var t TransactionEntry
+	var err error
+
+	tok := p.l.NextToken()
+	t.Description, err = parseStringTok(tok)
+	if err != nil {
+		return t, err
+	}
+
+	tok = p.l.NextToken()
+	if tok.Typ != lex.TokNewline {
+		return t, unexpected(tok)
+	}
+
+	if err := p.parseSplits(&t); err != nil {
+		return t, err
+	}
+	return t, nil
 }
 
-func (p *parser) parseUnit() (interface{}, error) {
+func (p *parser) parseSplits(t *TransactionEntry) error {
+	for {
+		switch tok := p.l.NextToken(); tok.Typ {
+		case lex.TokAccount:
+			if err := p.parseSplit(t, tok); err != nil {
+				return err
+			}
+		case lex.TokNewline:
+			continue
+		case lex.TokDot:
+			tok = p.l.NextToken()
+			if tok.Typ != lex.TokNewline {
+				return unexpected(tok)
+			}
+			return nil
+		default:
+			return unexpected(tok)
+		}
+	}
+}
+func (p *parser) parseSplit(t *TransactionEntry, tok lex.Token) error {
+	var s Split
+	var err error
+	s.Account = book.Account(tok.Val)
+
+	tok = p.l.NextToken()
+	s.Amount, err = p.parseAmount(tok)
+	if err != nil {
+		return err
+	}
+
+	tok = p.l.NextToken()
+	if tok.Typ != lex.TokNewline {
+		return unexpected(tok)
+	}
+	t.Splits = append(t.Splits, s)
+	return nil
+}
+
+func (p *parser) parseUnit() (UnitEntry, error) {
 	var u UnitEntry
 	var err error
 
@@ -125,26 +181,33 @@ func (p *parser) parseBalance() (BalanceEntry, error) {
 }
 
 func (p *parser) parseBalanceSingleAmount(b *BalanceEntry, tok lex.Token) error {
-	d, err := parseDecimalTok(tok)
+	a, err := p.parseAmount(tok)
 	if err != nil {
 		return err
 	}
-
-	tok = p.l.NextToken()
-	u, err := parseUnitTok(tok)
-	if err != nil {
-		return err
-	}
-	b.Amounts = append(b.Amounts, Amount{
-		Number: d,
-		Unit:   u,
-	})
+	b.Amounts = append(b.Amounts, a)
 
 	tok = p.l.NextToken()
 	if tok.Typ != lex.TokNewline {
 		return unexpected(tok)
 	}
 	return nil
+}
+
+func (p *parser) parseAmount(tok lex.Token) (Amount, error) {
+	var a Amount
+	var err error
+	a.Number, err = parseDecimalTok(tok)
+	if err != nil {
+		return a, err
+	}
+
+	tok = p.l.NextToken()
+	a.Unit, err = parseUnitTok(tok)
+	if err != nil {
+		return a, err
+	}
+	return a, nil
 }
 
 func (p *parser) parseBalanceMultipleAmounts(b *BalanceEntry) error {

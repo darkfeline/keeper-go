@@ -39,3 +39,24 @@ func parseUnitTok(tok lex.Token) (string, error) {
 	}
 	return tok.Val, nil
 }
+
+func parseStringTok(tok lex.Token) (string, error) {
+	if tok.Typ != lex.TokString {
+		return "", unexpected(tok)
+	}
+	n := len(tok.Val)
+	if tok.Val[0] != '"' || tok.Val[n-1] != '"' {
+		panic("string token starts without double quotes")
+	}
+	var s []rune
+	var escaped bool
+	for _, r := range tok.Val[1 : n-1] {
+		if r == '\\' && !escaped {
+			escaped = true
+			continue
+		}
+		s = append(s, r)
+		escaped = false
+	}
+	return string(s), nil
+}
