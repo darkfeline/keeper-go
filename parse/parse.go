@@ -68,6 +68,7 @@ func (e ProcessError) Error() string {
 
 type processor struct {
 	units        map[string]book.UnitType
+	balances     map[book.Account]acctBalance
 	transactions []book.Transaction
 	errs         []error
 }
