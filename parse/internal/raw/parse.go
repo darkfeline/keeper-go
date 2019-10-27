@@ -22,7 +22,7 @@ import (
 	"go.felesatra.moe/keeper/parse/internal/lex"
 )
 
-func Parse(r io.Reader) ([]interface{}, error) {
+func Parse(r io.Reader) ([]EntryCommon, error) {
 	p := newParser(r)
 	return p.parse()
 }
@@ -37,8 +37,8 @@ func newParser(r io.Reader) *parser {
 	}
 }
 
-func (p *parser) parse() ([]interface{}, error) {
-	var entries []interface{}
+func (p *parser) parse() ([]EntryCommon, error) {
+	var entries []EntryCommon
 	for {
 		switch tok := p.l.NextToken(); tok.Typ {
 		case lex.TokEOF:
@@ -59,7 +59,7 @@ func (p *parser) parse() ([]interface{}, error) {
 	}
 }
 
-func (p *parser) parseItem(tok lex.Token) (interface{}, error) {
+func (p *parser) parseItem(tok lex.Token) (EntryCommon, error) {
 	switch tok.Val {
 	case "tx":
 		return p.parseTransaction(tok)

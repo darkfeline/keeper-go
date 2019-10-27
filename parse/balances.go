@@ -16,6 +16,7 @@ package parse
 
 import (
 	"sort"
+	"strings"
 
 	"go.felesatra.moe/keeper/book"
 )
@@ -45,4 +46,16 @@ func (b acctBalance) Equal(b2 acctBalance) bool {
 
 func (b acctBalance) Sort() {
 	sort.Slice(b, func(i, j int) bool { return b[i].UnitType.Symbol < b[j].UnitType.Symbol })
+}
+
+func (b acctBalance) String() string {
+	n := len(b)
+	if n == 0 {
+		return "empty"
+	}
+	s := make([]string, n)
+	for i, a := range b {
+		s[i] = a.String()
+	}
+	return strings.Join(s, ", ")
 }

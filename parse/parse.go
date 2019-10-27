@@ -41,11 +41,12 @@ func Parse(r io.Reader) ([]book.Transaction, error) {
 	var errs []error
 process:
 	for _, e := range entries {
+		if len(errs) >= 20 {
+			errs = append(errs, errors.New("(too many errors)"))
+			break process
+		}
 		if err := p.processEntry(e); err != nil {
 			errs = append(errs, err)
-			if errors.Is(err, fatalError{}) {
-				break process
-			}
 		}
 	}
 	if len(errs) != 0 {
@@ -66,7 +67,7 @@ func newProcessor() *processor {
 	}
 }
 
-func (p *processor) processEntry(e interface{}) error {
+func (p *processor) processEntry(e raw.EntryCommon) error {
 	switch e := e.(type) {
 	case raw.UnitEntry:
 		return p.processUnit(e)
@@ -81,11 +82,11 @@ func (p *processor) processEntry(e interface{}) error {
 
 func (p *processor) processUnit(u raw.UnitEntry) error {
 	if _, ok := p.units[u.Symbol]; ok {
-		return fmt.Errorf("process unit: symbol %v already declared", u.Symbol)
+		return processErrf(u, "symbol %v already declared", u.Symbol)
 	}
 	scale, err := decimalToInt64(u.Scale)
 	if err != nil {
-		return fmt.Errorf("process unit: %v", err)
+		return processErr(u, err)
 	}
 	p.units[u.Symbol] = &book.UnitType{
 		Symbol: u.Symbol,
@@ -94,16 +95,19 @@ func (p *processor) processUnit(u raw.UnitEntry) error {
 	return nil
 }
 
-func (p *processor) processBalance(u raw.BalanceEntry) error {
-	want, err := p.convertBalances(u.Amounts)
+func (p *processor) processBalance(b raw.BalanceEntry) error {
+	want, err := p.convertBalances(b.Amounts)
 	if err != nil {
-		return fmt.Errorf("")
+		return processErr(b, err)
 	}
-	got := p.balances[u.Account]
-	panic("Not implemented")
+	got := p.balances[b.Account]
+	if !got.Equal(want) {
+		return processErrf(b, "balance %v not equal to declared %v", got, want)
+	}
+	return nil
 }
 
-func (p *processor) processTransaction(u raw.TransactionEntry) error {
+func (p *processor) processTransaction(t raw.TransactionEntry) error {
 	panic("Not implemented")
 }
 
@@ -127,10 +131,10 @@ func (p *processor) convertAmount(a raw.Amount) (book.Amount, error) {
 	return convertAmount(a.Number, u)
 }
 
-func sortEntries(e []interface{}) {
+func sortEntries(e []raw.EntryCommon) {
 	type keyed struct {
 		k int64
-		v interface{}
+		v raw.EntryCommon
 	}
 	ks := make([]keyed, len(e))
 	for i, e := range e {

@@ -21,8 +21,17 @@ import (
 	"go.felesatra.moe/keeper/book"
 )
 
+type EntryCommon interface {
+	EntryCommon() Common
+	EntryType() string
+}
+
 type Common struct {
 	Line int
+}
+
+func (c Common) EntryCommon() Common {
+	return c
 }
 
 type BalanceEntry struct {
@@ -30,6 +39,10 @@ type BalanceEntry struct {
 	Date    civil.Date
 	Account book.Account
 	Amounts []Amount
+}
+
+func (e BalanceEntry) EntryType() string {
+	return "balance"
 }
 
 type Amount struct {
@@ -47,11 +60,19 @@ type UnitEntry struct {
 	Scale  Decimal
 }
 
+func (e UnitEntry) EntryType() string {
+	return "unit"
+}
+
 type TransactionEntry struct {
 	Common
 	Date        civil.Date
 	Description string
 	Splits      []Split
+}
+
+func (e TransactionEntry) EntryType() string {
+	return "transaction"
 }
 
 type Split struct {

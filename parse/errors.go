@@ -17,7 +17,19 @@ package parse
 import (
 	"fmt"
 	"strings"
+
+	"go.felesatra.moe/keeper/parse/internal/raw"
 )
+
+func processErr(e raw.EntryCommon, v interface{}) error {
+	return processErrf(e, "%v", v)
+}
+
+func processErrf(e raw.EntryCommon, format string, v ...interface{}) error {
+	c := e.EntryCommon()
+	msg := fmt.Sprintf(format, v...)
+	return fmt.Errorf("process %s entry at line %d: %v", e.EntryType(), c.Line, msg)
+}
 
 // processError is returned for errors processing parsed entries.
 type processError struct {
@@ -33,28 +45,7 @@ func (e processError) Error() string {
 	for i, e := range e.errs {
 		s[i] = e.Error()
 	}
-	return fmt.Sprintf("%d errors while processing:\n  -%v",
+	return fmt.Sprintf("%d errors while processing:\n  - %v",
 		len(e.errs),
-		strings.Join(s, "\n  -"))
-}
-
-// fatalError is returned for fatal errors that stop processing, such
-// as errors that would cause many cascading errors.
-type fatalError struct {
-	err error
-}
-
-func (e fatalError) Error() string {
-	return e.err.Error()
-}
-
-func (e fatalError) Unwrap() error {
-	return e.err
-}
-
-func (e fatalError) Is(err error) bool {
-	if _, ok := err.(fatalError); ok {
-		return true
-	}
-	return false
+		strings.Join(s, "\n  - "))
 }
