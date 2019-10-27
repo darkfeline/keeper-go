@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/civil"
@@ -31,8 +32,47 @@ func Parse(r io.Reader) ([]book.Transaction, error) {
 		return nil, fmt.Errorf("keeper parse: %v", err)
 	}
 	sortEntries(entries)
+	p := newProcessor()
+	for _, e := range entries {
+		p.processEntry(e)
+	}
+	if len(p.errs) != 0 {
+		return p.transactions, ProcessError{Errors: p.errs}
+	}
 	panic("Not implemented")
 }
+
+type ProcessError struct {
+	Errors []error
+}
+
+func (e ProcessError) Error() string {
+	n := len(e.Errors)
+	if n == 0 {
+		return "error while processing"
+	}
+	s := make([]string, n)
+	for i, e := range e.Errors {
+		s[i] = e.Error()
+	}
+	return fmt.Sprintf("%d errors while processing:\n  -%v",
+		len(e.Errors),
+		strings.Join(s, "\n  -"))
+}
+
+type processor struct {
+	units        map[string]book.UnitType
+	transactions []book.Transaction
+	errs         []error
+}
+
+func newProcessor() *processor {
+	return &processor{
+		units: make(map[string]book.UnitType),
+	}
+}
+
+func (p *processor) processEntry(e interface{}) {}
 
 func sortEntries(e []interface{}) {
 	type keyed struct {
