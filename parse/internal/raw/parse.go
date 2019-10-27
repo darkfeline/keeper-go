@@ -51,6 +51,8 @@ func (p *parser) parse() ([]interface{}, error) {
 				return nil, fmt.Errorf("raw: %v", err)
 			}
 			entries = append(entries, v)
+		case lex.TokNewline:
+			continue
 		default:
 			return nil, fmt.Errorf("raw: %v", unexpected(tok))
 		}
@@ -63,7 +65,7 @@ func (p *parser) parseItem(tok lex.Token) (interface{}, error) {
 		return p.parseTransaction()
 	case "unit":
 		return p.parseUnit()
-	case "balance":
+	case "bal", "balance":
 		return p.parseBalance()
 	default:
 		return nil, fmt.Errorf("unknown keyword %v at %v", tok.Val, tok.Pos)
@@ -75,18 +77,24 @@ func (p *parser) parseTransaction() (TransactionEntry, error) {
 	var err error
 
 	tok := p.l.NextToken()
+	t.Date, err = parseDateTok(tok)
+	if err != nil {
+		return t, fmt.Errorf("parse transaction: %v", err)
+	}
+
+	tok = p.l.NextToken()
 	t.Description, err = parseStringTok(tok)
 	if err != nil {
-		return t, err
+		return t, fmt.Errorf("parse transaction: %v", err)
 	}
 
 	tok = p.l.NextToken()
 	if tok.Typ != lex.TokNewline {
-		return t, unexpected(tok)
+		return t, fmt.Errorf("parse transaction: %v", unexpected(tok))
 	}
 
 	if err := p.parseSplits(&t); err != nil {
-		return t, err
+		return t, fmt.Errorf("parse transaction: %v", err)
 	}
 	return t, nil
 }
@@ -137,13 +145,18 @@ func (p *parser) parseUnit() (UnitEntry, error) {
 	tok := p.l.NextToken()
 	u.Symbol, err = parseUnitTok(tok)
 	if err != nil {
-		return u, err
+		return u, fmt.Errorf("parse unit: %v", err)
 	}
 
 	tok = p.l.NextToken()
 	u.Scale, err = parseDecimalTok(tok)
 	if err != nil {
-		return u, err
+		return u, fmt.Errorf("parse unit: %v", err)
+	}
+
+	tok = p.l.NextToken()
+	if tok.Typ != lex.TokNewline {
+		return u, fmt.Errorf("parse unit: %v", unexpected(tok))
 	}
 	return u, nil
 }

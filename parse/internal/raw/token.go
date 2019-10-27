@@ -8,7 +8,7 @@ import (
 )
 
 func unexpected(tok lex.Token) error {
-	return fmt.Errorf("unexpected %v token %v at %v", tok.Typ, tok.Val, tok.Pos)
+	return fmt.Errorf("unexpected %v", tok)
 }
 
 func parseDecimalTok(tok lex.Token) (Decimal, error) {

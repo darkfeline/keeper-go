@@ -14,6 +14,8 @@
 
 package lex
 
+import "fmt"
+
 // Token is a lexed token.
 type Token struct {
 	Typ TokenType
@@ -21,7 +23,11 @@ type Token struct {
 	Pos Pos
 }
 
-// go:generate stringer -type=TokenType
+func (t Token) String() string {
+	return fmt.Sprintf("%v token %#v at %s", t.Typ, t.Val, t.Pos)
+}
+
+//go:generate stringer -type=TokenType
 
 type TokenType uint8
 
