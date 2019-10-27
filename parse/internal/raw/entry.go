@@ -5,7 +5,7 @@ import (
 	"go.felesatra.moe/keeper/book"
 )
 
-type Balance struct {
+type BalanceEntry struct {
 	Date    civil.Date
 	Account book.Account
 	Amounts []Amount
@@ -14,4 +14,7 @@ type Balance struct {
 type Amount struct {
 	Number Decimal
 	Unit   string
+}
+
+type UnitEntry struct {
 }

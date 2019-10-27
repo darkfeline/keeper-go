@@ -24,7 +24,8 @@ import (
 )
 
 func Parse(r io.Reader) ([]interface{}, error) {
-	panic("Not implemented")
+	p := newParser(r)
+	return p.parse()
 }
 
 type parser struct {
@@ -37,20 +38,20 @@ func newParser(r io.Reader) *parser {
 	}
 }
 
-func (p *parser) parse(r io.Reader) ([]interface{}, error) {
-	var items []interface{}
+func (p *parser) parse() ([]interface{}, error) {
+	var entries []interface{}
 	for {
 		switch tok := p.l.NextToken(); tok.Typ {
 		case lex.TokEOF:
-			return items, nil
+			return entries, nil
 		case lex.TokError:
-			return items, fmt.Errorf("raw: lex error: %v at %v", tok.Val, tok.Pos)
+			return entries, fmt.Errorf("raw: lex error: %v at %v", tok.Val, tok.Pos)
 		case lex.TokKeyword:
 			v, err := p.parseItem(tok)
 			if err != nil {
 				return nil, fmt.Errorf("raw: %v", err)
 			}
-			items = append(items, v)
+			entries = append(entries, v)
 		default:
 			return nil, fmt.Errorf("raw: %v", unexpected(tok))
 		}
@@ -78,8 +79,8 @@ func (p *parser) parseUnit() (interface{}, error) {
 	panic(nil)
 }
 
-func (p *parser) parseBalance() (Balance, error) {
-	var b Balance
+func (p *parser) parseBalance() (BalanceEntry, error) {
+	var b BalanceEntry
 	var err error
 
 	tok := p.l.NextToken()
@@ -110,7 +111,7 @@ func (p *parser) parseBalance() (Balance, error) {
 	return b, nil
 }
 
-func (p *parser) parseBalanceSingleAmount(b *Balance, tok lex.Token) error {
+func (p *parser) parseBalanceSingleAmount(b *BalanceEntry, tok lex.Token) error {
 	d, err := parseDecimalTok(tok)
 	if err != nil {
 		return err
@@ -129,7 +130,7 @@ func (p *parser) parseBalanceSingleAmount(b *Balance, tok lex.Token) error {
 	return nil
 }
 
-func (p *parser) parseBalanceMultipleAmounts(b *Balance) error {
+func (p *parser) parseBalanceMultipleAmounts(b *BalanceEntry) error {
 	for {
 		switch tok := p.l.NextToken(); tok.Typ {
 		case lex.TokDecimal:
