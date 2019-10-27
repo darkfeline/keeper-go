@@ -98,11 +98,24 @@ func (p *processor) processEntry(e interface{}) {
 }
 
 func (p *processor) processUnit(u raw.UnitEntry) error {
-	panic("Not implemented")
+	if _, ok := p.units[u.Symbol]; ok {
+		return fmt.Errorf("process unit: symbol %v already declared", u.Symbol)
+	}
+	scale, err := decimalToInt64(u.Scale)
+	if err != nil {
+		return fmt.Errorf("process unit: %v", err)
+	}
+	p.units[u.Symbol] = book.UnitType{
+		Symbol: u.Symbol,
+		Scale:  scale,
+	}
+	return nil
 }
+
 func (p *processor) processTransaction(u raw.TransactionEntry) error {
 	panic("Not implemented")
 }
+
 func (p *processor) processBalance(u raw.BalanceEntry) error {
 	panic("Not implemented")
 }
@@ -139,6 +152,13 @@ func entryKey(e interface{}) int64 {
 // dateKey returns a sort key corresponding to a Date.
 func dateKey(d civil.Date) int64 {
 	return d.In(time.UTC).Unix()
+}
+
+func decimalToInt64(d raw.Decimal) (int64, error) {
+	if d.Fraction() != 0 {
+		return 0, fmt.Errorf("decimal to int64 %v: non-integer", d)
+	}
+	return d.Integer(), nil
 }
 
 func convertAmount(d raw.Decimal, u book.UnitType) (book.Amount, error) {

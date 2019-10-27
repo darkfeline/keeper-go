@@ -21,10 +21,13 @@ import (
 	"strconv"
 )
 
+// Decimal is a floating point number implemented using a scale
+// factor.
 type Decimal struct {
 	Number int64
 	// Scale indicates the minimum fractional unit amount,
 	// e.g. 100 means 0.01 is the smallest amount.
+	// Should be a multiple of 10.
 	Scale int64
 }
 
@@ -64,9 +67,19 @@ func parseDecimal(s string) (Decimal, error) {
 	}, nil
 }
 
+// Integer returns the integer part of the decimal.
+func (d Decimal) Integer() int64 {
+	return d.Number / d.Scale
+}
+
+// Integer returns the fraction part of the decimal.
+func (d Decimal) Fraction() int64 {
+	return d.Number % d.Scale
+}
+
 func (d Decimal) String() string {
 	if d.Scale <= 1 {
 		return fmt.Sprintf("%d", d.Number)
 	}
-	return fmt.Sprintf("%d.%d", d.Number/d.Scale, d.Number%d.Scale)
+	return fmt.Sprintf("%d.%d", d.Integer(), d.Fraction())
 }
