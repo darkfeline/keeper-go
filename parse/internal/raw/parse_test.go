@@ -41,6 +41,7 @@ Expenses:Stuff -1.2 USD
 	}
 	want := []interface{}{
 		BalanceEntry{
+			Common:  Common{Line: 1},
 			Date:    civil.Date{2001, 2, 3},
 			Account: "Some:account",
 			Amounts: []Amount{
@@ -48,6 +49,7 @@ Expenses:Stuff -1.2 USD
 			},
 		},
 		BalanceEntry{
+			Common:  Common{Line: 2},
 			Date:    civil.Date{2001, 2, 5},
 			Account: "Some:account",
 			Amounts: []Amount{
@@ -56,10 +58,12 @@ Expenses:Stuff -1.2 USD
 			},
 		},
 		UnitEntry{
+			Common: Common{Line: 6},
 			Symbol: "USD",
 			Scale:  Decimal{100, 1},
 		},
 		TransactionEntry{
+			Common:      Common{Line: 7},
 			Date:        civil.Date{2001, 2, 3},
 			Description: "Buy stuff",
 			Splits: []Split{

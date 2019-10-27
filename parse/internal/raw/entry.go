@@ -21,7 +21,12 @@ import (
 	"go.felesatra.moe/keeper/book"
 )
 
+type Common struct {
+	Line int
+}
+
 type BalanceEntry struct {
+	Common
 	Date    civil.Date
 	Account book.Account
 	Amounts []Amount
@@ -37,11 +42,13 @@ func (a Amount) String() string {
 }
 
 type UnitEntry struct {
+	Common
 	Symbol string
 	Scale  Decimal
 }
 
 type TransactionEntry struct {
+	Common
 	Date        civil.Date
 	Description string
 	Splits      []Split

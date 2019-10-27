@@ -62,21 +62,21 @@ func (p *parser) parse() ([]interface{}, error) {
 func (p *parser) parseItem(tok lex.Token) (interface{}, error) {
 	switch tok.Val {
 	case "tx":
-		return p.parseTransaction()
+		return p.parseTransaction(tok)
 	case "unit":
-		return p.parseUnit()
+		return p.parseUnit(tok)
 	case "bal", "balance":
-		return p.parseBalance()
+		return p.parseBalance(tok)
 	default:
 		return nil, fmt.Errorf("unknown keyword %v at %v", tok.Val, tok.Pos)
 	}
 }
 
-func (p *parser) parseTransaction() (TransactionEntry, error) {
-	var t TransactionEntry
+func (p *parser) parseTransaction(tok lex.Token) (TransactionEntry, error) {
+	t := TransactionEntry{Common: Common{Line: tok.Pos.Line}}
 	var err error
 
-	tok := p.l.NextToken()
+	tok = p.l.NextToken()
 	t.Date, err = parseDateTok(tok)
 	if err != nil {
 		return t, fmt.Errorf("parse transaction: %v", err)
@@ -138,11 +138,11 @@ func (p *parser) parseSplit(t *TransactionEntry, tok lex.Token) error {
 	return nil
 }
 
-func (p *parser) parseUnit() (UnitEntry, error) {
-	var u UnitEntry
+func (p *parser) parseUnit(tok lex.Token) (UnitEntry, error) {
+	u := UnitEntry{Common: Common{Line: tok.Pos.Line}}
 	var err error
 
-	tok := p.l.NextToken()
+	tok = p.l.NextToken()
 	u.Symbol, err = parseUnitTok(tok)
 	if err != nil {
 		return u, fmt.Errorf("parse unit: %v", err)
@@ -161,11 +161,11 @@ func (p *parser) parseUnit() (UnitEntry, error) {
 	return u, nil
 }
 
-func (p *parser) parseBalance() (BalanceEntry, error) {
-	var b BalanceEntry
+func (p *parser) parseBalance(tok lex.Token) (BalanceEntry, error) {
+	b := BalanceEntry{Common: Common{Line: tok.Pos.Line}}
 	var err error
 
-	tok := p.l.NextToken()
+	tok = p.l.NextToken()
 	b.Date, err = parseDateTok(tok)
 	if err != nil {
 		return b, fmt.Errorf("parse balance: %v", err)
