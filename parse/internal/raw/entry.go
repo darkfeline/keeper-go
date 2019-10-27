@@ -23,7 +23,9 @@ import (
 
 type EntryCommon interface {
 	EntryCommon() Common
-	EntryType() string
+	// Summary returns a string that usefully identifies the
+	// entry, e.g., in errors.
+	Summary() string
 }
 
 type Common struct {
@@ -41,8 +43,8 @@ type BalanceEntry struct {
 	Amounts []Amount
 }
 
-func (e BalanceEntry) EntryType() string {
-	return "balance"
+func (e BalanceEntry) Summary() string {
+	return fmt.Sprintf("balance %v %v", e.Date, e.Account)
 }
 
 type Amount struct {
@@ -60,8 +62,8 @@ type UnitEntry struct {
 	Scale  Decimal
 }
 
-func (e UnitEntry) EntryType() string {
-	return "unit"
+func (e UnitEntry) Summary() string {
+	return fmt.Sprintf("unit %v", e.Symbol)
 }
 
 type TransactionEntry struct {
@@ -71,8 +73,8 @@ type TransactionEntry struct {
 	Splits      []Split
 }
 
-func (e TransactionEntry) EntryType() string {
-	return "transaction"
+func (e TransactionEntry) Summary() string {
+	return fmt.Sprintf("transaction %v %#v", e.Date, e.Description)
 }
 
 type Split struct {
