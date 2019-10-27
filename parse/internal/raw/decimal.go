@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package parse
+package raw
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
-
-	"golang.org/x/xerrors"
 )
 
 type decimal struct {
@@ -31,7 +30,7 @@ type decimal struct {
 
 func parseDecimal(s string) (decimal, error) {
 	if len(s) == 0 {
-		return decimal{}, xerrors.New("parse decimal: empty string")
+		return decimal{}, errors.New("parse decimal: empty string")
 	}
 	p := len(s)
 	for i, b := range s {
@@ -42,13 +41,13 @@ func parseDecimal(s string) (decimal, error) {
 	}
 	x, err := strconv.ParseInt(s[:p], 10, 64)
 	if err != nil {
-		return decimal{}, xerrors.Errorf("parse decimal %#v: %s", s, err)
+		return decimal{}, fmt.Errorf("parse decimal %#v: %s", s, err)
 	}
 	var y int64
 	if p+1 < len(s) {
 		y, err = strconv.ParseInt(s[p+1:], 10, 64)
 		if err != nil {
-			return decimal{}, xerrors.Errorf("parse decimal %#v: %s", s, err)
+			return decimal{}, fmt.Errorf("parse decimal %#v: %s", s, err)
 		}
 	}
 	p = len(s) - p

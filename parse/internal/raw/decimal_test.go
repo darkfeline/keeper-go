@@ -12,40 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package parse
+package raw
 
-import (
-	"fmt"
-	"testing"
+import "testing"
 
-	"github.com/google/go-cmp/cmp"
-	"go.felesatra.moe/keeper/book"
-)
-
-func TestConvertAmount(t *testing.T) {
+func TestParseDecimal(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		d    decimal
-		u    book.UnitType
-		want int64
+		desc string
+		s    string
+		want decimal
 	}{
-		{decimal{5, 1000}, book.UnitType{Symbol: "Foo", Scale: 1000}, 5},
-		{decimal{5, 10}, book.UnitType{Symbol: "Foo", Scale: 1000}, 500},
+		{"no dot", "123", decimal{123, 1}},
+		{"dot at end", "123.", decimal{123, 1}},
+		{"dot", "123.45", decimal{12345, 100}},
+		{"negative", "-123.45", decimal{-12345, 100}},
 	}
 	for _, c := range cases {
 		c := c
-		t.Run(fmt.Sprintf("%v %v", c.d, c.u), func(t *testing.T) {
+		t.Run(c.desc, func(t *testing.T) {
 			t.Parallel()
-			got, err := convertAmount(c.d, c.u)
+			got, err := parseDecimal(c.s)
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
-			want := book.Amount{
-				Number:   c.want,
-				UnitType: c.u,
-			}
-			if diff := cmp.Diff(want, got); diff != "" {
-				t.Errorf("amount mismatch (-want +got):\n%s", diff)
+			if got != c.want {
+				t.Errorf("parseDecimal(%#v) = %#v, want %#v", c.s, got, c.want)
 			}
 		})
 	}

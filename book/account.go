@@ -15,10 +15,9 @@
 package book
 
 import (
+	"fmt"
 	"sort"
 	"strings"
-
-	"golang.org/x/xerrors"
 )
 
 // Account is a bookkeeping account.
@@ -66,14 +65,14 @@ func WalkAccountTree(as []Account, f func(AccountNode) error) error {
 				Virtual: true,
 			}
 			if err := f(n); err != nil {
-				return xerrors.Errorf("map account tree: %w", err)
+				return fmt.Errorf("map account tree: %w", err)
 			}
 		}
 		n := AccountNode{
 			Account: a,
 		}
 		if err := f(n); err != nil {
-			return xerrors.Errorf("map account tree: %w", err)
+			return fmt.Errorf("map account tree: %w", err)
 		}
 		last = parts
 	}
