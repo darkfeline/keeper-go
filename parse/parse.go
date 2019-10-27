@@ -84,12 +84,12 @@ func (p *processor) processEntry(e interface{}) {
 		if err := p.processUnit(e); err != nil {
 			p.errs = append(p.errs, err)
 		}
-	case raw.TransactionEntry:
-		if err := p.processTransaction(e); err != nil {
-			p.errs = append(p.errs, err)
-		}
 	case raw.BalanceEntry:
 		if err := p.processBalance(e); err != nil {
+			p.errs = append(p.errs, err)
+		}
+	case raw.TransactionEntry:
+		if err := p.processTransaction(e); err != nil {
 			p.errs = append(p.errs, err)
 		}
 	default:
@@ -112,11 +112,11 @@ func (p *processor) processUnit(u raw.UnitEntry) error {
 	return nil
 }
 
-func (p *processor) processTransaction(u raw.TransactionEntry) error {
+func (p *processor) processBalance(u raw.BalanceEntry) error {
 	panic("Not implemented")
 }
 
-func (p *processor) processBalance(u raw.BalanceEntry) error {
+func (p *processor) processTransaction(u raw.TransactionEntry) error {
 	panic("Not implemented")
 }
 
