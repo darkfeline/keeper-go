@@ -15,6 +15,8 @@
 package raw
 
 import (
+	"fmt"
+
 	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/book"
 )
@@ -28,6 +30,10 @@ type BalanceEntry struct {
 type Amount struct {
 	Number Decimal
 	Unit   string
+}
+
+func (a Amount) String() string {
+	return fmt.Sprintf("%v %s", a.Number, a.Unit)
 }
 
 type UnitEntry struct {

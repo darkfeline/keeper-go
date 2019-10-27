@@ -50,14 +50,14 @@ func Parse(r io.Reader) ([]book.Transaction, error) {
 }
 
 type processor struct {
-	units        map[string]book.UnitType
+	units        map[string]*book.UnitType
 	balances     map[book.Account]acctBalance
 	transactions []book.Transaction
 }
 
 func newProcessor() *processor {
 	return &processor{
-		units: make(map[string]book.UnitType),
+		units: make(map[string]*book.UnitType),
 	}
 }
 
@@ -82,7 +82,7 @@ func (p *processor) processUnit(u raw.UnitEntry) error {
 	if err != nil {
 		return fmt.Errorf("process unit: %v", err)
 	}
-	p.units[u.Symbol] = book.UnitType{
+	p.units[u.Symbol] = &book.UnitType{
 		Symbol: u.Symbol,
 		Scale:  scale,
 	}
@@ -95,6 +95,14 @@ func (p *processor) processBalance(u raw.BalanceEntry) error {
 
 func (p *processor) processTransaction(u raw.TransactionEntry) error {
 	panic("Not implemented")
+}
+
+func (p *processor) convertAmount(a raw.Amount) (book.Amount, error) {
+	u, ok := p.units[a.Unit]
+	if !ok {
+		return book.Amount{}, fmt.Errorf("convert amount %v: unknown unit", a)
+	}
+	return convertAmount(a.Number, u)
 }
 
 func sortEntries(e []interface{}) {
@@ -138,7 +146,7 @@ func decimalToInt64(d raw.Decimal) (int64, error) {
 	return d.Integer(), nil
 }
 
-func convertAmount(d raw.Decimal, u book.UnitType) (book.Amount, error) {
+func convertAmount(d raw.Decimal, u *book.UnitType) (book.Amount, error) {
 	if d.Scale > u.Scale {
 		return book.Amount{}, fmt.Errorf("amount %v for unit %v divisions too small", d, u)
 	}

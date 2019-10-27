@@ -37,3 +37,17 @@ func (e processError) Error() string {
 		len(e.errs),
 		strings.Join(s, "\n  -"))
 }
+
+// fatalError is returned for fatal errors that stop processing, such
+// as errors that would cause many cascading errors.
+type fatalError struct {
+	err error
+}
+
+func (e fatalError) Error() string {
+	return e.err.Error()
+}
+
+func (e fatalError) Unwrap() error {
+	return e.err
+}

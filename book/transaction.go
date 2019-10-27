@@ -33,7 +33,7 @@ type Split struct {
 
 type Amount struct {
 	Number   int64
-	UnitType UnitType
+	UnitType *UnitType
 }
 
 func (a Amount) String() string {

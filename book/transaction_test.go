@@ -19,7 +19,7 @@ import "testing"
 func newAmount(n int64, symbol string, scale int64) Amount {
 	return Amount{
 		Number: n,
-		UnitType: UnitType{
+		UnitType: &UnitType{
 			Symbol: symbol,
 			Scale:  scale,
 		},
