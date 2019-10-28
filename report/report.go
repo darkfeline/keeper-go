@@ -40,6 +40,37 @@ func SortAccounts(as []book.Account) {
 	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
 }
 
+func AccountTx(ts []book.Transaction, a book.Account) []book.Transaction {
+	var new []book.Transaction
+	for _, t := range ts {
+	searchSplits:
+		for _, s := range t.Splits {
+			if s.Account != a {
+				continue
+			}
+			new = append(new, t)
+			break searchSplits
+		}
+	}
+	return new
+}
+
+func AccountSplits(ts []book.Transaction, a book.Account) []book.Transaction {
+	var new []book.Transaction
+	for _, t := range ts {
+	searchSplits:
+		for _, s := range t.Splits {
+			if s.Account != a {
+				continue
+			}
+			t.Splits = []book.Split{s}
+			new = append(new, t)
+			break searchSplits
+		}
+	}
+	return new
+}
+
 func TxStarting(ts []book.Transaction, d civil.Date) []book.Transaction {
 	i := sort.Search(len(ts), func(i int) bool {
 		return !ts[i].Date.Before(d)
