@@ -17,11 +17,66 @@ package cmd
 import (
 	"bufio"
 	"io"
+	"os"
 	"sort"
 	"strings"
+	"text/tabwriter"
 
+	"github.com/spf13/cobra"
 	"go.felesatra.moe/keeper/book"
+	"go.felesatra.moe/keeper/parse"
 )
+
+func init() {
+	rootCmd.AddCommand(balanceCmd)
+	rootCmd.AddCommand(incomeCmd)
+}
+
+var balanceCmd = &cobra.Command{
+	Use:   "balance",
+	Short: "Print balance sheet",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		f, err := os.Open(args[0])
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		ts, err := parse.Parse(f)
+		if err != nil {
+			return err
+		}
+		m := tallyBalances(ts)
+		tw := tabwriter.NewWriter(os.Stdout, 0, 4, 1, ' ', 0)
+		writeAccountTree(tw, m, "Assets")
+		writeAccountTree(tw, m, "Liabilities")
+		tw.Flush()
+		return nil
+	},
+}
+
+var incomeCmd = &cobra.Command{
+	Use:   "income",
+	Short: "Print income statement",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		f, err := os.Open(args[0])
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		ts, err := parse.Parse(f)
+		if err != nil {
+			return err
+		}
+		m := tallyBalances(ts)
+		tw := tabwriter.NewWriter(os.Stdout, 0, 4, 1, ' ', 0)
+		writeAccountTree(tw, m, "Income")
+		writeAccountTree(tw, m, "Expenses")
+		tw.Flush()
+		return nil
+	},
+}
 
 func tallyBalances(ts []book.Transaction) map[book.Account]book.Balance {
 	m := make(map[book.Account]book.Balance)
