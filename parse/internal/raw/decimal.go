@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+
+	"go.felesatra.moe/keeper/internal/decfmt"
 )
 
 // Decimal is a floating point number implemented using a scale
@@ -68,12 +70,5 @@ func parseDecimal(s string) (Decimal, error) {
 }
 
 func (d Decimal) String() string {
-	if d.Scale <= 1 {
-		return fmt.Sprintf("%d", d.Number)
-	}
-	f := d.Number % d.Scale
-	if f < 0 {
-		f = -f
-	}
-	return fmt.Sprintf("%d.%d", d.Number/d.Scale, f)
+	return decfmt.Format(d.Number, d.Scale)
 }

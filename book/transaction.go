@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/civil"
+	"go.felesatra.moe/keeper/internal/decfmt"
 )
 
 // Transaction describes a bookkeeping transaction.
@@ -50,14 +51,7 @@ func (a Amount) Neg() Amount {
 
 func (a Amount) String() string {
 	u := a.UnitType
-	if u.Scale <= 1 {
-		return fmt.Sprintf("%d %s", a.Number, u.Symbol)
-	}
-	f := a.Number % a.UnitType.Scale
-	if f < 0 {
-		f = -f
-	}
-	return fmt.Sprintf("%d.%d %s", a.Number/u.Scale, f, u.Symbol)
+	return fmt.Sprintf("%s %s", decfmt.Format(a.Number, u.Scale), u.Symbol)
 }
 
 // UnitType describes a unit, e.g., currency or commodity.

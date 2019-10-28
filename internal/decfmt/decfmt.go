@@ -12,36 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package decfmt
 
-import (
-	"os"
+import "fmt"
 
-	"github.com/spf13/cobra"
-	"go.felesatra.moe/keeper/parse"
-)
-
-func init() {
-	rootCmd.AddCommand(balanceCmd)
+func Format(n int64, scale int64) string {
+	if scale <= 1 {
+		return fmt.Sprintf("%d", n)
+	}
+	return fmt.Sprintf("%d."+digitsFormat(scale), n/scale, abs(n%scale))
 }
 
-var balanceCmd = &cobra.Command{
-	Use:   "balance",
-	Short: "Print balance sheet",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		f, err := os.Open(args[0])
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		ts, err := parse.Parse(f)
-		if err != nil {
-			return err
-		}
-		m := tallyBalances(ts)
-		writeAccountTree(os.Stdout, m, "Assets")
-		writeAccountTree(os.Stdout, m, "Liabilities")
-		return nil
-	},
+func digitsFormat(scale int64) string {
+	n := 0
+	for ; scale > 1; scale /= 10 {
+		n++
+	}
+	return fmt.Sprintf("%%0%dd", n)
+}
+
+func abs(x int64) int64 {
+	y := x >> 63
+	return (x ^ y) - y
 }

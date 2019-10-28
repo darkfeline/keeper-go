@@ -16,41 +16,7 @@ package book
 
 import (
 	"fmt"
-	"testing"
 )
-
-func newAmount(n int64, symbol string, scale int64) Amount {
-	return Amount{
-		Number: n,
-		UnitType: &UnitType{
-			Symbol: symbol,
-			Scale:  scale,
-		},
-	}
-}
-
-func TestAmount_String(t *testing.T) {
-	t.Parallel()
-	cases := []struct {
-		desc string
-		a    Amount
-		want string
-	}{
-		{"unit", newAmount(1234, "JPY", 1), "1234 JPY"},
-		{"fractions", newAmount(12345, "USD", 100), "123.45 USD"},
-		{"negative fractions", newAmount(-12345, "USD", 100), "-123.45 USD"},
-	}
-	for _, c := range cases {
-		c := c
-		t.Run(c.desc, func(t *testing.T) {
-			t.Parallel()
-			got := c.a.String()
-			if got != c.want {
-				t.Errorf("Got %#v, want %#v", got, c.want)
-			}
-		})
-	}
-}
 
 func ExampleWalkAccountTree() {
 	f := func(n AccountNode) error {

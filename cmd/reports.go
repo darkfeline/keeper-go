@@ -15,8 +15,10 @@
 package cmd
 
 import (
+	"bufio"
 	"io"
 	"sort"
+	"strings"
 
 	"go.felesatra.moe/keeper/book"
 )
@@ -32,40 +34,54 @@ func tallyBalances(ts []book.Transaction) map[book.Account]book.Balance {
 	return m
 }
 
-func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Account) {
+func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
+	bw := bufio.NewWriter(w)
 	var as []book.Account
-	for _, a := range m {
+	for a := range m {
 		if a.Under(root) {
 			as = append(as, a)
 		}
 	}
 	sortAccounts(as)
 
-	bw.WriteString(string(parent))
-	bw.WriteString("\t\t\n")
-	var total []keeper.Quantity
-	pflen := len(parent.Parts())
-	_ = keeper.WalkAccountTree(as, func(n keeper.AccountNode) error {
+	bw.WriteString(string(root))
+	bw.WriteByte('\n')
+	var total book.Balance
+	rlen := len(root.Parts())
+	_ = book.WalkAccountTree(as, func(n book.AccountNode) error {
 		a := n.Account
-		for _ = range a.Parts()[pflen:] {
-			bw.WriteString("    ")
+		if !a.Under(root) && a != root {
+			return nil
 		}
+		prefix := indent(len(a.Parts()) - rlen)
+		bw.WriteString(prefix)
 		bw.WriteString(a.Leaf())
-		bw.WriteString("\t\t\n")
-		for _, q := range b[a] {
-			bw.WriteByte('\t')
-			bw.WriteString(q.String())
-			bw.WriteString("\t\n")
-			total = keeper.AddQuantity(total, q)
+		b := m[a]
+		if len(b) == 0 {
+			bw.WriteByte('\n')
+			return nil
+		}
+		bw.WriteByte('\t')
+		bw.WriteString(b.String())
+		bw.WriteByte('\n')
+		for _, a := range b {
+			total = total.Add(a)
 		}
 		return nil
 	})
-	bw.WriteString("\nTotal")
-	for _, q := range total {
-		bw.WriteByte('\t')
-		bw.WriteString(q.String())
-		bw.WriteString("\t\n")
+	bw.WriteString("Total")
+	bw.WriteByte('\t')
+	bw.WriteString(total.String())
+	bw.WriteByte('\n')
+	return bw.Flush()
+}
+
+func indent(n int) string {
+	var b strings.Builder
+	for i := 0; i < n; i++ {
+		b.WriteByte('\t')
 	}
+	return b.String()
 }
 
 func sortAccounts(as []book.Account) {

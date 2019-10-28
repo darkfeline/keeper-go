@@ -42,26 +42,3 @@ func TestParseDecimal(t *testing.T) {
 		})
 	}
 }
-
-func TestDeciaml_String(t *testing.T) {
-	t.Parallel()
-	cases := []struct {
-		desc string
-		d    Decimal
-		want string
-	}{
-		{"unit", Decimal{1234, 1}, "1234"},
-		{"fractions", Decimal{12345, 100}, "123.45"},
-		{"negative fractions", Decimal{-12345, 100}, "-123.45"},
-	}
-	for _, c := range cases {
-		c := c
-		t.Run(c.desc, func(t *testing.T) {
-			t.Parallel()
-			got := c.d.String()
-			if got != c.want {
-				t.Errorf("Got %#v, want %#v", got, c.want)
-			}
-		})
-	}
-}
