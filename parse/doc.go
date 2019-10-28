@@ -78,7 +78,7 @@
 //   Other:account2
 //   .
 //
-// Balance entries checks the balance for an account:
+// Balance entries check the balance for an account:
 //
 //   balance 2001-02-03 Some:account 100 USD
 //
