@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"os"
+	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 	"go.felesatra.moe/keeper/parse"
@@ -40,8 +41,10 @@ var balanceCmd = &cobra.Command{
 			return err
 		}
 		m := tallyBalances(ts)
-		writeAccountTree(os.Stdout, m, "Assets")
-		writeAccountTree(os.Stdout, m, "Liabilities")
+		tw := tabwriter.NewWriter(os.Stdout, 0, 4, 1, ' ', 0)
+		writeAccountTree(tw, m, "Assets")
+		writeAccountTree(tw, m, "Liabilities")
+		tw.Flush()
 		return nil
 	},
 }

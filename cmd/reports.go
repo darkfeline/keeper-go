@@ -44,8 +44,6 @@ func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 	}
 	sortAccounts(as)
 
-	bw.WriteString(string(root))
-	bw.WriteByte('\n')
 	var total book.Balance
 	rlen := len(root.Parts())
 	_ = book.WalkAccountTree(as, func(n book.AccountNode) error {
@@ -58,11 +56,14 @@ func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 		bw.WriteString(a.Leaf())
 		b := m[a]
 		if len(b) == 0 {
+			bw.WriteByte('\t')
+			bw.WriteByte('\t')
 			bw.WriteByte('\n')
 			return nil
 		}
 		bw.WriteByte('\t')
 		bw.WriteString(b.String())
+		bw.WriteByte('\t')
 		bw.WriteByte('\n')
 		for _, a := range b {
 			total = total.Add(a)
@@ -72,6 +73,7 @@ func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 	bw.WriteString("Total")
 	bw.WriteByte('\t')
 	bw.WriteString(total.String())
+	bw.WriteByte('\t')
 	bw.WriteByte('\n')
 	return bw.Flush()
 }
@@ -79,7 +81,7 @@ func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 func indent(n int) string {
 	var b strings.Builder
 	for i := 0; i < n; i++ {
-		b.WriteByte('\t')
+		b.WriteString("  ")
 	}
 	return b.String()
 }
