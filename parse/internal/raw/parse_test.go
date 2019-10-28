@@ -115,3 +115,59 @@ Expenses:Stuff
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
+
+func TestParse_empty_lines_ignored(t *testing.T) {
+	t.Parallel()
+	const input = `
+bal 2001-02-05 Some:account
+123.45 USD
+# some comment
+56700 JPY
+.
+# some comment
+unit USD 100
+tx 2001-02-03 "Buy stuff"
+Some:account 1.2 USD
+# some comment
+Expenses:Stuff -1.2 USD
+.
+`
+	got, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []EntryCommon{
+		BalanceEntry{
+			Common:  Common{Line: 2},
+			Date:    civil.Date{2001, 2, 5},
+			Account: "Some:account",
+			Amounts: []Amount{
+				{Number: Decimal{12345, 100}, Unit: "USD"},
+				{Number: Decimal{56700, 1}, Unit: "JPY"},
+			},
+		},
+		UnitEntry{
+			Common: Common{Line: 8},
+			Symbol: "USD",
+			Scale:  Decimal{100, 1},
+		},
+		TransactionEntry{
+			Common:      Common{Line: 9},
+			Date:        civil.Date{2001, 2, 3},
+			Description: "Buy stuff",
+			Splits: []Split{
+				{
+					Account: "Some:account",
+					Amount:  Amount{Number: Decimal{12, 10}, Unit: "USD"},
+				},
+				{
+					Account: "Expenses:Stuff",
+					Amount:  Amount{Number: Decimal{-12, 10}, Unit: "USD"},
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
