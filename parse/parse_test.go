@@ -28,11 +28,11 @@ import (
 func TestParse(t *testing.T) {
 	t.Parallel()
 	const input = `bal 2001-02-03 Some:account -1.20 USD
-unit USD 100
 tx 2001-02-03 "Buy stuff"
 Some:account -1.2 USD
 Expenses:Stuff
 .
+unit USD 100
 `
 	got, err := Parse(strings.NewReader(input))
 	if err != nil {
@@ -57,6 +57,35 @@ Expenses:Stuff
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("transactions mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestParse_unbalanced_transaction(t *testing.T) {
+	t.Parallel()
+	const input = `unit USD 100
+tx 2001-02-03 "Buy stuff"
+Some:account -1.2 USD
+Expenses:Stuff 1.3 USD
+.
+`
+	_, err := Parse(strings.NewReader(input))
+	if err == nil {
+		t.Errorf("Expected error")
+	}
+}
+
+func TestParse_failed_balance_check(t *testing.T) {
+	t.Parallel()
+	const input = `unit USD 100
+tx 2001-02-03 "Buy stuff"
+Some:account -1.2 USD
+Expenses:Stuff
+.
+bal 2001-02-03 Some:account -1 USD
+`
+	_, err := Parse(strings.NewReader(input))
+	if err == nil {
+		t.Errorf("Expected error")
 	}
 }
 
