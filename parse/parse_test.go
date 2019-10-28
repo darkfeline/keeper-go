@@ -105,6 +105,7 @@ func TestConvertAmount(t *testing.T) {
 	}{
 		{raw.Decimal{5, 1000}, book.UnitType{Symbol: "Foo", Scale: 1000}, 5},
 		{raw.Decimal{5, 10}, book.UnitType{Symbol: "Foo", Scale: 1000}, 500},
+		{raw.Decimal{50, 10}, book.UnitType{Symbol: "Foo", Scale: 1}, 5},
 	}
 	for _, c := range cases {
 		c := c

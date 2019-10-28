@@ -253,10 +253,15 @@ func decimalToInt64(d raw.Decimal) (int64, error) {
 	return d.Number / d.Scale, nil
 }
 
-// TODO: fix decimal scale bigger but zeros
 func convertAmount(d raw.Decimal, u *book.UnitType) (book.Amount, error) {
 	if d.Scale > u.Scale {
-		return book.Amount{}, fmt.Errorf("amount %v for unit %v divisions too small", d, u)
+		rescale := d.Scale / u.Scale
+		if d.Number%rescale != 0 {
+			return book.Amount{}, fmt.Errorf("convert amount: fractions for %v too small for unit %v", d, u)
+		}
+		d.Number /= rescale
+		d.Scale /= rescale
+
 	}
 	return book.Amount{
 		Number:   d.Number * u.Scale / d.Scale,
