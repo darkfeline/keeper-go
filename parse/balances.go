@@ -24,6 +24,9 @@ import (
 type acctBalance []book.Amount
 
 func (b *acctBalance) Add(a book.Amount) {
+	if a.Number == 0 {
+		return
+	}
 	for i := range *b {
 		if (*b)[i].UnitType == a.UnitType {
 			(*b)[i].Number += a.Number
@@ -34,17 +37,43 @@ func (b *acctBalance) Add(a book.Amount) {
 }
 
 func (b acctBalance) Equal(b2 acctBalance) bool {
-	b.Sort()
-	b2.Sort()
-	for i, a := range b {
-		if a != b2[i] {
+	n := b.Copy()
+	n2 := b2.Copy()
+	n.Canonicalize()
+	n2.Canonicalize()
+	if len(n) != len(n2) {
+		return false
+	}
+	for i, a := range n {
+		if a != n2[i] {
 			return false
 		}
 	}
 	return true
 }
 
-func (b acctBalance) Sort() {
+func (b acctBalance) Copy() acctBalance {
+	new := make(acctBalance, len(b))
+	copy(new, b)
+	return new
+}
+
+func (b *acctBalance) Canonicalize() {
+	b.removeEmpty()
+	b.sort()
+}
+
+func (b *acctBalance) removeEmpty() {
+	new := make(acctBalance, 0, len(*b))
+	for _, a := range *b {
+		if a.Number != 0 {
+			new = append(new, a)
+		}
+	}
+	*b = new
+}
+
+func (b acctBalance) sort() {
 	sort.Slice(b, func(i, j int) bool { return b[i].UnitType.Symbol < b[j].UnitType.Symbol })
 }
 

@@ -108,7 +108,42 @@ func (p *processor) processBalance(b raw.BalanceEntry) error {
 }
 
 func (p *processor) processTransaction(t raw.TransactionEntry) error {
+	t2 := book.Transaction{
+		Date:        t.Date,
+		Description: t.Description,
+		Splits:      make([]book.Split, len(t.Splits)),
+	}
+	var b acctBalance
+	// emptySplit := -1
+	for i, s := range t.Splits {
+		s2, err := p.convertSplit(s)
+		if err != nil {
+			return processErr(t, err)
+		}
+		t2.Splits[i] = s2
+		if s2.Amount == (book.Amount{}) {
+			// if emptySplit
+		} else {
+			b.Add(s2.Amount)
+		}
+	}
 	panic("Not implemented")
+	return nil
+}
+
+func (p *processor) convertSplit(s raw.Split) (book.Split, error) {
+	var a book.Amount
+	if s.Amount != (raw.Amount{}) {
+		var err error
+		a, err = p.convertAmount(s.Amount)
+		if err != nil {
+			return book.Split{}, fmt.Errorf("convert split %v: %v", s.Account, err)
+		}
+	}
+	return book.Split{
+		Account: s.Account,
+		Amount:  a,
+	}, nil
 }
 
 func (p *processor) convertBalances(a []raw.Amount) (acctBalance, error) {

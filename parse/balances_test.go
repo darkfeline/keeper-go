@@ -65,13 +65,16 @@ func TestAcctBalance_Equal_different_length(t *testing.T) {
 	u := &book.UnitType{Symbol: "USD", Scale: 100}
 	u2 := &book.UnitType{Symbol: "JPY", Scale: 1}
 	a := acctBalance{
-		{Number: 123, UnitType: u},
+		{Number: 3200, UnitType: u2},
 	}
 	b := acctBalance{
 		{Number: 123, UnitType: u},
 		{Number: 3200, UnitType: u2},
 	}
 	if a.Equal(b) {
+		t.Errorf("a.Equal(b) returned true")
+	}
+	if b.Equal(a) {
 		t.Errorf("a.Equal(b) returned true")
 	}
 }
@@ -90,5 +93,22 @@ func TestAcctBalance_Equal_different_amount(t *testing.T) {
 	}
 	if a.Equal(b) {
 		t.Errorf("a.Equal(b) returned true")
+	}
+}
+
+func TestAcctBalance_Add_zeroed_accounts(t *testing.T) {
+	t.Parallel()
+	u := &book.UnitType{Symbol: "USD", Scale: 100}
+	u2 := &book.UnitType{Symbol: "JPY", Scale: 1}
+	b := acctBalance{
+		{Number: 3200, UnitType: u2},
+		{Number: 123, UnitType: u},
+	}
+	b.Add(book.Amount{Number: -123, UnitType: u})
+	want := acctBalance{
+		{Number: 3200, UnitType: u2},
+	}
+	if diff := cmp.Diff(want, b); diff != "" {
+		t.Errorf("balance mismatch (-want +got):\n%s", diff)
 	}
 }
