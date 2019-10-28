@@ -24,7 +24,7 @@ func TestBalance_Add_empty_balance(t *testing.T) {
 	t.Parallel()
 	u := &UnitType{Symbol: "USD", Scale: 100}
 	var b Balance
-	b.Add(Amount{Number: 12345, UnitType: u})
+	b = b.Add(Amount{Number: 12345, UnitType: u})
 	want := Balance{{Number: 12345, UnitType: u}}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
@@ -35,7 +35,7 @@ func TestBalance_Add_existing_balance(t *testing.T) {
 	t.Parallel()
 	u := &UnitType{Symbol: "USD", Scale: 100}
 	b := Balance{{Number: 10000, UnitType: u}}
-	b.Add(Amount{Number: 12345, UnitType: u})
+	b = b.Add(Amount{Number: 12345, UnitType: u})
 	want := Balance{{Number: 22345, UnitType: u}}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
@@ -50,7 +50,7 @@ func TestBalance_Add_zeroed_accounts(t *testing.T) {
 		{Number: 3200, UnitType: u2},
 		{Number: 123, UnitType: u},
 	}
-	b.Add(Amount{Number: -123, UnitType: u})
+	b = b.Add(Amount{Number: -123, UnitType: u})
 	want := Balance{
 		{Number: 3200, UnitType: u2},
 	}

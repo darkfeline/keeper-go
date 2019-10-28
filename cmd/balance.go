@@ -15,7 +15,10 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
+	"go.felesatra.moe/keeper/parse"
 )
 
 func init() {
@@ -25,6 +28,18 @@ func init() {
 var balanceCmd = &cobra.Command{
 	Use:   "balance",
 	Short: "Print balance sheet",
-	Run: func(cmd *cobra.Command, args []string) {
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		f, err := os.Open(args[0])
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		ts, err := parse.Parse(f)
+		if err != nil {
+			return err
+		}
+		_ = ts
+		return nil
 	},
 }

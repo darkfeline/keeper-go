@@ -56,14 +56,14 @@ process:
 
 type processor struct {
 	units        map[string]*book.UnitType
-	balances     map[book.Account]*book.Balance
+	balances     map[book.Account]book.Balance
 	transactions []book.Transaction
 }
 
 func newProcessor() *processor {
 	return &processor{
 		units:    make(map[string]*book.UnitType),
-		balances: make(map[book.Account]*book.Balance),
+		balances: make(map[book.Account]book.Balance),
 	}
 }
 
@@ -143,12 +143,8 @@ func (p *processor) processTransaction(t raw.TransactionEntry) error {
 }
 
 func (p *processor) addToBalance(s book.Split) {
-	b, ok := p.balances[s.Account]
-	if !ok {
-		b = new(book.Balance)
-		p.balances[s.Account] = b
-	}
-	b.Add(s.Amount)
+	b := p.balances[s.Account]
+	p.balances[s.Account] = b.Add(s.Amount)
 }
 
 func (p *processor) convertSplits(s []raw.Split) ([]book.Split, error) {
@@ -204,7 +200,7 @@ func splitsBalance(s []book.Split) (b book.Balance, empty []*book.Split) {
 			empty = append(empty, &s[i])
 			continue
 		}
-		b.Add(s[i].Amount)
+		b = b.Add(s[i].Amount)
 	}
 	return b, empty
 }

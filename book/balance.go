@@ -26,17 +26,18 @@ import (
 type Balance []Amount
 
 // Add adds an amount to the balance.
-func (b *Balance) Add(a Amount) {
+func (b Balance) Add(a Amount) Balance {
 	if a.Number == 0 {
-		return
+		return b
 	}
-	for i := range *b {
-		if (*b)[i].UnitType == a.UnitType {
-			(*b)[i].Number += a.Number
-			return
+	for i := range b {
+		if b[i].UnitType == a.UnitType {
+			b[i].Number += a.Number
+			return b
 		}
 	}
-	*b = append(*b, a)
+	b = append(b, a)
+	return b
 }
 
 // Equal returns true if the two balances are equal.

@@ -14,33 +14,8 @@
 
 package cmd
 
-import (
-	"fmt"
-	"log"
-	"os"
+import "go.felesatra.moe/keeper/book"
 
-	"github.com/spf13/cobra"
-)
-
-var rootCmd = &cobra.Command{
-	Use:   "keeper",
-	Short: "keeper is plain text accounting software",
-	Run: func(cmd *cobra.Command, args []string) {
-	},
-}
-
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
-
-func wrap(f func(*cobra.Command, []string) error) func(*cobra.Command, []string) {
-	return func(cmd *cobra.Command, args []string) {
-		if err := f(cmd, args); err != nil {
-			log.Println(err)
-			os.Exit(1)
-		}
-	}
+func tallyBalances(ts []book.Transaction) map[book.Account]book.Balance {
+	panic("Not implemented")
 }
