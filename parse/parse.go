@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package parse implements parsing of keeper entries.
 package parse
 
 import (
