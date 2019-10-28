@@ -14,8 +14,60 @@
 
 package cmd
 
-import "go.felesatra.moe/keeper/book"
+import (
+	"io"
+	"sort"
+
+	"go.felesatra.moe/keeper/book"
+)
 
 func tallyBalances(ts []book.Transaction) map[book.Account]book.Balance {
-	panic("Not implemented")
+	m := make(map[book.Account]book.Balance)
+	for _, t := range ts {
+		for _, s := range t.Splits {
+			b := m[s.Account]
+			m[s.Account] = b.Add(s.Amount)
+		}
+	}
+	return m
+}
+
+func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Account) {
+	var as []book.Account
+	for _, a := range m {
+		if a.Under(root) {
+			as = append(as, a)
+		}
+	}
+	sortAccounts(as)
+
+	bw.WriteString(string(parent))
+	bw.WriteString("\t\t\n")
+	var total []keeper.Quantity
+	pflen := len(parent.Parts())
+	_ = keeper.WalkAccountTree(as, func(n keeper.AccountNode) error {
+		a := n.Account
+		for _ = range a.Parts()[pflen:] {
+			bw.WriteString("    ")
+		}
+		bw.WriteString(a.Leaf())
+		bw.WriteString("\t\t\n")
+		for _, q := range b[a] {
+			bw.WriteByte('\t')
+			bw.WriteString(q.String())
+			bw.WriteString("\t\n")
+			total = keeper.AddQuantity(total, q)
+		}
+		return nil
+	})
+	bw.WriteString("\nTotal")
+	for _, q := range total {
+		bw.WriteByte('\t')
+		bw.WriteString(q.String())
+		bw.WriteString("\t\n")
+	}
+}
+
+func sortAccounts(as []book.Account) {
+	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
 }
