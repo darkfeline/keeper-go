@@ -35,6 +35,7 @@ func TestAmount_String(t *testing.T) {
 	}{
 		{"unit", newAmount(1234, "JPY", 1), "1234 JPY"},
 		{"fractions", newAmount(12345, "USD", 100), "123.45 USD"},
+		{"negative fractions", newAmount(-12345, "USD", 100), "-123.45 USD"},
 	}
 	for _, c := range cases {
 		c := c

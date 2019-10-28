@@ -28,7 +28,7 @@ func processErr(e raw.EntryCommon, v interface{}) error {
 func processErrf(e raw.EntryCommon, format string, v ...interface{}) error {
 	c := e.EntryCommon()
 	msg := fmt.Sprintf(format, v...)
-	return fmt.Errorf("process entry %v (line %d): %v", e.Summary(), c.Line, msg)
+	return fmt.Errorf("entry %v (line %d): %v", e.Summary(), c.Line, msg)
 }
 
 // processError is returned for errors processing parsed entries.

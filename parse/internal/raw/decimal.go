@@ -67,19 +67,13 @@ func parseDecimal(s string) (Decimal, error) {
 	}, nil
 }
 
-// Integer returns the integer part of the decimal.
-func (d Decimal) Integer() int64 {
-	return d.Number / d.Scale
-}
-
-// Integer returns the fraction part of the decimal.
-func (d Decimal) Fraction() int64 {
-	return d.Number % d.Scale
-}
-
 func (d Decimal) String() string {
 	if d.Scale <= 1 {
 		return fmt.Sprintf("%d", d.Number)
 	}
-	return fmt.Sprintf("%d.%d", d.Integer(), d.Fraction())
+	f := d.Number % d.Scale
+	if f < 0 {
+		f = -f
+	}
+	return fmt.Sprintf("%d.%d", d.Number/d.Scale, f)
 }

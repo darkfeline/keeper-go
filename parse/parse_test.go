@@ -16,6 +16,7 @@ package parse
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"cloud.google.com/go/civil"
@@ -23,6 +24,41 @@ import (
 	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/parse/internal/raw"
 )
+
+func TestParse(t *testing.T) {
+	t.Parallel()
+	const input = `bal 2001-02-03 Some:account -1.20 USD
+unit USD 100
+tx 2001-02-03 "Buy stuff"
+Some:account -1.2 USD
+Expenses:Stuff
+.
+`
+	got, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatal(err)
+	}
+	u := &book.UnitType{Symbol: "USD", Scale: 100}
+	want := []book.Transaction{
+		{
+			Date:        civil.Date{2001, 2, 3},
+			Description: "Buy stuff",
+			Splits: []book.Split{
+				{
+					Account: "Some:account",
+					Amount:  book.Amount{Number: -120, UnitType: u},
+				},
+				{
+					Account: "Expenses:Stuff",
+					Amount:  book.Amount{Number: 120, UnitType: u},
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("transactions mismatch (-want +got):\n%s", diff)
+	}
+}
 
 func TestSortEntries(t *testing.T) {
 	t.Parallel()

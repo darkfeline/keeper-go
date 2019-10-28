@@ -57,13 +57,14 @@ process:
 
 type processor struct {
 	units        map[string]*book.UnitType
-	balances     map[book.Account]acctBalance
+	balances     map[book.Account]*acctBalance
 	transactions []book.Transaction
 }
 
 func newProcessor() *processor {
 	return &processor{
-		units: make(map[string]*book.UnitType),
+		units:    make(map[string]*book.UnitType),
+		balances: make(map[book.Account]*acctBalance),
 	}
 }
 
@@ -129,6 +130,7 @@ func (p *processor) processTransaction(t raw.TransactionEntry) error {
 			emptySplit = i
 		} else {
 			b.Add(s2.Amount)
+			p.addToBalance(s2)
 		}
 	}
 	b = b.CleanCopy()
@@ -136,12 +138,26 @@ func (p *processor) processTransaction(t raw.TransactionEntry) error {
 		if len(b) != 1 {
 			return processErrf(t, "unsuitable balance for empty split %v", b)
 		}
-		t2.Splits[emptySplit].Amount = b[0]
+		a := b[0]
+		a.Number = -a.Number
+		t2.Splits[emptySplit].Amount = a
+		b = nil
+		p.addToBalance(t2.Splits[emptySplit])
 	}
 	if len(b) > 0 {
 		return processErrf(t, "unbalanced amount %v", b)
 	}
+	p.transactions = append(p.transactions, t2)
 	return nil
+}
+
+func (p *processor) addToBalance(s book.Split) {
+	b, ok := p.balances[s.Account]
+	if !ok {
+		b = new(acctBalance)
+		p.balances[s.Account] = b
+	}
+	b.Add(s.Amount)
 }
 
 func (p *processor) convertSplit(s raw.Split) (book.Split, error) {
@@ -214,10 +230,10 @@ func dateKey(d civil.Date) int64 {
 }
 
 func decimalToInt64(d raw.Decimal) (int64, error) {
-	if d.Fraction() != 0 {
+	if d.Number%d.Scale != 0 {
 		return 0, fmt.Errorf("decimal to int64 %v: non-integer", d)
 	}
-	return d.Integer(), nil
+	return d.Number / d.Scale, nil
 }
 
 func convertAmount(d raw.Decimal, u *book.UnitType) (book.Amount, error) {

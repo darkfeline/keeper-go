@@ -41,7 +41,11 @@ func (a Amount) String() string {
 	if u.Scale <= 1 {
 		return fmt.Sprintf("%d %s", a.Number, u.Symbol)
 	}
-	return fmt.Sprintf("%d.%d %s", a.Number/u.Scale, a.Number%u.Scale, u.Symbol)
+	f := a.Number % a.UnitType.Scale
+	if f < 0 {
+		f = -f
+	}
+	return fmt.Sprintf("%d.%d %s", a.Number/u.Scale, f, u.Symbol)
 }
 
 type UnitType struct {
