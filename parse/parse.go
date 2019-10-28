@@ -57,14 +57,14 @@ process:
 
 type processor struct {
 	units        map[string]*book.UnitType
-	balances     map[book.Account]*acctBalance
+	balances     map[book.Account]*book.Balance
 	transactions []book.Transaction
 }
 
 func newProcessor() *processor {
 	return &processor{
 		units:    make(map[string]*book.UnitType),
-		balances: make(map[book.Account]*acctBalance),
+		balances: make(map[book.Account]*book.Balance),
 	}
 }
 
@@ -127,9 +127,7 @@ func (p *processor) processTransaction(t raw.TransactionEntry) error {
 		if len(b) != 1 {
 			return processErrf(t, "unsuitable balance for empty split %v", b)
 		}
-		a := b[0]
-		a.Number = -a.Number
-		(*(empty[0])).Amount = a
+		(*(empty[0])).Amount = b[0].Neg()
 		b = nil
 	default:
 		return processErrf(t, "multiple empty splits")
@@ -148,7 +146,7 @@ func (p *processor) processTransaction(t raw.TransactionEntry) error {
 func (p *processor) addToBalance(s book.Split) {
 	b, ok := p.balances[s.Account]
 	if !ok {
-		b = new(acctBalance)
+		b = new(book.Balance)
 		p.balances[s.Account] = b
 	}
 	b.Add(s.Amount)
@@ -181,8 +179,8 @@ func (p *processor) convertSplit(s raw.Split) (book.Split, error) {
 	}, nil
 }
 
-func (p *processor) convertBalances(a []raw.Amount) (acctBalance, error) {
-	var b acctBalance
+func (p *processor) convertBalances(a []raw.Amount) (book.Balance, error) {
+	var b book.Balance
 	for _, a := range a {
 		a2, err := p.convertAmount(a)
 		if err != nil {
@@ -201,7 +199,7 @@ func (p *processor) convertAmount(a raw.Amount) (book.Amount, error) {
 	return convertAmount(a.Number, u)
 }
 
-func splitsBalance(s []book.Split) (b acctBalance, empty []*book.Split) {
+func splitsBalance(s []book.Split) (b book.Balance, empty []*book.Split) {
 	for i := range s {
 		if s[i].Amount == (book.Amount{}) {
 			empty = append(empty, &s[i])
