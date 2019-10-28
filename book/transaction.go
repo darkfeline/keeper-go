@@ -42,6 +42,12 @@ type Amount struct {
 	UnitType *UnitType
 }
 
+// Neg returns the additive inverse of the amount.
+func (a Amount) Neg() Amount {
+	a.Number = -a.Number
+	return a
+}
+
 func (a Amount) String() string {
 	u := a.UnitType
 	if u.Scale <= 1 {
