@@ -18,13 +18,13 @@ import (
 	"bufio"
 	"io"
 	"os"
-	"sort"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/parse"
+	"go.felesatra.moe/keeper/report"
 )
 
 func init() {
@@ -46,7 +46,7 @@ var balanceCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		m := tallyBalances(ts)
+		m := report.TallyBalances(ts)
 		tw := tabwriter.NewWriter(os.Stdout, 0, 4, 1, ' ', 0)
 		writeAccountTree(tw, m, "Assets")
 		writeAccountTree(tw, m, "Liabilities")
@@ -69,24 +69,13 @@ var incomeCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		m := tallyBalances(ts)
+		m := report.TallyBalances(ts)
 		tw := tabwriter.NewWriter(os.Stdout, 0, 4, 1, ' ', 0)
 		writeAccountTree(tw, m, "Income")
 		writeAccountTree(tw, m, "Expenses")
 		tw.Flush()
 		return nil
 	},
-}
-
-func tallyBalances(ts []book.Transaction) map[book.Account]book.Balance {
-	m := make(map[book.Account]book.Balance)
-	for _, t := range ts {
-		for _, s := range t.Splits {
-			b := m[s.Account]
-			m[s.Account] = b.Add(s.Amount)
-		}
-	}
-	return m
 }
 
 func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
@@ -97,7 +86,7 @@ func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 			as = append(as, a)
 		}
 	}
-	sortAccounts(as)
+	report.SortAccounts(as)
 
 	var total book.Balance
 	rlen := len(root.Parts())
@@ -139,8 +128,4 @@ func indent(n int) string {
 		b.WriteString("  ")
 	}
 	return b.String()
-}
-
-func sortAccounts(as []book.Account) {
-	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
 }
