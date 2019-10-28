@@ -112,42 +112,36 @@ func (p *processor) processTransaction(t raw.TransactionEntry) error {
 	t2 := book.Transaction{
 		Date:        t.Date,
 		Description: t.Description,
-		Splits:      make([]book.Split, len(t.Splits)),
 	}
-	var b acctBalance
-	emptySplit := -1
-	for i, s := range t.Splits {
-		s2, err := p.convertSplit(s)
-		if err != nil {
-			return processErr(t, err)
-		}
-		t2.Splits[i] = s2
+	var err error
+	t2.Splits, err = p.convertSplits(t.Splits)
+	if err != nil {
+		return processErr(t, err)
+	}
 
-		if s2.Amount == (book.Amount{}) {
-			if emptySplit >= 0 {
-				return processErrf(t, "multiple empty splits")
-			}
-			emptySplit = i
-		} else {
-			b.Add(s2.Amount)
-			p.addToBalance(s2)
-		}
-	}
-	b = b.CleanCopy()
-	if emptySplit >= 0 {
+	b, empty := splitsBalance(t2.Splits)
+	switch len(empty) {
+	case 0:
+	case 1:
+		b = b.CleanCopy()
 		if len(b) != 1 {
 			return processErrf(t, "unsuitable balance for empty split %v", b)
 		}
 		a := b[0]
 		a.Number = -a.Number
-		t2.Splits[emptySplit].Amount = a
+		(*(empty[0])).Amount = a
 		b = nil
-		p.addToBalance(t2.Splits[emptySplit])
+	default:
+		return processErrf(t, "multiple empty splits")
 	}
+
 	if len(b) > 0 {
 		return processErrf(t, "unbalanced amount %v", b)
 	}
 	p.transactions = append(p.transactions, t2)
+	for _, s := range t2.Splits {
+		p.addToBalance(s)
+	}
 	return nil
 }
 
@@ -158,6 +152,18 @@ func (p *processor) addToBalance(s book.Split) {
 		p.balances[s.Account] = b
 	}
 	b.Add(s.Amount)
+}
+
+func (p *processor) convertSplits(s []raw.Split) ([]book.Split, error) {
+	bs := make([]book.Split, len(s))
+	for i, s := range s {
+		s2, err := p.convertSplit(s)
+		if err != nil {
+			return nil, err
+		}
+		bs[i] = s2
+	}
+	return bs, nil
 }
 
 func (p *processor) convertSplit(s raw.Split) (book.Split, error) {
@@ -193,6 +199,17 @@ func (p *processor) convertAmount(a raw.Amount) (book.Amount, error) {
 		return book.Amount{}, fmt.Errorf("convert amount %v: unknown unit", a)
 	}
 	return convertAmount(a.Number, u)
+}
+
+func splitsBalance(s []book.Split) (b acctBalance, empty []*book.Split) {
+	for i := range s {
+		if s[i].Amount == (book.Amount{}) {
+			empty = append(empty, &s[i])
+			continue
+		}
+		b.Add(s[i].Amount)
+	}
+	return b, empty
 }
 
 func sortEntries(e []raw.EntryCommon) {
@@ -236,6 +253,7 @@ func decimalToInt64(d raw.Decimal) (int64, error) {
 	return d.Number / d.Scale, nil
 }
 
+// TODO: fix decimal scale bigger but zeros
 func convertAmount(d raw.Decimal, u *book.UnitType) (book.Amount, error) {
 	if d.Scale > u.Scale {
 		return book.Amount{}, fmt.Errorf("amount %v for unit %v divisions too small", d, u)
