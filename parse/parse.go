@@ -131,7 +131,7 @@ func (p *processor) processTransaction(t raw.TransactionEntry) error {
 			b.Add(s2.Amount)
 		}
 	}
-	b.RemoveEmpty()
+	b = b.CleanCopy()
 	if emptySplit >= 0 {
 		if len(b) != 1 {
 			return processErrf(t, "unsuitable balance for empty split %v", b)

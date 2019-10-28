@@ -37,10 +37,8 @@ func (b *acctBalance) Add(a book.Amount) {
 }
 
 func (b acctBalance) Equal(b2 acctBalance) bool {
-	c, c2 := b.copy(), b2.copy()
-	c.RemoveEmpty()
+	c, c2 := b.CleanCopy(), b2.CleanCopy()
 	c.sort()
-	c2.RemoveEmpty()
 	c2.sort()
 	if len(c) != len(c2) {
 		return false
@@ -53,19 +51,13 @@ func (b acctBalance) Equal(b2 acctBalance) bool {
 	return true
 }
 
-func (b *acctBalance) RemoveEmpty() {
+func (b acctBalance) CleanCopy() acctBalance {
 	var new acctBalance
-	for _, a := range *b {
+	for _, a := range b {
 		if a.Number != 0 {
 			new = append(new, a)
 		}
 	}
-	*b = new
-}
-
-func (b acctBalance) copy() acctBalance {
-	new := make(acctBalance, len(b))
-	copy(new, b)
 	return new
 }
 
