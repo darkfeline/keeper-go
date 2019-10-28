@@ -20,12 +20,16 @@ import (
 	"cloud.google.com/go/civil"
 )
 
+// Transaction describes a bookkeeping transaction.
+// The sum of all split amounts for all unit types should be zero.
 type Transaction struct {
 	Date        civil.Date
 	Description string
 	Splits      []Split
 }
 
+// Split is one split in a transaction.  This describes a change in
+// the amount of one unit type for one account.
 type Split struct {
 	Account Account
 	Amount  Amount
