@@ -14,7 +14,10 @@
 
 package book
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func newAmount(n int64, symbol string, scale int64) Amount {
 	return Amount{
@@ -47,4 +50,35 @@ func TestAmount_String(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleWalkAccountTree() {
+	f := func(n AccountNode) error {
+		fmt.Println(n)
+		return nil
+	}
+	a := []Account{
+		"Equity:InitialBalance",
+		"Assets:Cash",
+		"Liabilities:CreditCard",
+		"Income:Salary",
+		"Expenses:Food",
+		"Expenses:Hobbies:Games",
+		"Expenses:Hobbies:Music",
+	}
+	_ = WalkAccountTree(a, f)
+	// Output:
+	// {Assets true}
+	// {Assets:Cash false}
+	// {Equity true}
+	// {Equity:InitialBalance false}
+	// {Expenses true}
+	// {Expenses:Food false}
+	// {Expenses:Hobbies true}
+	// {Expenses:Hobbies:Games false}
+	// {Expenses:Hobbies:Music false}
+	// {Income true}
+	// {Income:Salary false}
+	// {Liabilities true}
+	// {Liabilities:CreditCard false}
 }

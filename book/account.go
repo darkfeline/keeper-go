@@ -48,7 +48,7 @@ func (a Account) Under(parent Account) bool {
 	return strings.HasPrefix(string(a), string(parent)+":")
 }
 
-// WalkAccountTree calls the function for every account in the tree of accounts.
+// WalkAccountTree calls the given function for every account in the tree of accounts.
 // If parent accounts are missing, they are also visited as virtual nodes.
 func WalkAccountTree(as []Account, f func(AccountNode) error) error {
 	new := make([]Account, len(as))
