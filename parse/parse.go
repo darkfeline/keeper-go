@@ -261,7 +261,6 @@ func convertAmount(d raw.Decimal, u *book.UnitType) (book.Amount, error) {
 		}
 		d.Number /= rescale
 		d.Scale /= rescale
-
 	}
 	return book.Amount{
 		Number:   d.Number * u.Scale / d.Scale,
