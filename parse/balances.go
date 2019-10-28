@@ -37,40 +37,36 @@ func (b *acctBalance) Add(a book.Amount) {
 }
 
 func (b acctBalance) Equal(b2 acctBalance) bool {
-	n := b.Copy()
-	n2 := b2.Copy()
-	n.Canonicalize()
-	n2.Canonicalize()
-	if len(n) != len(n2) {
+	c, c2 := b.copy(), b2.copy()
+	c.removeEmpty()
+	c.sort()
+	c2.removeEmpty()
+	c2.sort()
+	if len(c) != len(c2) {
 		return false
 	}
-	for i, a := range n {
-		if a != n2[i] {
+	for i, a := range c {
+		if a != c2[i] {
 			return false
 		}
 	}
 	return true
 }
 
-func (b acctBalance) Copy() acctBalance {
-	new := make(acctBalance, len(b))
-	copy(new, b)
-	return new
-}
-
-func (b *acctBalance) Canonicalize() {
-	b.removeEmpty()
-	b.sort()
-}
-
 func (b *acctBalance) removeEmpty() {
-	new := make(acctBalance, 0, len(*b))
+	var new acctBalance
 	for _, a := range *b {
 		if a.Number != 0 {
 			new = append(new, a)
 		}
 	}
 	*b = new
+}
+
+func (b acctBalance) copy() acctBalance {
+	new := make(acctBalance, len(b))
+	copy(new, b)
+	return new
 }
 
 func (b acctBalance) sort() {

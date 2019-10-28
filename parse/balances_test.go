@@ -75,7 +75,7 @@ func TestAcctBalance_Equal_different_length(t *testing.T) {
 		t.Errorf("a.Equal(b) returned true")
 	}
 	if b.Equal(a) {
-		t.Errorf("a.Equal(b) returned true")
+		t.Errorf("b.Equal(a) returned true")
 	}
 }
 
@@ -93,6 +93,25 @@ func TestAcctBalance_Equal_different_amount(t *testing.T) {
 	}
 	if a.Equal(b) {
 		t.Errorf("a.Equal(b) returned true")
+	}
+}
+
+func TestAcctBalance_Equal_ignore_zero(t *testing.T) {
+	t.Parallel()
+	u := &book.UnitType{Symbol: "USD", Scale: 100}
+	u2 := &book.UnitType{Symbol: "JPY", Scale: 1}
+	a := acctBalance{
+		{Number: 3200, UnitType: u2},
+		{Number: 0, UnitType: u},
+	}
+	b := acctBalance{
+		{Number: 3200, UnitType: u2},
+	}
+	if !a.Equal(b) {
+		t.Errorf("a.Equal(b) returned false")
+	}
+	if !b.Equal(a) {
+		t.Errorf("b.Equal(a) returned false")
 	}
 }
 
