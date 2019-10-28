@@ -114,20 +114,33 @@ func (p *processor) processTransaction(t raw.TransactionEntry) error {
 		Splits:      make([]book.Split, len(t.Splits)),
 	}
 	var b acctBalance
-	// emptySplit := -1
+	emptySplit := -1
 	for i, s := range t.Splits {
 		s2, err := p.convertSplit(s)
 		if err != nil {
 			return processErr(t, err)
 		}
 		t2.Splits[i] = s2
+
 		if s2.Amount == (book.Amount{}) {
-			// if emptySplit
+			if emptySplit >= 0 {
+				return processErrf(t, "multiple empty splits")
+			}
+			emptySplit = i
 		} else {
 			b.Add(s2.Amount)
 		}
 	}
-	panic("Not implemented")
+	b.RemoveEmpty()
+	if emptySplit >= 0 {
+		if len(b) != 1 {
+			return processErrf(t, "unsuitable balance for empty split %v", b)
+		}
+		t2.Splits[emptySplit].Amount = b[0]
+	}
+	if len(b) > 0 {
+		return processErrf(t, "unbalanced amount %v", b)
+	}
 	return nil
 }
 
