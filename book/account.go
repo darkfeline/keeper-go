@@ -21,7 +21,7 @@ import (
 )
 
 // Account is a bookkeeping account.
-// Accounts are colon separated paths.
+// Accounts are colon separated paths, like "Income:Salary".
 type Account string
 
 // Concat concatenates strings into an Account.

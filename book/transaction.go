@@ -31,7 +31,9 @@ type Split struct {
 	Amount  Amount
 }
 
+// Amount is an amount of a certain unit, e.g., currency or commodity.
 type Amount struct {
+	// Number is the number of the smallest unit of the UnitType.
 	Number   int64
 	UnitType *UnitType
 }
@@ -48,10 +50,14 @@ func (a Amount) String() string {
 	return fmt.Sprintf("%d.%d %s", a.Number/u.Scale, f, u.Symbol)
 }
 
+// UnitType describes a unit, e.g., currency or commodity.
 type UnitType struct {
+	// Symbol for the unit.
+	// This should be all uppercase ASCII letters.
 	Symbol string
 	// Scale indicates the minimum fractional unit amount,
 	// e.g. 100 means 0.01 is the smallest amount.
+	// This should be a multiple of 10.
 	Scale int64
 }
 
