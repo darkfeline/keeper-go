@@ -79,7 +79,6 @@ var incomeCmd = &cobra.Command{
 }
 
 func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
-	bw := bufio.NewWriter(w)
 	var as []book.Account
 	for a := range m {
 		if a.Under(root) {
@@ -88,6 +87,7 @@ func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 	}
 	report.SortAccounts(as)
 
+	bw := bufio.NewWriter(w)
 	var total book.Balance
 	rlen := len(root.Parts())
 	_ = book.WalkAccountTree(as, func(n book.AccountNode) error {
