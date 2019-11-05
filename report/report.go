@@ -25,6 +25,7 @@ import (
 	"go.felesatra.moe/keeper/book"
 )
 
+// TallyBalances returns the balance for each account after all the transactions.
 func TallyBalances(ts []book.Transaction) map[book.Account]book.Balance {
 	m := make(map[book.Account]book.Balance)
 	for _, t := range ts {
@@ -36,10 +37,12 @@ func TallyBalances(ts []book.Transaction) map[book.Account]book.Balance {
 	return m
 }
 
+// SortAccounts sorts the slice of accounts.
 func SortAccounts(as []book.Account) {
 	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
 }
 
+// AccountTx returns the transactions for the given account.
 func AccountTx(ts []book.Transaction, a book.Account) []book.Transaction {
 	var new []book.Transaction
 	for _, t := range ts {
@@ -55,6 +58,9 @@ func AccountTx(ts []book.Transaction, a book.Account) []book.Transaction {
 	return new
 }
 
+// AccountSplits returns the splits for the given account.
+// The returned transactions will be unbalanced since they will only
+// have the splits for the given account.
 func AccountSplits(ts []book.Transaction, a book.Account) []book.Transaction {
 	var new []book.Transaction
 	for _, t := range ts {
@@ -71,6 +77,7 @@ func AccountSplits(ts []book.Transaction, a book.Account) []book.Transaction {
 	return new
 }
 
+// TxStarting returns the transactions with dates on or after the given date.
 func TxStarting(ts []book.Transaction, d civil.Date) []book.Transaction {
 	i := sort.Search(len(ts), func(i int) bool {
 		return !ts[i].Date.Before(d)
@@ -80,6 +87,7 @@ func TxStarting(ts []book.Transaction, d civil.Date) []book.Transaction {
 	return new
 }
 
+// TxEnding returns the transactions with dates before or on the given date.
 func TxEnding(ts []book.Transaction, d civil.Date) []book.Transaction {
 	i := sort.Search(len(ts), func(i int) bool {
 		return !ts[len(ts)-1-i].Date.After(d)
