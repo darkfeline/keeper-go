@@ -88,11 +88,7 @@ func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 	as := accountsUnder(m, root)
 	bw := bufio.NewWriter(w)
 	var total book.Balance
-	_ = book.WalkAccountTree(as, func(n book.AccountNode) error {
-		a := n.Account
-		if !a.Under(root) && a != root {
-			return nil
-		}
+	for _, a := range as {
 		bw.WriteString(string(a))
 		b := m[a]
 		if len(b) == 0 {
@@ -105,8 +101,7 @@ func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 		for _, a := range b {
 			total = total.Add(a)
 		}
-		return nil
-	})
+	}
 	bw.WriteString("Total")
 	bw.WriteByte('\t')
 	bw.WriteString(total.String())
