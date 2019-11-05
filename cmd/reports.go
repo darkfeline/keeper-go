@@ -73,7 +73,7 @@ var incomeCmd = &cobra.Command{
 	},
 }
 
-func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
+func accountsUnder(m map[book.Account]book.Balance, root book.Account) []book.Account {
 	var as []book.Account
 	for a := range m {
 		if a.Under(root) {
@@ -81,7 +81,11 @@ func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 		}
 	}
 	report.SortAccounts(as)
+	return as
+}
 
+func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
+	as := accountsUnder(m, root)
 	bw := bufio.NewWriter(w)
 	var total book.Balance
 	rlen := len(root.Parts())
