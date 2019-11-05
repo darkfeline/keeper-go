@@ -15,10 +15,7 @@
 package cmd
 
 import (
-	"bufio"
-	"io"
 	"os"
-	"strings"
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"

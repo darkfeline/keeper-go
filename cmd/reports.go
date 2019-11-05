@@ -19,7 +19,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 	"go.felesatra.moe/keeper/book"
@@ -47,10 +46,8 @@ var balanceCmd = &cobra.Command{
 			return err
 		}
 		m := report.TallyBalances(ts)
-		tw := tabwriter.NewWriter(os.Stdout, 0, 4, 1, ' ', 0)
-		writeAccountTree(tw, m, "Assets")
-		writeAccountTree(tw, m, "Liabilities")
-		tw.Flush()
+		writeAccountTree(os.Stdout, m, "Assets")
+		writeAccountTree(os.Stdout, m, "Liabilities")
 		return nil
 	},
 }
@@ -70,10 +67,8 @@ var incomeCmd = &cobra.Command{
 			return err
 		}
 		m := report.TallyBalances(ts)
-		tw := tabwriter.NewWriter(os.Stdout, 0, 4, 1, ' ', 0)
-		writeAccountTree(tw, m, "Income")
-		writeAccountTree(tw, m, "Expenses")
-		tw.Flush()
+		writeAccountTree(os.Stdout, m, "Income")
+		writeAccountTree(os.Stdout, m, "Expenses")
 		return nil
 	},
 }
