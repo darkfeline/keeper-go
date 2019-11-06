@@ -15,6 +15,8 @@
 package colfmt
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -70,4 +72,38 @@ func TestFormatString(t *testing.T) {
 	if got != want {
 		t.Errorf("formatString() = %#v; want %#v", got, want)
 	}
+}
+
+func BenchmarkFprintf_5_1M(b *testing.B) {
+	v := setupStruct5(1000000)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, v := range v {
+			fmt.Fprintf(ioutil.Discard, "%s\n", v)
+		}
+	}
+}
+
+func BenchmarkFormat_5_1M(b *testing.B) {
+	v := setupStruct5(1000000)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Format(ioutil.Discard, v)
+	}
+}
+
+type struct5 struct {
+	a string
+	b string
+	c string
+	d string
+	e string
+}
+
+func setupStruct5(n int) []struct5 {
+	var v []struct5
+	for i := 0; i < n; i++ {
+		v = append(v, struct5{"ayanami", "ibuki", "laffey", "gascogne", "cleveland"})
+	}
+	return v
 }
