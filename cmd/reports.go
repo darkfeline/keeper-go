@@ -22,7 +22,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
 	"go.felesatra.moe/keeper/book"
+	"go.felesatra.moe/keeper/internal/decfmt"
 	"go.felesatra.moe/keeper/parse"
 	"go.felesatra.moe/keeper/report"
 )
@@ -52,6 +54,7 @@ var balanceCmd = &cobra.Command{
 			return err
 		}
 		wf(os.Stdout, m, "Assets")
+		fmt.Println()
 		wf(os.Stdout, m, "Liabilities")
 		return nil
 	},
@@ -77,6 +80,7 @@ var incomeCmd = &cobra.Command{
 			return err
 		}
 		wf(os.Stdout, m, "Income")
+		fmt.Println()
 		wf(os.Stdout, m, "Expenses")
 		return nil
 	},
@@ -131,41 +135,86 @@ func writeBalancesTab(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 	return bw.Flush()
 }
 
+// writeBalancesPretty writes balances prettily.
+// The amounts are right justified and aligned.
+// The units are left justified and aligned.
+// If there is more than one unit type in an account,
+// its balance is printed comma separated, aligned after the units for
+// single unit accounts.
+// These are assumed to be trading accounts and less important.
 func writeBalancesPretty(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
-	as := accountsUnder(m, root)
+	items := makeBalanceItems(m, root)
+	var (
+		prefixWidth int
+		amountWidth int
+		unitWidth   int
+	)
+	for _, i := range items {
+		if n := len(i.prefix); n > prefixWidth {
+			prefixWidth = n
+		}
+		if n := len(i.amount); n > amountWidth {
+			amountWidth = n
+		}
+		if n := len(i.unit); n > unitWidth {
+			unitWidth = n
+		}
+	}
+
 	bw := bufio.NewWriter(w)
+	format := fmt.Sprintf("%%-%ds %%%ds %%-%ds %%s\n", prefixWidth, amountWidth, unitWidth)
+	for _, i := range items {
+		fmt.Fprintf(bw, format, i.prefix, i.amount, i.unit, i.extraBalance)
+	}
+	return bw.Flush()
+}
+
+// balanceItem is used to prepare balances for pretty formatting.
+type balanceItem struct {
+	prefix       string
+	amount       string
+	unit         string
+	extraBalance string
+}
+
+func (i *balanceItem) addBalance(b book.Balance) {
+	switch len(b) {
+	case 0:
+	case 1:
+		a := b[0]
+		i.amount = decfmt.Format(a.Number, a.UnitType.Scale)
+		i.unit = a.UnitType.Symbol
+	default:
+		i.extraBalance = b.String()
+	}
+}
+
+func makeBalanceItems(m map[book.Account]book.Balance, root book.Account) []balanceItem {
+	var items []balanceItem
 	var total book.Balance
 	rlen := len(root.Parts())
-	_ = book.WalkAccountTree(as, func(n book.AccountNode) error {
+	_ = book.WalkAccountTree(accountsUnder(m, root), func(n book.AccountNode) error {
 		a := n.Account
 		if !a.Under(root) && a != root {
 			return nil
 		}
-		prefix := indent(len(a.Parts()) - rlen)
-		bw.WriteString(prefix)
-		bw.WriteString(a.Leaf())
-		b := m[a]
-		if len(b) == 0 {
-			bw.WriteByte('\t')
-			bw.WriteByte('\t')
-			bw.WriteByte('\n')
-			return nil
+		i := balanceItem{
+			prefix: indent(len(a.Parts())-rlen) + a.Leaf(),
 		}
-		bw.WriteByte('\t')
-		bw.WriteString(b.String())
-		bw.WriteByte('\t')
-		bw.WriteByte('\n')
+		b := m[a]
+		i.addBalance(b)
+		items = append(items, i)
 		for _, a := range b {
 			total = total.Add(a)
 		}
 		return nil
 	})
-	bw.WriteString("Total")
-	bw.WriteByte('\t')
-	bw.WriteString(total.String())
-	bw.WriteByte('\t')
-	bw.WriteByte('\n')
-	return bw.Flush()
+	i := balanceItem{
+		prefix: "Total",
+	}
+	i.addBalance(total)
+	items = append(items, i)
+	return items
 }
 
 func indent(n int) string {
