@@ -15,6 +15,8 @@
 package cmd
 
 import (
+	"bufio"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -42,7 +44,13 @@ var splitsCmd = &cobra.Command{
 			return err
 		}
 		ts = report.AccountSplits(ts, book.Account(args[1]))
-		// XXXXXXXXXXXXXXXXXXX
+		writeSplits(os.Stdout, ts)
 		return nil
 	},
+}
+
+func writeSplits(w io.Writer, ts []book.Transaction) error {
+	bw := bufio.NewWriter(w)
+	// XXXXXXXXXXXXXXXXXX
+	return bw.Flush()
 }
