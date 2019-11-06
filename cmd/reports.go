@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.felesatra.moe/keeper/book"
+	"go.felesatra.moe/keeper/cmd/internal/colfmt"
 	"go.felesatra.moe/keeper/internal/decfmt"
 	"go.felesatra.moe/keeper/parse"
 	"go.felesatra.moe/keeper/report"
@@ -144,35 +145,13 @@ func writeBalancesTab(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 // These are assumed to be trading accounts and less important.
 func writeBalancesPretty(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
 	items := makeBalanceItems(m, root)
-	var (
-		prefixWidth int
-		amountWidth int
-		unitWidth   int
-	)
-	for _, i := range items {
-		if n := len(i.prefix); n > prefixWidth {
-			prefixWidth = n
-		}
-		if n := len(i.amount); n > amountWidth {
-			amountWidth = n
-		}
-		if n := len(i.unit); n > unitWidth {
-			unitWidth = n
-		}
-	}
-
-	bw := bufio.NewWriter(w)
-	format := fmt.Sprintf("%%-%ds %%%ds %%-%ds %%s\n", prefixWidth, amountWidth, unitWidth)
-	for _, i := range items {
-		fmt.Fprintf(bw, format, i.prefix, i.amount, i.unit, i.extraBalance)
-	}
-	return bw.Flush()
+	return colfmt.Format(w, items)
 }
 
 // balanceItem is used to prepare balances for pretty formatting.
 type balanceItem struct {
 	prefix       string
-	amount       string
+	amount       string `colfmt:"right"`
 	unit         string
 	extraBalance string
 }
