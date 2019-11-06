@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -46,8 +47,12 @@ var balanceCmd = &cobra.Command{
 			return err
 		}
 		m := report.TallyBalances(ts)
-		writeAccountTree(os.Stdout, m, "Assets")
-		writeAccountTree(os.Stdout, m, "Liabilities")
+		wf, err := writeBalancesFunc(format)
+		if err != nil {
+			return err
+		}
+		wf(os.Stdout, m, "Assets")
+		wf(os.Stdout, m, "Liabilities")
 		return nil
 	},
 }
@@ -67,8 +72,12 @@ var incomeCmd = &cobra.Command{
 			return err
 		}
 		m := report.TallyBalances(ts)
-		writeAccountTree(os.Stdout, m, "Income")
-		writeAccountTree(os.Stdout, m, "Expenses")
+		wf, err := writeBalancesFunc(format)
+		if err != nil {
+			return err
+		}
+		wf(os.Stdout, m, "Income")
+		wf(os.Stdout, m, "Expenses")
 		return nil
 	},
 }
@@ -84,7 +93,20 @@ func accountsUnder(m map[book.Account]book.Balance, root book.Account) []book.Ac
 	return as
 }
 
-func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
+type writeBalancesFn func(w io.Writer, m map[book.Account]book.Balance, root book.Account) error
+
+func writeBalancesFunc(format string) (writeBalancesFn, error) {
+	switch format {
+	case "tab":
+		return writeBalancesTab, nil
+	case "pretty":
+		return writeBalancesPretty, nil
+	default:
+		return nil, fmt.Errorf("unknown format %v", format)
+	}
+}
+
+func writeBalancesTab(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
 	as := accountsUnder(m, root)
 	bw := bufio.NewWriter(w)
 	var total book.Balance
@@ -109,7 +131,7 @@ func writeAccountTree(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 	return bw.Flush()
 }
 
-func writeAccountTreePretty(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
+func writeBalancesPretty(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
 	as := accountsUnder(m, root)
 	bw := bufio.NewWriter(w)
 	var total book.Balance

@@ -26,6 +26,14 @@ var rootCmd = &cobra.Command{
 	Short: "keeper is plain text accounting software",
 }
 
+var (
+	format string
+)
+
+func init() {
+	rootCmd.PersistentFlags().StringVar(&format, "format", "pretty", "output format")
+}
+
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"os"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 	"go.felesatra.moe/keeper/book"
@@ -43,9 +42,7 @@ var splitsCmd = &cobra.Command{
 			return err
 		}
 		ts = report.AccountSplits(ts, book.Account(args[1]))
-		tw := tabwriter.NewWriter(os.Stdout, 0, 4, 1, ' ', 0)
 		// XXXXXXXXXXXXXXXXXXX
-		tw.Flush()
 		return nil
 	},
 }
