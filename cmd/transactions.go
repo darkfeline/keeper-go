@@ -15,12 +15,12 @@
 package cmd
 
 import (
-	"bufio"
 	"io"
 	"os"
 
 	"github.com/spf13/cobra"
 	"go.felesatra.moe/keeper/book"
+	"go.felesatra.moe/keeper/cmd/internal/colfmt"
 	"go.felesatra.moe/keeper/parse"
 	"go.felesatra.moe/keeper/report"
 )
@@ -50,7 +50,17 @@ var splitsCmd = &cobra.Command{
 }
 
 func writeSplits(w io.Writer, ts []book.Transaction) error {
-	bw := bufio.NewWriter(w)
-	// XXXXXXXXXXXXXXXXXX
-	return bw.Flush()
+	return colfmt.Format(w, makeSplitItems(ts))
+}
+
+type splitItem struct {
+	date        string
+	description string
+	amount      string `colfmt:"right"`
+	unit        string
+}
+
+func makeSplitItems(ts []book.Transaction) []splitItem {
+	// XXXXXXXXXXXXXXXXXXXXXX
+	return nil
 }
