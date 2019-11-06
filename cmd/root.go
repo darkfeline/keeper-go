@@ -24,8 +24,6 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "keeper",
 	Short: "keeper is plain text accounting software",
-	Run: func(cmd *cobra.Command, args []string) {
-	},
 }
 
 func Execute() {
