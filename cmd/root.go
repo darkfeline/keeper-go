@@ -31,8 +31,13 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&format, "format", "pretty", "output format")
+	rootCmd.PersistentFlags().StringVar(&format, "format", prettyFmt, "output format")
 }
+
+const (
+	prettyFmt = "pretty"
+	tabFmt    = "tab"
+)
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {

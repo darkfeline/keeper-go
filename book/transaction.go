@@ -49,9 +49,12 @@ func (a Amount) Neg() Amount {
 	return a
 }
 
+func (a Amount) Scalar() string {
+	return decfmt.Format(a.Number, a.UnitType.Scale)
+}
+
 func (a Amount) String() string {
-	u := a.UnitType
-	return fmt.Sprintf("%s %s", decfmt.Format(a.Number, u.Scale), u.Symbol)
+	return fmt.Sprintf("%s %s", a.Scalar(), a.UnitType.Symbol)
 }
 
 // UnitType describes a unit, e.g., currency or commodity.

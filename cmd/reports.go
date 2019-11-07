@@ -25,7 +25,6 @@ import (
 
 	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/cmd/internal/colfmt"
-	"go.felesatra.moe/keeper/internal/decfmt"
 	"go.felesatra.moe/keeper/parse"
 	"go.felesatra.moe/keeper/report"
 )
@@ -102,9 +101,9 @@ type writeBalancesFn func(w io.Writer, m map[book.Account]book.Balance, root boo
 
 func writeBalancesFunc(format string) (writeBalancesFn, error) {
 	switch format {
-	case "tab":
+	case tabFmt:
 		return writeBalancesTab, nil
-	case "pretty":
+	case prettyFmt:
 		return writeBalancesPretty, nil
 	default:
 		return nil, fmt.Errorf("unknown format %v", format)
@@ -161,7 +160,7 @@ func (i *balanceItem) addBalance(b book.Balance) {
 	case 0:
 	case 1:
 		a := b[0]
-		i.amount = decfmt.Format(a.Number, a.UnitType.Scale)
+		i.amount = a.Scalar()
 		i.unit = a.UnitType.Symbol
 	default:
 		i.extraBalance = b.String()
