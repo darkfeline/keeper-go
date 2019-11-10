@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"go.felesatra.moe/keeper/internal/decfmt"
 )
@@ -37,6 +38,7 @@ func parseDecimal(s string) (Decimal, error) {
 	if len(s) == 0 {
 		return Decimal{}, errors.New("parse decimal: empty string")
 	}
+	s = strings.Replace(s, ",", "", -1)
 	p := len(s)
 	for i, b := range s {
 		if b == '.' {

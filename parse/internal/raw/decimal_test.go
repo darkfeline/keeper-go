@@ -27,6 +27,7 @@ func TestParseDecimal(t *testing.T) {
 		{"dot at end", "123.", Decimal{123, 1}},
 		{"dot", "123.45", Decimal{12345, 100}},
 		{"negative", "-123.45", Decimal{-12345, 100}},
+		{"comma", "2,123.45", Decimal{212345, 100}},
 	}
 	for _, c := range cases {
 		c := c

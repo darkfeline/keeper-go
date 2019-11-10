@@ -215,6 +215,7 @@ const (
 	lower        = "abcdefghijklmnopqrstuvwxyz"
 	upper        = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	letters      = lower + upper
+	decimalChars = digits + ","
 	accountChars = letters + digits + ":"
 )
 
@@ -231,24 +232,11 @@ func lexComment(l *Lexer) stateFn {
 	}
 }
 
-func lexDecimal(l *Lexer) stateFn {
-	l.acceptRun(digits)
-	l.accept(".")
-	return lexDecimalAfterPoint
-}
-
-func lexDecimalAfterPoint(l *Lexer) stateFn {
-	l.acceptRun(digits)
-	if r := l.peek(); !unicode.IsSpace(r) {
-		return l.unexpected(r)
-	}
-	l.emit(TokDecimal)
-	return lexStart
-}
-
 func lexDigit(l *Lexer) stateFn {
 	l.acceptRun(digits)
 	switch r := l.next(); {
+	case r == ',':
+		return lexDecimal
 	case r == '.':
 		return lexDecimalAfterPoint
 	case r == '-':
@@ -260,6 +248,21 @@ func lexDigit(l *Lexer) stateFn {
 	default:
 		return l.unexpected(r)
 	}
+}
+
+func lexDecimal(l *Lexer) stateFn {
+	l.acceptRun(decimalChars)
+	l.accept(".")
+	return lexDecimalAfterPoint
+}
+
+func lexDecimalAfterPoint(l *Lexer) stateFn {
+	l.acceptRun(decimalChars)
+	if r := l.peek(); !unicode.IsSpace(r) {
+		return l.unexpected(r)
+	}
+	l.emit(TokDecimal)
+	return lexStart
 }
 
 func lexDate(l *Lexer) stateFn {
