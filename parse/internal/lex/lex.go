@@ -211,10 +211,11 @@ func lexStart(l *Lexer) stateFn {
 }
 
 const (
-	digits  = "0123456789"
-	lower   = "abcdefghijklmnopqrstuvwxyz"
-	upper   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	letters = lower + upper
+	digits       = "0123456789"
+	lower        = "abcdefghijklmnopqrstuvwxyz"
+	upper        = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	letters      = lower + upper
+	accountChars = letters + digits + ":"
 )
 
 func lexComment(l *Lexer) stateFn {
@@ -277,6 +278,8 @@ func lexUpper(l *Lexer) stateFn {
 			return lexAccount
 		case unicode.IsLower(r):
 			return lexAccount
+		case unicode.IsDigit(r):
+			return lexAccount
 		case unicode.IsUpper(r):
 			continue
 		case unicode.IsSpace(r):
@@ -299,7 +302,7 @@ func lexKeyword(l *Lexer) stateFn {
 }
 
 func lexAccount(l *Lexer) stateFn {
-	l.acceptRun(letters + ":")
+	l.acceptRun(accountChars)
 	if r := l.peek(); !unicode.IsSpace(r) {
 		return l.unexpected(r)
 	}
