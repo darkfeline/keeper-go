@@ -41,7 +41,11 @@ var splitsCmd = &cobra.Command{
 			return err
 		}
 		defer f.Close()
-		ts, err := parse.Parse(f)
+		p, err := parse.Parse(f)
+		if err != nil {
+			return err
+		}
+		ts, err := p.CheckedTransactions()
 		if err != nil {
 			return err
 		}

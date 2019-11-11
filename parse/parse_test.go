@@ -25,7 +25,7 @@ import (
 	"go.felesatra.moe/keeper/parse/internal/raw"
 )
 
-func TestParse(t *testing.T) {
+func TestParse_CheckedTransactions(t *testing.T) {
 	t.Parallel()
 	const input = `bal 2001-02-03 Some:account -1.20 USD
 tx 2001-02-03 "Buy stuff"
@@ -34,10 +34,7 @@ Expenses:Stuff
 .
 unit USD 100
 `
-	got, err := Parse(strings.NewReader(input))
-	if err != nil {
-		t.Fatal(err)
-	}
+	got := parseCheckedTransactions(t, input)
 	u := &book.UnitType{Symbol: "USD", Scale: 100}
 	want := []book.Transaction{
 		{
@@ -68,7 +65,11 @@ Some:account -1.2 USD
 Expenses:Stuff 1.3 USD
 .
 `
-	_, err := Parse(strings.NewReader(input))
+	p, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = p.CheckedTransactions()
 	if err == nil {
 		t.Errorf("Expected error")
 	}
@@ -83,7 +84,11 @@ Expenses:Stuff
 .
 bal 2001-02-03 Some:account -1 USD
 `
-	_, err := Parse(strings.NewReader(input))
+	p, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = p.CheckedTransactions()
 	if err == nil {
 		t.Errorf("Expected error")
 	}
@@ -153,4 +158,17 @@ func TestConvertAmount(t *testing.T) {
 			}
 		})
 	}
+}
+
+func parseCheckedTransactions(t *testing.T, input string) []book.Transaction {
+	t.Helper()
+	p, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := p.CheckedTransactions()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return got
 }

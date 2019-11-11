@@ -26,32 +26,43 @@ import (
 	"go.felesatra.moe/keeper/parse/internal/raw"
 )
 
+type Parser struct {
+	entries []raw.EntryCommon
+}
+
 // Parse parses keeper format entries.
 // See the module description for the format.
-// Only the final transactions are returned.
-// The transactions are sorted by date and checked for correctness.
-func Parse(r io.Reader) ([]book.Transaction, error) {
+func Parse(r io.Reader) (*Parser, error) {
 	entries, err := raw.Parse(r)
 	if err != nil {
 		return nil, fmt.Errorf("keeper parse: %v", err)
 	}
 	sortEntries(entries)
-	p := newProcessor()
+	return &Parser{
+		entries: entries,
+	}, nil
+}
+
+// CheckedTransactions returns parsed transactions.
+// Only the final transactions are returned.
+// The transactions are sorted by date and checked for correctness.
+func (p *Parser) CheckedTransactions() ([]book.Transaction, error) {
+	ps := newProcessor()
 	var errs []error
 process:
-	for _, e := range entries {
+	for _, e := range p.entries {
 		if len(errs) >= 20 {
 			errs = append(errs, errors.New("(too many errors)"))
 			break process
 		}
-		if err := p.processEntry(e); err != nil {
+		if err := ps.processEntry(e); err != nil {
 			errs = append(errs, err)
 		}
 	}
 	if len(errs) != 0 {
-		return p.transactions, processError{errs}
+		return ps.transactions, processError{errs}
 	}
-	return p.transactions, nil
+	return ps.transactions, nil
 }
 
 type processor struct {
