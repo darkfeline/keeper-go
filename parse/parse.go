@@ -23,7 +23,7 @@ import (
 
 	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/book"
-	"go.felesatra.moe/keeper/parse/internal/raw"
+	"go.felesatra.moe/keeper/parse/raw"
 )
 
 type Parser struct {

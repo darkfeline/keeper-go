@@ -22,6 +22,7 @@ import (
 	"go.felesatra.moe/keeper/parse/internal/lex"
 )
 
+// Parse parses keeper entries from the reader and returns them.
 func Parse(r io.Reader) ([]EntryCommon, error) {
 	p := newParser(r)
 	return p.parse()

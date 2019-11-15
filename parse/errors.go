@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.felesatra.moe/keeper/parse/internal/raw"
+	"go.felesatra.moe/keeper/parse/raw"
 )
 
 func processErr(e raw.EntryCommon, v interface{}) error {

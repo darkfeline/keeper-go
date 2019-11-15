@@ -21,13 +21,18 @@ import (
 	"go.felesatra.moe/keeper/book"
 )
 
+// EntryCommon describes the common interface implemented by all
+// entries.  Type assertions can be used to process specific types of
+// entries.
 type EntryCommon interface {
+	// EntryCommon returns a struct with the common fields.
 	EntryCommon() Common
 	// Summary returns a string that usefully identifies the
 	// entry, e.g., in errors.
 	Summary() string
 }
 
+// Common contains the fields common to all entries.
 type Common struct {
 	Line int
 }
@@ -36,6 +41,7 @@ func (c Common) EntryCommon() Common {
 	return c
 }
 
+// BalanceEntry represents a balance entry.
 type BalanceEntry struct {
 	Common
 	Date    civil.Date
@@ -47,6 +53,7 @@ func (e BalanceEntry) Summary() string {
 	return fmt.Sprintf("balance %v %v", e.Date, e.Account)
 }
 
+// Amount represents an amount of a unit.
 type Amount struct {
 	Number Decimal
 	Unit   string
@@ -56,6 +63,7 @@ func (a Amount) String() string {
 	return fmt.Sprintf("%v %s", a.Number, a.Unit)
 }
 
+// UnitEntry represents a unit entry.
 type UnitEntry struct {
 	Common
 	Symbol string
@@ -66,6 +74,7 @@ func (e UnitEntry) Summary() string {
 	return fmt.Sprintf("unit %v", e.Symbol)
 }
 
+// TransactionEntry represents a transaction entry.
 type TransactionEntry struct {
 	Common
 	Date        civil.Date
@@ -77,6 +86,7 @@ func (e TransactionEntry) Summary() string {
 	return fmt.Sprintf("transaction %v %#v", e.Date, e.Description)
 }
 
+// Split represents one split in a transaction.
 type Split struct {
 	Account book.Account
 	Amount  Amount

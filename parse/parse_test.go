@@ -22,7 +22,7 @@ import (
 	"cloud.google.com/go/civil"
 	"github.com/google/go-cmp/cmp"
 	"go.felesatra.moe/keeper/book"
-	"go.felesatra.moe/keeper/parse/internal/raw"
+	"go.felesatra.moe/keeper/parse/raw"
 )
 
 func TestParse_CheckedTransactions(t *testing.T) {
