@@ -18,10 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"sort"
-	"time"
 
-	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/parse/raw"
 )
@@ -214,40 +211,6 @@ func splitsBalance(s []book.Split) (b book.Balance, empty []*book.Split) {
 		b = b.Add(s[i].Amount)
 	}
 	return b, empty
-}
-
-func sortEntries(e []interface{}) {
-	type keyed struct {
-		k int64
-		v interface{}
-	}
-	ks := make([]keyed, len(e))
-	for i, e := range e {
-		ks[i] = keyed{entryKey(e), e}
-	}
-	sort.Slice(ks, func(i, j int) bool {
-		return ks[i].k < ks[j].k
-	})
-	for i, k := range ks {
-		e[i] = k.v
-	}
-}
-
-// entryKey returns a sort key corresponding to an entry.
-func entryKey(e interface{}) int64 {
-	switch e := e.(type) {
-	case raw.TransactionEntry:
-		return dateKey(e.Date)
-	case raw.BalanceEntry:
-		return dateKey(e.Date) + 1
-	default:
-		return 0
-	}
-}
-
-// dateKey returns a sort key corresponding to a Date.
-func dateKey(d civil.Date) int64 {
-	return d.In(time.UTC).Unix()
 }
 
 func decimalToInt64(d raw.Decimal) (int64, error) {
