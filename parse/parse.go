@@ -24,7 +24,11 @@ import (
 )
 
 type Parser struct {
-	entries []interface{}
+	entries  []interface{}
+	units    map[string]*book.UnitType
+	balances map[book.Account]book.Balance
+	lines    []interface{}
+	errors   []error
 }
 
 // Parse parses keeper format entries.
@@ -35,9 +39,12 @@ func Parse(r io.Reader) (*Parser, error) {
 		return nil, fmt.Errorf("keeper parse: %v", err)
 	}
 	sortEntries(entries)
-	return &Parser{
-		entries: entries,
-	}, nil
+	p := &Parser{
+		entries:  entries,
+		units:    make(map[string]*book.UnitType),
+		balances: make(map[book.Account]book.Balance),
+	}
+	return p, nil
 }
 
 // CheckedTransactions returns parsed transactions.
