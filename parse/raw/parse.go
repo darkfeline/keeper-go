@@ -74,7 +74,7 @@ func (p *parser) parseItem(tok lex.Token) (Entry, error) {
 }
 
 func (p *parser) parseTransaction(tok lex.Token) (TransactionEntry, error) {
-	t := TransactionEntry{Common: Common{Line: tok.Pos.Line}}
+	t := TransactionEntry{common: common{line: tok.Pos.Line}}
 	var err error
 
 	tok = p.l.NextToken()
@@ -142,7 +142,7 @@ func (p *parser) parseSplit(t *TransactionEntry, tok lex.Token) error {
 }
 
 func (p *parser) parseUnit(tok lex.Token) (UnitEntry, error) {
-	u := UnitEntry{Common: Common{Line: tok.Pos.Line}}
+	u := UnitEntry{common: common{line: tok.Pos.Line}}
 	var err error
 
 	tok = p.l.NextToken()
@@ -165,7 +165,7 @@ func (p *parser) parseUnit(tok lex.Token) (UnitEntry, error) {
 }
 
 func (p *parser) parseBalance(tok lex.Token) (BalanceEntry, error) {
-	b := BalanceEntry{Common: Common{Line: tok.Pos.Line}}
+	b := BalanceEntry{common: common{line: tok.Pos.Line}}
 	var err error
 
 	tok = p.l.NextToken()

@@ -41,7 +41,7 @@ Expenses:Stuff -1.2 USD
 	}
 	want := []Entry{
 		BalanceEntry{
-			Common:  Common{Line: 1},
+			common:  common{line: 1},
 			Date:    civil.Date{2001, 2, 3},
 			Account: "Some:account",
 			Amounts: []Amount{
@@ -49,7 +49,7 @@ Expenses:Stuff -1.2 USD
 			},
 		},
 		BalanceEntry{
-			Common:  Common{Line: 2},
+			common:  common{line: 2},
 			Date:    civil.Date{2001, 2, 5},
 			Account: "Some:account",
 			Amounts: []Amount{
@@ -58,12 +58,12 @@ Expenses:Stuff -1.2 USD
 			},
 		},
 		UnitEntry{
-			Common: Common{Line: 6},
+			common: common{line: 6},
 			Symbol: "USD",
 			Scale:  Decimal{100, 1},
 		},
 		TransactionEntry{
-			Common:      Common{Line: 7},
+			common:      common{line: 7},
 			Date:        civil.Date{2001, 2, 3},
 			Description: "Buy stuff",
 			Splits: []Split{
@@ -96,7 +96,7 @@ Expenses:Stuff
 	}
 	want := []Entry{
 		TransactionEntry{
-			Common:      Common{Line: 1},
+			common:      common{line: 1},
 			Date:        civil.Date{2001, 2, 3},
 			Description: "Buy stuff",
 			Splits: []Split{
@@ -138,7 +138,7 @@ Expenses:Stuff -1.2 USD
 	}
 	want := []Entry{
 		BalanceEntry{
-			Common:  Common{Line: 2},
+			common:  common{line: 2},
 			Date:    civil.Date{2001, 2, 5},
 			Account: "Some:account",
 			Amounts: []Amount{
@@ -147,12 +147,12 @@ Expenses:Stuff -1.2 USD
 			},
 		},
 		UnitEntry{
-			Common: Common{Line: 8},
+			common: common{line: 8},
 			Symbol: "USD",
 			Scale:  Decimal{100, 1},
 		},
 		TransactionEntry{
-			Common:      Common{Line: 9},
+			common:      common{line: 9},
 			Date:        civil.Date{2001, 2, 3},
 			Description: "Buy stuff",
 			Splits: []Split{
