@@ -21,33 +21,30 @@ import (
 	"go.felesatra.moe/keeper/parse/raw"
 )
 
-type commonEntry struct {
-	e interface{}
+type commonFields struct {
+	summary string
+	line    int
 }
 
-func (c commonEntry) summary() string {
-	switch e := c.e.(type) {
+func getCommonFields(e interface{}) commonFields {
+	switch e := e.(type) {
 	case raw.BalanceEntry:
-		return fmt.Sprintf("balance %v %v", e.Date, e.Account)
+		return commonFields{
+			summary: fmt.Sprintf("balance %v %v", e.Date, e.Account),
+			line:    e.Line,
+		}
 	case raw.UnitEntry:
-		return fmt.Sprintf("unit %v", e.Symbol)
+		return commonFields{
+			summary: fmt.Sprintf("unit %v", e.Symbol),
+			line:    e.Line,
+		}
 	case raw.TransactionEntry:
-		return fmt.Sprintf("transaction %v %#v", e.Date, e.Description)
+		return commonFields{
+			summary: fmt.Sprintf("transaction %v %#v", e.Date, e.Description),
+			line:    e.Line,
+		}
 	default:
-		panic(e)
-	}
-}
-
-func (c commonEntry) lineno() int {
-	switch e := c.e.(type) {
-	case raw.BalanceEntry:
-		return e.Line
-	case raw.UnitEntry:
-		return e.Line
-	case raw.TransactionEntry:
-		return e.Line
-	default:
-		panic(e)
+		panic(fmt.Sprintf("unknown entry: %#v", e))
 	}
 }
 
@@ -56,9 +53,9 @@ func processErr(e interface{}, v interface{}) error {
 }
 
 func processErrf(e interface{}, format string, v ...interface{}) error {
-	c := commonEntry{e: e}
+	c := getCommonFields(e)
 	msg := fmt.Sprintf(format, v...)
-	return fmt.Errorf("entry %v (line %d): %v", c.summary(), c.lineno(), msg)
+	return fmt.Errorf("entry %v (line %d): %v", c.summary, c.line, msg)
 }
 
 // processError is returned for errors processing parsed entries.
