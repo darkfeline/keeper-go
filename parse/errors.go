@@ -21,13 +21,44 @@ import (
 	"go.felesatra.moe/keeper/parse/raw"
 )
 
-func processErr(e raw.Entry, v interface{}) error {
+type commonEntry struct {
+	e interface{}
+}
+
+func (c commonEntry) summary() string {
+	switch e := c.e.(type) {
+	case raw.BalanceEntry:
+		return fmt.Sprintf("balance %v %v", e.Date, e.Account)
+	case raw.UnitEntry:
+		return fmt.Sprintf("unit %v", e.Symbol)
+	case raw.TransactionEntry:
+		return fmt.Sprintf("transaction %v %#v", e.Date, e.Description)
+	default:
+		panic(e)
+	}
+}
+
+func (c commonEntry) lineno() int {
+	switch e := c.e.(type) {
+	case raw.BalanceEntry:
+		return e.Line
+	case raw.UnitEntry:
+		return e.Line
+	case raw.TransactionEntry:
+		return e.Line
+	default:
+		panic(e)
+	}
+}
+
+func processErr(e interface{}, v interface{}) error {
 	return processErrf(e, "%v", v)
 }
 
-func processErrf(e raw.Entry, format string, v ...interface{}) error {
+func processErrf(e interface{}, format string, v ...interface{}) error {
+	c := commonEntry{e: e}
 	msg := fmt.Sprintf(format, v...)
-	return fmt.Errorf("entry %v (line %d): %v", e.Summary(), e.LineNumber(), msg)
+	return fmt.Errorf("entry %v (line %d): %v", c.summary(), c.lineno(), msg)
 }
 
 // processError is returned for errors processing parsed entries.

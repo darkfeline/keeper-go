@@ -27,7 +27,7 @@ import (
 )
 
 type Parser struct {
-	entries []raw.Entry
+	entries []interface{}
 }
 
 // Parse parses keeper format entries.
@@ -78,7 +78,7 @@ func newProcessor() *processor {
 	}
 }
 
-func (p *processor) processEntry(e raw.Entry) error {
+func (p *processor) processEntry(e interface{}) error {
 	switch e := e.(type) {
 	case raw.UnitEntry:
 		return p.processUnit(e)
@@ -216,10 +216,10 @@ func splitsBalance(s []book.Split) (b book.Balance, empty []*book.Split) {
 	return b, empty
 }
 
-func sortEntries(e []raw.Entry) {
+func sortEntries(e []interface{}) {
 	type keyed struct {
 		k int64
-		v raw.Entry
+		v interface{}
 	}
 	ks := make([]keyed, len(e))
 	for i, e := range e {

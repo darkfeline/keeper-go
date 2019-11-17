@@ -39,7 +39,7 @@ Expenses:Stuff -1.2 USD
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []Entry{
+	want := []interface{}{
 		BalanceEntry{
 			Common:  Common{Line: 1},
 			Date:    civil.Date{2001, 2, 3},
@@ -94,7 +94,7 @@ Expenses:Stuff
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []Entry{
+	want := []interface{}{
 		TransactionEntry{
 			Common:      Common{Line: 1},
 			Date:        civil.Date{2001, 2, 3},
@@ -136,7 +136,7 @@ Expenses:Stuff -1.2 USD
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []Entry{
+	want := []interface{}{
 		BalanceEntry{
 			Common:  Common{Line: 2},
 			Date:    civil.Date{2001, 2, 5},

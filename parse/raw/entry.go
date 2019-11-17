@@ -21,17 +21,6 @@ import (
 	"go.felesatra.moe/keeper/book"
 )
 
-// Entry describes the common interface implemented by all
-// entries.  Type assertions can be used to process specific types of
-// entries.
-type Entry interface {
-	// Summary returns a string that usefully identifies the
-	// entry, e.g., in errors.
-	Summary() string
-	// LineNumber returns the line number of the entry.
-	LineNumber() int
-}
-
 // Common contains the fields common to all entries.
 type Common struct {
 	// Line number of the entry.
@@ -48,10 +37,6 @@ type BalanceEntry struct {
 	Date    civil.Date
 	Account book.Account
 	Amounts []Amount
-}
-
-func (e BalanceEntry) Summary() string {
-	return fmt.Sprintf("balance %v %v", e.Date, e.Account)
 }
 
 // Amount represents an amount of a unit.
@@ -71,20 +56,12 @@ type UnitEntry struct {
 	Scale  Decimal
 }
 
-func (e UnitEntry) Summary() string {
-	return fmt.Sprintf("unit %v", e.Symbol)
-}
-
 // TransactionEntry represents a transaction entry.
 type TransactionEntry struct {
 	Common
 	Date        civil.Date
 	Description string
 	Splits      []Split
-}
-
-func (e TransactionEntry) Summary() string {
-	return fmt.Sprintf("transaction %v %#v", e.Date, e.Description)
 }
 
 // Split represents one split in a transaction.

@@ -122,9 +122,9 @@ func TestSortEntries(t *testing.T) {
 		Scale:  raw.Decimal{100, 1},
 	}
 
-	got := []raw.Entry{et1, eb2, eb1, eu}
+	got := []interface{}{et1, eb2, eb1, eu}
 	sortEntries(got)
-	want := []raw.Entry{eu, et1, eb1, eb2}
+	want := []interface{}{eu, et1, eb1, eb2}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
