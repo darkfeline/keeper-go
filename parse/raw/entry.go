@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/civil"
-	"github.com/google/go-cmp/cmp"
 	"go.felesatra.moe/keeper/book"
 )
 
@@ -33,32 +32,25 @@ type Entry interface {
 	Summary() string
 }
 
-// common contains the fields common to all entries.
-type common struct {
-	line int
-}
-
-func (c common) Line() int {
-	return c.line
+// Common contains the fields common to all entries.
+type Common struct {
+	Line int
 }
 
 // BalanceEntry represents a balance entry.
 type BalanceEntry struct {
-	common
+	Common
 	Date    civil.Date
 	Account book.Account
 	Amounts []Amount
 }
 
-func (e BalanceEntry) Summary() string {
-	return fmt.Sprintf("balance %v %v", e.Date, e.Account)
+func (e BalanceEntry) Line() int {
+	return e.Common.Line
 }
 
-func (e BalanceEntry) Equal(v BalanceEntry) bool {
-	return e.common == v.common &&
-		e.Date == v.Date &&
-		e.Account == v.Account &&
-		cmp.Equal(e.Amounts, v.Amounts)
+func (e BalanceEntry) Summary() string {
+	return fmt.Sprintf("balance %v %v", e.Date, e.Account)
 }
 
 // Amount represents an amount of a unit.
@@ -73,36 +65,33 @@ func (a Amount) String() string {
 
 // UnitEntry represents a unit entry.
 type UnitEntry struct {
-	common
+	Common
 	Symbol string
 	Scale  Decimal
+}
+
+func (e UnitEntry) Line() int {
+	return e.Common.Line
 }
 
 func (e UnitEntry) Summary() string {
 	return fmt.Sprintf("unit %v", e.Symbol)
 }
 
-func (e UnitEntry) Equal(v UnitEntry) bool {
-	return e == v
-}
-
 // TransactionEntry represents a transaction entry.
 type TransactionEntry struct {
-	common
+	Common
 	Date        civil.Date
 	Description string
 	Splits      []Split
 }
 
-func (e TransactionEntry) Summary() string {
-	return fmt.Sprintf("transaction %v %#v", e.Date, e.Description)
+func (e TransactionEntry) Line() int {
+	return e.Common.Line
 }
 
-func (e TransactionEntry) Equal(v TransactionEntry) bool {
-	return e.common == v.common &&
-		e.Date == v.Date &&
-		e.Description == v.Description &&
-		cmp.Equal(e.Splits, v.Splits)
+func (e TransactionEntry) Summary() string {
+	return fmt.Sprintf("transaction %v %#v", e.Date, e.Description)
 }
 
 // Split represents one split in a transaction.

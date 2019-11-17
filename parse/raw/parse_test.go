@@ -41,7 +41,7 @@ Expenses:Stuff -1.2 USD
 	}
 	want := []Entry{
 		BalanceEntry{
-			common:  common{line: 1},
+			Common:  Common{Line: 1},
 			Date:    civil.Date{2001, 2, 3},
 			Account: "Some:account",
 			Amounts: []Amount{
@@ -49,7 +49,7 @@ Expenses:Stuff -1.2 USD
 			},
 		},
 		BalanceEntry{
-			common:  common{line: 2},
+			Common:  Common{Line: 2},
 			Date:    civil.Date{2001, 2, 5},
 			Account: "Some:account",
 			Amounts: []Amount{
@@ -58,12 +58,12 @@ Expenses:Stuff -1.2 USD
 			},
 		},
 		UnitEntry{
-			common: common{line: 6},
+			Common: Common{Line: 6},
 			Symbol: "USD",
 			Scale:  Decimal{100, 1},
 		},
 		TransactionEntry{
-			common:      common{line: 7},
+			Common:      Common{Line: 7},
 			Date:        civil.Date{2001, 2, 3},
 			Description: "Buy stuff",
 			Splits: []Split{
@@ -96,7 +96,7 @@ Expenses:Stuff
 	}
 	want := []Entry{
 		TransactionEntry{
-			common:      common{line: 1},
+			Common:      Common{Line: 1},
 			Date:        civil.Date{2001, 2, 3},
 			Description: "Buy stuff",
 			Splits: []Split{
@@ -116,7 +116,7 @@ Expenses:Stuff
 	}
 }
 
-func TestParse_empty_lines_ignored(t *testing.T) {
+func TestParse_empty_Lines_ignored(t *testing.T) {
 	t.Parallel()
 	const input = `
 bal 2001-02-05 Some:account
@@ -138,7 +138,7 @@ Expenses:Stuff -1.2 USD
 	}
 	want := []Entry{
 		BalanceEntry{
-			common:  common{line: 2},
+			Common:  Common{Line: 2},
 			Date:    civil.Date{2001, 2, 5},
 			Account: "Some:account",
 			Amounts: []Amount{
@@ -147,12 +147,12 @@ Expenses:Stuff -1.2 USD
 			},
 		},
 		UnitEntry{
-			common: common{line: 8},
+			Common: Common{Line: 8},
 			Symbol: "USD",
 			Scale:  Decimal{100, 1},
 		},
 		TransactionEntry{
-			common:      common{line: 9},
+			Common:      Common{Line: 9},
 			Date:        civil.Date{2001, 2, 3},
 			Description: "Buy stuff",
 			Splits: []Split{
