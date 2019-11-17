@@ -28,7 +28,7 @@ type TransactionLine struct {
 	Common
 	Description string
 	Splits      []book.Split
-	Errors      []error
+	Err         error
 }
 
 func (l TransactionLine) Transaction() book.Transaction {
@@ -41,7 +41,8 @@ func (l TransactionLine) Transaction() book.Transaction {
 
 type BalanceLine struct {
 	Common
-	Account book.Account
-	Amounts []book.Amount
-	Errors  []error
+	Account  book.Account
+	Balance  book.Balance
+	Declared book.Balance
+	Err      error
 }

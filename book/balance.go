@@ -15,6 +15,7 @@
 package book
 
 import (
+	"reflect"
 	"sort"
 	"strings"
 )
@@ -22,7 +23,6 @@ import (
 // Balance represents a balance of amounts of various unit types.
 // The order of different units does not matter.
 // There should not be more than one Amount for a unit type.
-// Equality of unit types is by pointer.
 type Balance []Amount
 
 // Add adds an amount to the balance.
@@ -43,17 +43,12 @@ func (b Balance) Add(a Amount) Balance {
 // Equal returns true if the two balances are equal.
 func (b Balance) Equal(b2 Balance) bool {
 	c, c2 := b.CleanCopy(), b2.CleanCopy()
-	c.sort()
-	c2.sort()
 	if len(c) != len(c2) {
 		return false
 	}
-	for i, a := range c {
-		if a != c2[i] {
-			return false
-		}
-	}
-	return true
+	c.sort()
+	c2.sort()
+	return reflect.DeepEqual(c, c2)
 }
 
 // CleanCopy returns a copy of the balance without units that have

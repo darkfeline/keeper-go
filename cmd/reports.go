@@ -44,14 +44,11 @@ var balanceCmd = &cobra.Command{
 			return err
 		}
 		defer f.Close()
-		p, err := parse.Parse(f)
+		r, err := parse.Parse(f)
 		if err != nil {
 			return err
 		}
-		ts, err := p.CheckedTransactions()
-		if err != nil {
-			return err
-		}
+		ts := report.Transactions(r)
 		m := report.TallyBalances(ts)
 		wf, err := writeBalancesFunc(format)
 		if err != nil {
@@ -74,14 +71,11 @@ var incomeCmd = &cobra.Command{
 			return err
 		}
 		defer f.Close()
-		p, err := parse.Parse(f)
+		r, err := parse.Parse(f)
 		if err != nil {
 			return err
 		}
-		ts, err := p.CheckedTransactions()
-		if err != nil {
-			return err
-		}
+		ts := report.Transactions(r)
 		m := report.TallyBalances(ts)
 		wf, err := writeBalancesFunc(format)
 		if err != nil {

@@ -41,14 +41,11 @@ var splitsCmd = &cobra.Command{
 			return err
 		}
 		defer f.Close()
-		p, err := parse.Parse(f)
+		r, err := parse.Parse(f)
 		if err != nil {
 			return err
 		}
-		ts, err := p.CheckedTransactions()
-		if err != nil {
-			return err
-		}
+		ts := report.Transactions(r)
 		ts = report.AccountSplits(ts, book.Account(args[1]))
 		wf, err := writeSplitsFunc(format)
 		if err != nil {

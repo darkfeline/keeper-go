@@ -23,7 +23,20 @@ import (
 
 	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/book"
+	"go.felesatra.moe/keeper/parse"
 )
+
+func Transactions(r parse.Result) []book.Transaction {
+	var t []book.Transaction
+	for _, l := range r.Lines {
+		e, ok := l.(parse.TransactionLine)
+		if !ok {
+			continue
+		}
+		t = append(t, e.Transaction())
+	}
+	return t
+}
 
 // TallyBalances returns the balance for each account after all the transactions.
 func TallyBalances(ts []book.Transaction) map[book.Account]book.Balance {

@@ -25,7 +25,7 @@ import (
 	"go.felesatra.moe/keeper/parse/raw"
 )
 
-func TestParse_CheckedTransactions(t *testing.T) {
+func TestParse(t *testing.T) {
 	t.Parallel()
 	const input = `bal 2001-02-03 Some:account -1.20 USD
 tx 2001-02-03 "Buy stuff"
@@ -34,11 +34,14 @@ Expenses:Stuff
 .
 unit USD 100
 `
-	got := parseCheckedTransactions(t, input)
+	got := parseTestInput(t, input)
 	u := &book.UnitType{Symbol: "USD", Scale: 100}
-	want := []book.Transaction{
-		{
-			Date:        civil.Date{2001, 2, 3},
+	want := []interface{}{
+		TransactionLine{
+			Common: Common{
+				Date: civil.Date{2001, 2, 3},
+				Line: 2,
+			},
 			Description: "Buy stuff",
 			Splits: []book.Split{
 				{
@@ -51,10 +54,28 @@ unit USD 100
 				},
 			},
 		},
+		BalanceLine{
+			Common: Common{
+				Date: civil.Date{2001, 2, 3},
+				Line: 1,
+			},
+			Account:  "Some:account",
+			Balance:  book.Balance{{Number: -120, UnitType: u}},
+			Declared: book.Balance{{Number: -120, UnitType: u}},
+		},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmp.Diff(want, got.Lines); diff != "" {
 		t.Errorf("transactions mismatch (-want +got):\n%s", diff)
 	}
+}
+
+func parseTestInput(t *testing.T, input string) Result {
+	t.Helper()
+	r, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return r
 }
 
 func TestParse_unbalanced_transaction(t *testing.T) {
@@ -65,13 +86,9 @@ Some:account -1.2 USD
 Expenses:Stuff 1.3 USD
 .
 `
-	p, err := Parse(strings.NewReader(input))
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = p.CheckedTransactions()
-	if err == nil {
-		t.Errorf("Expected error")
+	got := parseTestInput(t, input)
+	if len(got.Errors) == 0 {
+		t.Errorf("Expected errors")
 	}
 }
 
@@ -84,13 +101,9 @@ Expenses:Stuff
 .
 bal 2001-02-03 Some:account -1 USD
 `
-	p, err := Parse(strings.NewReader(input))
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = p.CheckedTransactions()
-	if err == nil {
-		t.Errorf("Expected error")
+	got := parseTestInput(t, input)
+	if len(got.Errors) == 0 {
+		t.Errorf("Expected errors")
 	}
 }
 
@@ -160,15 +173,32 @@ func TestCombineDecimalUnit(t *testing.T) {
 	}
 }
 
-func parseCheckedTransactions(t *testing.T, input string) []book.Transaction {
-	t.Helper()
-	p, err := Parse(strings.NewReader(input))
-	if err != nil {
-		t.Fatal(err)
+func TestIsPower10(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		n    int64
+		want bool
+	}{
+		{0, false},
+		{11, false},
+		{-11, false},
+		{101, false},
+		{-101, false},
+		{1, true},
+		{-1, true},
+		{10, true},
+		{100, true},
+		{-10, true},
+		{-100, true},
 	}
-	got, err := p.CheckedTransactions()
-	if err != nil {
-		t.Fatal(err)
+	for _, c := range cases {
+		c := c
+		t.Run(fmt.Sprintf("%d", c.n), func(t *testing.T) {
+			t.Parallel()
+			got := isPower10(c.n)
+			if got != c.want {
+				t.Errorf("isPower10(%d) = %v; want %v", c.n, got, c.want)
+			}
+		})
 	}
-	return got
 }
