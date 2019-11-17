@@ -25,16 +25,21 @@ import (
 // entries.  Type assertions can be used to process specific types of
 // entries.
 type Entry interface {
-	// Line returns the line number of the entry.
-	Line() int
 	// Summary returns a string that usefully identifies the
 	// entry, e.g., in errors.
 	Summary() string
+	// LineNumber returns the line number of the entry.
+	LineNumber() int
 }
 
 // Common contains the fields common to all entries.
 type Common struct {
+	// Line number of the entry.
 	Line int
+}
+
+func (c Common) LineNumber() int {
+	return c.Line
 }
 
 // BalanceEntry represents a balance entry.
@@ -43,10 +48,6 @@ type BalanceEntry struct {
 	Date    civil.Date
 	Account book.Account
 	Amounts []Amount
-}
-
-func (e BalanceEntry) Line() int {
-	return e.Common.Line
 }
 
 func (e BalanceEntry) Summary() string {
@@ -70,10 +71,6 @@ type UnitEntry struct {
 	Scale  Decimal
 }
 
-func (e UnitEntry) Line() int {
-	return e.Common.Line
-}
-
 func (e UnitEntry) Summary() string {
 	return fmt.Sprintf("unit %v", e.Symbol)
 }
@@ -84,10 +81,6 @@ type TransactionEntry struct {
 	Date        civil.Date
 	Description string
 	Splits      []Split
-}
-
-func (e TransactionEntry) Line() int {
-	return e.Common.Line
 }
 
 func (e TransactionEntry) Summary() string {
