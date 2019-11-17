@@ -23,7 +23,7 @@ import (
 )
 
 // Parse parses keeper entries from the reader and returns them.
-func Parse(r io.Reader) ([]EntryCommon, error) {
+func Parse(r io.Reader) ([]Entry, error) {
 	p := newParser(r)
 	return p.parse()
 }
@@ -38,8 +38,8 @@ func newParser(r io.Reader) *parser {
 	}
 }
 
-func (p *parser) parse() ([]EntryCommon, error) {
-	var entries []EntryCommon
+func (p *parser) parse() ([]Entry, error) {
+	var entries []Entry
 	for {
 		switch tok := p.l.NextToken(); tok.Typ {
 		case lex.TokEOF:
@@ -60,7 +60,7 @@ func (p *parser) parse() ([]EntryCommon, error) {
 	}
 }
 
-func (p *parser) parseItem(tok lex.Token) (EntryCommon, error) {
+func (p *parser) parseItem(tok lex.Token) (Entry, error) {
 	switch tok.Val {
 	case "tx":
 		return p.parseTransaction(tok)

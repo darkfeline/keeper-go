@@ -21,12 +21,12 @@ import (
 	"go.felesatra.moe/keeper/parse/raw"
 )
 
-func processErr(e raw.EntryCommon, v interface{}) error {
+func processErr(e raw.Entry, v interface{}) error {
 	return processErrf(e, "%v", v)
 }
 
-func processErrf(e raw.EntryCommon, format string, v ...interface{}) error {
-	c := e.EntryCommon()
+func processErrf(e raw.Entry, format string, v ...interface{}) error {
+	c := e.GetCommon()
 	msg := fmt.Sprintf(format, v...)
 	return fmt.Errorf("entry %v (line %d): %v", e.Summary(), c.Line, msg)
 }

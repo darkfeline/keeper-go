@@ -21,12 +21,12 @@ import (
 	"go.felesatra.moe/keeper/book"
 )
 
-// EntryCommon describes the common interface implemented by all
+// Entry describes the common interface implemented by all
 // entries.  Type assertions can be used to process specific types of
 // entries.
-type EntryCommon interface {
-	// EntryCommon returns a struct with the common fields.
-	EntryCommon() Common
+type Entry interface {
+	// GetCommon returns a struct with the common fields.
+	GetCommon() Common
 	// Summary returns a string that usefully identifies the
 	// entry, e.g., in errors.
 	Summary() string
@@ -37,7 +37,7 @@ type Common struct {
 	Line int
 }
 
-func (c Common) EntryCommon() Common {
+func (c Common) GetCommon() Common {
 	return c
 }
 
