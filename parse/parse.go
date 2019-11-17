@@ -206,7 +206,11 @@ func (p *processor) convertAmount(a raw.Amount) (book.Amount, error) {
 	if !ok {
 		return book.Amount{}, fmt.Errorf("convert amount %v: unknown unit", a)
 	}
-	return convertAmount(a.Number, u)
+	a2, err := combineDecimalUnit(a.Number, u)
+	if err != nil {
+		return book.Amount{}, fmt.Errorf("convert amount %v: %v", a, err)
+	}
+	return a2, nil
 }
 
 func splitsBalance(s []book.Split) (b book.Balance, empty []*book.Split) {
@@ -227,11 +231,12 @@ func decimalToInt64(d raw.Decimal) (int64, error) {
 	return d.Number / d.Scale, nil
 }
 
-func convertAmount(d raw.Decimal, u *book.UnitType) (book.Amount, error) {
+// combineDecimalUnit combines a decimal magnitude and unit into a book amount.
+func combineDecimalUnit(d raw.Decimal, u *book.UnitType) (book.Amount, error) {
 	if d.Scale > u.Scale {
 		rescale := d.Scale / u.Scale
 		if d.Number%rescale != 0 {
-			return book.Amount{}, fmt.Errorf("convert amount: fractions for %v too small for unit %v", d, u)
+			return book.Amount{}, fmt.Errorf("%v fractions too small for unit %v", d, u)
 		}
 		d.Number /= rescale
 		d.Scale /= rescale

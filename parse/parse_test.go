@@ -130,7 +130,7 @@ func TestSortEntries(t *testing.T) {
 	}
 }
 
-func TestConvertAmount(t *testing.T) {
+func TestCombineDecimalUnit(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		d    raw.Decimal
@@ -145,7 +145,7 @@ func TestConvertAmount(t *testing.T) {
 		c := c
 		t.Run(fmt.Sprintf("%v %v", c.d, c.u), func(t *testing.T) {
 			t.Parallel()
-			got, err := convertAmount(c.d, &c.u)
+			got, err := combineDecimalUnit(c.d, &c.u)
 			if err != nil {
 				t.Error(err)
 			}
