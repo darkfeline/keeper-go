@@ -27,11 +27,15 @@ var rootCmd = &cobra.Command{
 }
 
 var (
-	format string
+	format    string
+	startDate string
+	endDate   string
 )
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&format, "format", prettyFmt, "output format")
+	rootCmd.PersistentFlags().StringVar(&startDate, "start", "", "start date")
+	rootCmd.PersistentFlags().StringVar(&endDate, "end", "", "end date")
 }
 
 const (
