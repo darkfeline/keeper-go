@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package report
+package cmd
 
 import (
 	"testing"
@@ -104,7 +104,7 @@ func TestTxStarting(t *testing.T) {
 		c := c
 		t.Run(c.desc, func(t *testing.T) {
 			t.Parallel()
-			got := TxStarting(c.ts, c.d)
+			got := txStarting(c.ts, c.d)
 			if diff := cmp.Diff(c.want, got); diff != "" {
 				t.Errorf("tx mismatch (-want +got):\n%s", diff)
 			}
@@ -194,7 +194,7 @@ func TestTxEnding(t *testing.T) {
 		c := c
 		t.Run(c.desc, func(t *testing.T) {
 			t.Parallel()
-			got := TxEnding(c.ts, c.d)
+			got := txEnding(c.ts, c.d)
 			if diff := cmp.Diff(c.want, got); diff != "" {
 				t.Errorf("tx mismatch (-want +got):\n%s", diff)
 			}

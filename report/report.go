@@ -21,7 +21,6 @@ package report
 import (
 	"sort"
 
-	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/parse"
 )
@@ -87,26 +86,5 @@ func AccountSplits(ts []book.Transaction, a book.Account) []book.Transaction {
 			break searchSplits
 		}
 	}
-	return new
-}
-
-// TxStarting returns the transactions with dates on or after the given date.
-func TxStarting(ts []book.Transaction, d civil.Date) []book.Transaction {
-	i := sort.Search(len(ts), func(i int) bool {
-		return !ts[i].Date.Before(d)
-	})
-	new := make([]book.Transaction, len(ts)-i)
-	copy(new, ts[i:])
-	return new
-}
-
-// TxEnding returns the transactions with dates before or on the given date.
-func TxEnding(ts []book.Transaction, d civil.Date) []book.Transaction {
-	i := sort.Search(len(ts), func(i int) bool {
-		return !ts[len(ts)-1-i].Date.After(d)
-	})
-	n := len(ts) - i
-	new := make([]book.Transaction, n)
-	copy(new, ts[:n])
 	return new
 }
