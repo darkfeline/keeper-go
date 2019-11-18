@@ -45,7 +45,7 @@ var splitsCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		ts := report.Transactions(r)
+		ts := r.Transactions()
 		ts = report.AccountSplits(ts, book.Account(args[1]))
 		wf, err := writeSplitsFunc(format)
 		if err != nil {

@@ -48,7 +48,7 @@ var balanceCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		ts := report.Transactions(r)
+		ts := r.Transactions()
 		m := report.TallyBalances(ts)
 		wf, err := writeBalancesFunc(format)
 		if err != nil {
@@ -75,7 +75,7 @@ var incomeCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		ts := report.Transactions(r)
+		ts := r.Transactions()
 		m := report.TallyBalances(ts)
 		wf, err := writeBalancesFunc(format)
 		if err != nil {

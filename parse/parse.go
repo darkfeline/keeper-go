@@ -23,10 +23,25 @@ import (
 	"go.felesatra.moe/keeper/parse/raw"
 )
 
+// Result contains the parse results.
 type Result struct {
 	Entries []interface{}
 	Lines   []interface{}
 	Errors  []error
+}
+
+// Transactions returns the parsed transactions.
+// This doesn't take into account any errors during parsing.
+func (r Result) Transactions() []book.Transaction {
+	var t []book.Transaction
+	for _, l := range r.Lines {
+		e, ok := l.(TransactionLine)
+		if !ok {
+			continue
+		}
+		t = append(t, e.Transaction())
+	}
+	return t
 }
 
 // Parse parses keeper format entries.
