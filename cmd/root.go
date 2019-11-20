@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 
+	"cloud.google.com/go/civil"
 	"github.com/spf13/cobra"
 )
 
@@ -27,15 +28,15 @@ var rootCmd = &cobra.Command{
 }
 
 var (
-	format    string
-	startDate string
-	endDate   string
+	format       string
+	startDateStr string
+	endDateStr   string
 )
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&format, "format", prettyFmt, "output format")
-	rootCmd.PersistentFlags().StringVar(&startDate, "start", "", "start date")
-	rootCmd.PersistentFlags().StringVar(&endDate, "end", "", "end date")
+	rootCmd.PersistentFlags().StringVar(&startDateStr, "start", "", "start date")
+	rootCmd.PersistentFlags().StringVar(&endDateStr, "end", "", "end date")
 }
 
 const (
@@ -48,4 +49,26 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func startDate() (civil.Date, error) {
+	if startDateStr == "" {
+		return civil.Date{}, nil
+	}
+	d, err := civil.ParseDate(startDateStr)
+	if err != nil {
+		return civil.Date{}, err
+	}
+	return d, nil
+}
+
+func endDate() (civil.Date, error) {
+	if endDateStr == "" {
+		return civil.Date{}, nil
+	}
+	d, err := civil.ParseDate(endDateStr)
+	if err != nil {
+		return civil.Date{}, err
+	}
+	return d, nil
 }
