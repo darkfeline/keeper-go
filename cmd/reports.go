@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -95,8 +96,12 @@ func accountsUnder(m map[book.Account]book.Balance, root book.Account) []book.Ac
 			as = append(as, a)
 		}
 	}
-	report.SortAccounts(as)
+	sortAccounts(as)
 	return as
+}
+
+func sortAccounts(as []book.Account) {
+	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
 }
 
 type writeBalancesFn func(w io.Writer, m map[book.Account]book.Balance, root book.Account) error

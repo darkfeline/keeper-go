@@ -19,8 +19,6 @@
 package report
 
 import (
-	"sort"
-
 	"go.felesatra.moe/keeper/book"
 )
 
@@ -34,11 +32,6 @@ func TallyBalances(ts []book.Transaction) map[book.Account]book.Balance {
 		}
 	}
 	return m
-}
-
-// SortAccounts sorts the slice of accounts.
-func SortAccounts(as []book.Account) {
-	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
 }
 
 // AccountTx returns the transactions for the given account.
