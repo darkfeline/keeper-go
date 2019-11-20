@@ -27,7 +27,6 @@ import (
 	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/cmd/internal/colfmt"
 	"go.felesatra.moe/keeper/parse"
-	"go.felesatra.moe/keeper/report"
 )
 
 func init() {
@@ -50,7 +49,7 @@ var balanceCmd = &cobra.Command{
 			return err
 		}
 		ts := r.Transactions()
-		m := report.TallyBalances(ts)
+		m := tallyBalances(ts)
 		wf, err := writeBalancesFunc(format)
 		if err != nil {
 			return err
@@ -77,7 +76,7 @@ var incomeCmd = &cobra.Command{
 			return err
 		}
 		ts := r.Transactions()
-		m := report.TallyBalances(ts)
+		m := tallyBalances(ts)
 		wf, err := writeBalancesFunc(format)
 		if err != nil {
 			return err
@@ -87,6 +86,17 @@ var incomeCmd = &cobra.Command{
 		wf(os.Stdout, m, "Expenses")
 		return nil
 	},
+}
+
+func tallyBalances(ts []book.Transaction) map[book.Account]book.Balance {
+	m := make(map[book.Account]book.Balance)
+	for _, t := range ts {
+		for _, s := range t.Splits {
+			b := m[s.Account]
+			m[s.Account] = b.Add(s.Amount)
+		}
+	}
+	return m
 }
 
 func accountsUnder(m map[book.Account]book.Balance, root book.Account) []book.Account {

@@ -24,7 +24,6 @@ import (
 	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/cmd/internal/colfmt"
 	"go.felesatra.moe/keeper/parse"
-	"go.felesatra.moe/keeper/report"
 )
 
 func init() {
@@ -46,7 +45,7 @@ var splitsCmd = &cobra.Command{
 			return err
 		}
 		ts := r.Transactions()
-		ts = report.AccountSplits(ts, book.Account(args[1]))
+		ts = accountSplits(ts, book.Account(args[1]))
 		wf, err := writeSplitsFunc(format)
 		if err != nil {
 			return err
@@ -54,6 +53,25 @@ var splitsCmd = &cobra.Command{
 		wf(os.Stdout, ts)
 		return nil
 	},
+}
+
+// accountSplits returns the splits for the given account.
+// The returned transactions will be unbalanced since they will only
+// have the splits for the given account.
+func accountSplits(ts []book.Transaction, a book.Account) []book.Transaction {
+	var new []book.Transaction
+	for _, t := range ts {
+	searchSplits:
+		for _, s := range t.Splits {
+			if s.Account != a {
+				continue
+			}
+			t.Splits = []book.Split{s}
+			new = append(new, t)
+			break searchSplits
+		}
+	}
+	return new
 }
 
 type writeSplitsFn func(w io.Writer, ts []book.Transaction) error
