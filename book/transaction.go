@@ -41,7 +41,7 @@ type Split struct {
 type Amount struct {
 	// Number is the number of the smallest unit of the UnitType.
 	Number   int64
-	UnitType *UnitType
+	UnitType UnitType
 }
 
 // Neg returns the additive inverse of the amount.

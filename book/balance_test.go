@@ -22,7 +22,7 @@ import (
 
 func TestBalance_Add_empty_balance(t *testing.T) {
 	t.Parallel()
-	u := &UnitType{Symbol: "USD", Scale: 100}
+	u := UnitType{Symbol: "USD", Scale: 100}
 	var b Balance
 	b = b.Add(Amount{Number: 12345, UnitType: u})
 	want := Balance{{Number: 12345, UnitType: u}}
@@ -33,7 +33,7 @@ func TestBalance_Add_empty_balance(t *testing.T) {
 
 func TestBalance_Add_existing_balance(t *testing.T) {
 	t.Parallel()
-	u := &UnitType{Symbol: "USD", Scale: 100}
+	u := UnitType{Symbol: "USD", Scale: 100}
 	b := Balance{{Number: 10000, UnitType: u}}
 	b = b.Add(Amount{Number: 12345, UnitType: u})
 	want := Balance{{Number: 22345, UnitType: u}}
@@ -44,8 +44,8 @@ func TestBalance_Add_existing_balance(t *testing.T) {
 
 func TestBalance_Add_zeroed_accounts(t *testing.T) {
 	t.Parallel()
-	u := &UnitType{Symbol: "USD", Scale: 100}
-	u2 := &UnitType{Symbol: "JPY", Scale: 1}
+	u := UnitType{Symbol: "USD", Scale: 100}
+	u2 := UnitType{Symbol: "JPY", Scale: 1}
 	b := Balance{
 		{Number: 3200, UnitType: u2},
 		{Number: 123, UnitType: u},
@@ -61,8 +61,8 @@ func TestBalance_Add_zeroed_accounts(t *testing.T) {
 
 func TestBalance_Equal_ignores_order(t *testing.T) {
 	t.Parallel()
-	u := &UnitType{Symbol: "USD", Scale: 100}
-	u2 := &UnitType{Symbol: "JPY", Scale: 1}
+	u := UnitType{Symbol: "USD", Scale: 100}
+	u2 := UnitType{Symbol: "JPY", Scale: 1}
 	a := Balance{
 		{Number: 123, UnitType: u},
 		{Number: 3200, UnitType: u2},
@@ -78,8 +78,8 @@ func TestBalance_Equal_ignores_order(t *testing.T) {
 
 func TestBalance_Equal_different_length(t *testing.T) {
 	t.Parallel()
-	u := &UnitType{Symbol: "USD", Scale: 100}
-	u2 := &UnitType{Symbol: "JPY", Scale: 1}
+	u := UnitType{Symbol: "USD", Scale: 100}
+	u2 := UnitType{Symbol: "JPY", Scale: 1}
 	a := Balance{
 		{Number: 3200, UnitType: u2},
 	}
@@ -97,8 +97,8 @@ func TestBalance_Equal_different_length(t *testing.T) {
 
 func TestBalance_Equal_different_amount(t *testing.T) {
 	t.Parallel()
-	u := &UnitType{Symbol: "USD", Scale: 100}
-	u2 := &UnitType{Symbol: "JPY", Scale: 1}
+	u := UnitType{Symbol: "USD", Scale: 100}
+	u2 := UnitType{Symbol: "JPY", Scale: 1}
 	a := Balance{
 		{Number: 3200, UnitType: u2},
 		{Number: 123, UnitType: u},
@@ -114,8 +114,8 @@ func TestBalance_Equal_different_amount(t *testing.T) {
 
 func TestBalance_Equal_ignore_zero(t *testing.T) {
 	t.Parallel()
-	u := &UnitType{Symbol: "USD", Scale: 100}
-	u2 := &UnitType{Symbol: "JPY", Scale: 1}
+	u := UnitType{Symbol: "USD", Scale: 100}
+	u2 := UnitType{Symbol: "JPY", Scale: 1}
 	a := Balance{
 		{Number: 3200, UnitType: u2},
 		{Number: 0, UnitType: u},

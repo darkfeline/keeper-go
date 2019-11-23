@@ -62,7 +62,7 @@ func Parse(r io.Reader) (Result, error) {
 }
 
 type processor struct {
-	units    map[string]*book.UnitType
+	units    map[string]book.UnitType
 	balances map[book.Account]book.Balance
 
 	transactions []book.Transaction
@@ -72,7 +72,7 @@ type processor struct {
 
 func newProcessor() *processor {
 	return &processor{
-		units:    make(map[string]*book.UnitType),
+		units:    make(map[string]book.UnitType),
 		balances: make(map[book.Account]book.Balance),
 	}
 }
@@ -108,7 +108,7 @@ func (p *processor) processUnit(u raw.UnitEntry) error {
 	if !isPower10(scale) {
 		return processErrf(u, "scale")
 	}
-	p.units[u.Symbol] = &book.UnitType{
+	p.units[u.Symbol] = book.UnitType{
 		Symbol: u.Symbol,
 		Scale:  scale,
 	}
@@ -250,7 +250,7 @@ func splitsBalance(s []book.Split) (b book.Balance, empty []*book.Split) {
 }
 
 // combineDecimalUnit combines a decimal magnitude and unit into a book amount.
-func combineDecimalUnit(d raw.Decimal, u *book.UnitType) (book.Amount, error) {
+func combineDecimalUnit(d raw.Decimal, u book.UnitType) (book.Amount, error) {
 	if d.Scale > u.Scale {
 		rescale := d.Scale / u.Scale
 		if d.Number%rescale != 0 {

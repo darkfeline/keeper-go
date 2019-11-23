@@ -35,7 +35,7 @@ Expenses:Stuff
 unit USD 100
 `
 	got := parseTestInput(t, input)
-	u := &book.UnitType{Symbol: "USD", Scale: 100}
+	u := book.UnitType{Symbol: "USD", Scale: 100}
 	want := []interface{}{
 		TransactionLine{
 			Common: Common{
@@ -158,13 +158,13 @@ func TestCombineDecimalUnit(t *testing.T) {
 		c := c
 		t.Run(fmt.Sprintf("%v %v", c.d, c.u), func(t *testing.T) {
 			t.Parallel()
-			got, err := combineDecimalUnit(c.d, &c.u)
+			got, err := combineDecimalUnit(c.d, c.u)
 			if err != nil {
 				t.Error(err)
 			}
 			want := book.Amount{
 				Number:   c.want,
-				UnitType: &c.u,
+				UnitType: c.u,
 			}
 			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("amount mismatch (-want +got):\n%s", diff)
