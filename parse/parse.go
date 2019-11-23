@@ -25,9 +25,8 @@ import (
 
 // Result contains the parse results.
 type Result struct {
-	Entries []interface{}
-	Lines   []interface{}
-	Errors  []error
+	Lines  []interface{}
+	Errors []error
 }
 
 // Transactions returns the parsed transactions.
@@ -57,9 +56,8 @@ func Parse(r io.Reader) (Result, error) {
 		p.processEntry(e)
 	}
 	return Result{
-		Entries: entries,
-		Lines:   p.lines,
-		Errors:  p.errors,
+		Lines:  p.lines,
+		Errors: p.errors,
 	}, nil
 }
 
