@@ -128,27 +128,28 @@ func writeBalancesFunc(format string) (writeBalancesFn, error) {
 }
 
 func writeBalancesTab(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
-	as := accountsUnder(m, root)
-	bw := bufio.NewWriter(w)
+	type item struct {
+		account string
+		balance string
+	}
+	var is []item
 	var total book.Balance
-	for _, a := range as {
-		bw.WriteString(string(a))
-		b := m[a]
-		if len(b) == 0 {
-			bw.WriteByte('\n')
-			return nil
-		}
-		bw.WriteByte('\t')
-		bw.WriteString(b.String())
-		bw.WriteByte('\n')
-		for _, a := range b {
+	for _, a := range accountsUnder(m, root) {
+		is = append(is, item{
+			account: string(a),
+			balance: m[a].String(),
+		})
+		for _, a := range m[a] {
 			total = total.Add(a)
 		}
 	}
-	bw.WriteString("Total")
-	bw.WriteByte('\t')
-	bw.WriteString(total.String())
-	bw.WriteByte('\n')
+	is = append(is, item{
+		account: "Total",
+		balance: total.String(),
+	})
+
+	bw := bufio.NewWriter(w)
+	colfmt.FormatTab(bw, is)
 	return bw.Flush()
 }
 
