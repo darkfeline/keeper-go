@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package colfmt implements formatting "columns of things".
+// "Columns of things" should be slices of structs containing only
+// string fields.
 package colfmt
 
 import (
