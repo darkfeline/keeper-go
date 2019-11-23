@@ -38,6 +38,21 @@ func Format(w io.Writer, v interface{}) error {
 	return bw.Flush()
 }
 
+func FormatTab(w io.Writer, v interface{}) error {
+	if err := checkType(v); err != nil {
+		return fmt.Errorf("colspec: %v", err)
+	}
+	rv := reflect.ValueOf(v)
+	n := rv.Len()
+	bw := bufio.NewWriter(w)
+	format := tabFormatString(rv.Elem().NumField())
+	for i := 0; i < n; i++ {
+		f := structFields(rv.Index(i))
+		fmt.Fprintf(bw, format, f...)
+	}
+	return bw.Flush()
+}
+
 func checkType(v interface{}) error {
 	t := reflect.TypeOf(v)
 	if k := t.Kind(); k != reflect.Slice {
@@ -142,6 +157,14 @@ func formatString(c []colspec) string {
 	}
 	b.WriteByte('\n')
 	return b.String()
+}
+
+func tabFormatString(n int) string {
+	p := make([]string, n)
+	for i := range p {
+		p[i] = "%s"
+	}
+	return strings.Join(p, "\t") + "\n"
 }
 
 type alignment int

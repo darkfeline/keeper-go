@@ -16,10 +16,12 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"cloud.google.com/go/civil"
 	"github.com/spf13/cobra"
+	"go.felesatra.moe/keeper/cmd/internal/colfmt"
 )
 
 var rootCmd = &cobra.Command{
@@ -71,4 +73,31 @@ func endDate() (civil.Date, error) {
 		return civil.Date{}, err
 	}
 	return d, nil
+}
+
+type formatter interface {
+	Format(io.Writer, interface{}) error
+}
+
+func getFormatter(format string) (formatter, error) {
+	switch format {
+	case tabFmt:
+		return tabFormatter{}, nil
+	case prettyFmt:
+		return colFormatter{}, nil
+	default:
+		return nil, fmt.Errorf("unknown format %v", format)
+	}
+}
+
+type colFormatter struct{}
+
+func (colFormatter) Format(w io.Writer, v interface{}) error {
+	return colfmt.Format(w, v)
+}
+
+type tabFormatter struct{}
+
+func (tabFormatter) Format(w io.Writer, v interface{}) error {
+	return colfmt.FormatTab(w, v)
 }
