@@ -26,6 +26,7 @@ import (
 	"strings"
 )
 
+// Format formats the slice of structs as columns.
 func Format(w io.Writer, v interface{}) error {
 	if err := checkType(v); err != nil {
 		return fmt.Errorf("colspec: %v", err)
@@ -41,6 +42,7 @@ func Format(w io.Writer, v interface{}) error {
 	return bw.Flush()
 }
 
+// FormatTab formats the slice of structs as tab separated values.
 func FormatTab(w io.Writer, v interface{}) error {
 	if err := checkType(v); err != nil {
 		return fmt.Errorf("colspec: %v", err)
