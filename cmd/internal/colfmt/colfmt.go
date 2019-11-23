@@ -45,7 +45,7 @@ func FormatTab(w io.Writer, v interface{}) error {
 	rv := reflect.ValueOf(v)
 	n := rv.Len()
 	bw := bufio.NewWriter(w)
-	format := tabFormatString(rv.Elem().NumField())
+	format := tabFormatString(reflect.TypeOf(v).Elem().NumField())
 	for i := 0; i < n; i++ {
 		f := structFields(rv.Index(i))
 		fmt.Fprintf(bw, format, f...)
