@@ -25,8 +25,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "keeper",
-	Short: "keeper is plain text accounting software",
+	Use:          "keeper",
+	Short:        "keeper is plain text accounting software",
+	SilenceUsage: true,
 }
 
 var (
