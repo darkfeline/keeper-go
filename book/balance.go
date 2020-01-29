@@ -70,7 +70,7 @@ func (b Balance) sort() {
 func (b Balance) String() string {
 	n := len(b)
 	if n == 0 {
-		return "empty balance"
+		return "0"
 	}
 	s := make([]string, n)
 	for i, a := range b {
