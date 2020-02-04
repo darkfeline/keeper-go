@@ -12,10 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package journal
 
-import "go.felesatra.moe/keeper/internal/cmd"
+import (
+	"fmt"
+)
 
-func main() {
-	cmd.Execute()
+// decFormat does decimal formatting for n/scale.
+// scale must be a positive multiple of 10.
+func decFormat(n int64, scale int64) string {
+	if scale <= 1 {
+		return fmt.Sprintf("%d", n)
+	}
+	return fmt.Sprintf("%d."+fracFmtStr(scale), n/scale, abs(n%scale))
+}
+
+func fracFmtStr(scale int64) string {
+	n := 0
+	for ; scale > 1; scale /= 10 {
+		n++
+	}
+	return fmt.Sprintf("%%0%dd", n)
+}
+
+func abs(x int64) int64 {
+	y := x >> 63
+	return (x ^ y) - y
 }

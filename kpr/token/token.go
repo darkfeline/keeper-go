@@ -12,10 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package token
 
-import "go.felesatra.moe/keeper/internal/cmd"
+//go:generate stringer -type=Token
 
-func main() {
-	cmd.Execute()
-}
+type Token int
+
+const (
+	ILLEGAL Token = iota
+	EOF
+	COMMENT
+
+	NEWLINE
+	DOT
+
+	// Values
+	STRING
+	IDENT
+	ACCOUNT
+	DECIMAL
+	DATE
+)

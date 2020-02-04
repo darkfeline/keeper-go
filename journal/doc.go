@@ -1,4 +1,4 @@
-// Copyright (C) 2019  Allen Li
+// Copyright (C) 2020  Allen Li
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
-
-import "go.felesatra.moe/keeper/internal/cmd"
-
-func main() {
-	cmd.Execute()
-}
+// Package entry implements building journal entries from keeper files.
+// These entries are the building blocks for analysis and reporting.
+package journal
