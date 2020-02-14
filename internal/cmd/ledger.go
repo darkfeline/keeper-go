@@ -20,7 +20,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"go.felesatra.moe/keeper/book"
-	"go.felesatra.moe/keeper/parse"
 )
 
 func init() {
@@ -37,7 +36,7 @@ var ledgerCmd = &cobra.Command{
 			return err
 		}
 		a := book.Account(args[1])
-		items := makeLedgerItems(a, b.AccountEntries)
+		items := makeLedgerItems(a, b.AccountEntries[a])
 		f, err := getFormatter(format)
 		if err != nil {
 			return err
@@ -72,46 +71,42 @@ func (l *ledgerItem) setBalance(b book.Balance) {
 	}
 }
 
-func makeLedgerItems(a book.Account, l []interface{}) []ledgerItem {
-	var is []ledgerItem
-	var b book.Balance
-lines:
-	for _, l := range l {
-		switch l := l.(type) {
-		case parse.TransactionLine:
-		splits:
-			for _, s := range l.Splits {
+func makeLedgerItems(a book.Account, e []book.Entry) []ledgerItem {
+	var items []ledgerItem
+	for _, e := range e {
+		item := ledgerItem{
+			date: e.Date().String(),
+			line: fmt.Sprintf("L%d", e.Pos().Line),
+		}
+
+		switch e := e.(type) {
+		case book.Transaction:
+			item := item
+			item.description = e.Description
+			if len(e.Splits) == 0 {
+				panic(fmt.Sprintf("no splits for %#v", e))
+			}
+			for _, s := range e.Splits {
 				if s.Account != a {
-					continue splits
+					continue
 				}
-				li := ledgerItem{
-					date:        l.Date.String(),
-					line:        fmt.Sprintf("L%d", l.Line),
-					description: l.Description,
-					amount:      s.Amount.String(),
-				}
-				if err := l.Err; err != nil {
-					li.error = err.Error()
-				}
-				b = b.Add(s.Amount)
-				li.setBalance(b)
-				is = append(is, li)
+				item := item
+				item.amount = s.Amount.String()
+				items = append(items, item)
 			}
-		case parse.BalanceLine:
+			items[len(items)-1].setBalance(e.Balance[a])
+		case book.BalanceAssert:
 			if l.Account != a {
-				continue lines
+				panic(fmt.Sprintf("got balance for account %s not %s", l.Account, a))
 			}
-			li := ledgerItem{
-				date: l.Date.String(),
-				line: fmt.Sprintf("L%d", l.Line),
+			item := item
+			item.setBalance(e.Actual)
+			if len(e.Diff) != 0 {
+				item.error = fmt.Sprintf("declared %s (diff %s)", e.Declared, e.Diff)
 			}
-			if err := l.Err; err != nil {
-				li.error = err.Error()
-			}
-			li.setBalance(b)
-			is = append(is, li)
+			items = append(items, item)
 		default:
-			panic(fmt.Sprintf("unknown line type %T", l))
+			panic(fmt.Sprintf("unknown entry type %T", l))
 		}
 	}
 	return is
