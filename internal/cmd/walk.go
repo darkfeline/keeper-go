@@ -27,7 +27,7 @@ func walkAccountTree(a []book.Account, f func(accountNode) error) error {
 	sortAccounts(a)
 	var last []string
 	for _, a := range a {
-		parts := acctParts(a)
+		parts := a.Parts()
 		common := commonPrefix(last, parts)
 		vlen := len(parts)
 		for i := len(common) + 1; i < vlen; i++ {

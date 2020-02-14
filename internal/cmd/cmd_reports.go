@@ -146,14 +146,14 @@ func (i *balanceItem) addBalance(b book.Balance) {
 func makeBalanceItems(m book.TBalance, root book.Account) []balanceItem {
 	var items []balanceItem
 	var total book.Balance
-	rlen := len(acctParts(root))
+	rlen := root.Level()
 	_ = walkAccountTree(accountsUnder(m, root), func(n accountNode) error {
 		a := n.Account
-		if !acctUnder(a, root) && a != root {
+		if !a.Under(root) && a != root {
 			return nil
 		}
 		i := balanceItem{
-			prefix: indent(len(acctParts(a))-rlen) + acctLeaf(a),
+			prefix: indent(a.Level()-rlen) + a.Leaf(),
 		}
 		b := m[a]
 		i.addBalance(b)
@@ -174,7 +174,7 @@ func makeBalanceItems(m book.TBalance, root book.Account) []balanceItem {
 func accountsUnder(m book.TBalance, root book.Account) []book.Account {
 	var as []book.Account
 	for a := range m {
-		if acctUnder(a, root) {
+		if a.Under(root) {
 			as = append(as, a)
 		}
 	}

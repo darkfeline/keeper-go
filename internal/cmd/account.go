@@ -25,21 +25,6 @@ func acctConcat(parts []string) book.Account {
 	return book.Account(strings.Join(parts, ":"))
 }
 
-func acctParts(a book.Account) []string {
-	return strings.Split(string(a), ":")
-}
-
-// acctLeaf returns the leaf part of the Account (after the last colon).
-func acctLeaf(a book.Account) string {
-	p := acctParts(a)
-	return p[len(p)-1]
-}
-
-// acctUnder returns true if the Account is a child account of the argument.
-func acctUnder(a book.Account, parent book.Account) bool {
-	return strings.HasPrefix(string(a), string(parent)+":")
-}
-
 func sortAccounts(as []book.Account) {
 	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
 }
