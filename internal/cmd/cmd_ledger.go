@@ -21,7 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"go.felesatra.moe/keeper/book"
-	"go.felesatra.moe/keeper/cmd/internal/colfmt"
+	"go.felesatra.moe/keeper/internal/colfmt"
 )
 
 func init() {
