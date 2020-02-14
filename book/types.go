@@ -50,22 +50,6 @@ func (u Unit) String() string {
 // Accounts are colon separated paths, like "Income:Salary".
 type Account string
 
-// Parts returns the string parts of the Account.
-func (a Account) Parts() []string {
-	return strings.Split(string(a), ":")
-}
-
-// Leaf returns the leaf part of the Account (after the last colon).
-func (a Account) Leaf() string {
-	p := a.Parts()
-	return p[len(p)-1]
-}
-
-// Under returns true if the Account is a child account of the argument.
-func (a Account) Under(parent Account) bool {
-	return strings.HasPrefix(string(a), string(parent)+":")
-}
-
 // Balance represents a balance of amounts of various units.
 // The order of different units does not matter.
 // There should not be more than one Amount for a unit.

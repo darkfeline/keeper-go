@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -180,10 +179,6 @@ func accountsUnder(m book.TBalance, root book.Account) []book.Account {
 	}
 	sortAccounts(as)
 	return as
-}
-
-func sortAccounts(as []book.Account) {
-	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
 }
 
 // indent returns a whitespace prefix for the given number of levels
