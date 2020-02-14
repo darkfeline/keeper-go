@@ -17,6 +17,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"cloud.google.com/go/civil"
@@ -55,7 +56,15 @@ func Execute() {
 	}
 }
 
-func compileBook(src []byte) (*book.Book, error) {
+func compileFile(path string) (*book.Book, error) {
+	src, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return compile(src)
+}
+
+func compile(src []byte) (*book.Book, error) {
 	var o []book.Option
 	d, err := startDate()
 	if err != nil {
@@ -96,29 +105,15 @@ func endDate() (civil.Date, error) {
 	return d, nil
 }
 
-type formatter interface {
-	Format(io.Writer, interface{}) error
-}
+type formatter func(io.Writer, interface{}) error
 
 func getFormatter(format string) (formatter, error) {
 	switch format {
 	case tabFmt:
-		return tabFormatter{}, nil
+		return colfmt.FormatTab, nil
 	case prettyFmt:
-		return colFormatter{}, nil
+		return colfmt.Format, nil
 	default:
 		return nil, fmt.Errorf("unknown format %v", format)
 	}
-}
-
-type colFormatter struct{}
-
-func (colFormatter) Format(w io.Writer, v interface{}) error {
-	return colfmt.Format(w, v)
-}
-
-type tabFormatter struct{}
-
-func (tabFormatter) Format(w io.Writer, v interface{}) error {
-	return colfmt.FormatTab(w, v)
 }

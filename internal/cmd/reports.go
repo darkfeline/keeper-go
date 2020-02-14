@@ -25,8 +25,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.felesatra.moe/keeper/cmd/internal/colfmt"
-	"go.felesatra.moe/keeper/journal"
-	"go.felesatra.moe/keeper/parse"
 )
 
 func init() {
@@ -39,15 +37,11 @@ var balanceCmd = &cobra.Command{
 	Short: "Print balance sheet",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		f, err := os.Open(args[0])
+		b, err := compileFile(args[0])
 		if err != nil {
 			return err
 		}
-		defer f.Close()
-		r, err := parse.Parse(f)
-		if err != nil {
-			return err
-		}
+		panic(0) // XXXXXXXXX
 		ts := r.Transactions()
 		m := tallyBalances(ts)
 		wf, err := writeBalancesFunc(format)
@@ -66,15 +60,11 @@ var incomeCmd = &cobra.Command{
 	Short: "Print income statement",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		f, err := os.Open(args[0])
+		b, err := compileFile(args[0])
 		if err != nil {
 			return err
 		}
-		defer f.Close()
-		r, err := parse.Parse(f)
-		if err != nil {
-			return err
-		}
+		panic(0) // XXXXXXXXX
 		ts := r.Transactions()
 		m := tallyBalances(ts)
 		wf, err := writeBalancesFunc(format)
@@ -88,8 +78,8 @@ var incomeCmd = &cobra.Command{
 	},
 }
 
-func tallyBalances(ts []journal.Transaction) map[journal.Account]journal.Balance {
-	m := make(map[journal.Account]journal.Balance)
+func tallyBalances(ts []book.Transaction) map[book.Account]book.Balance {
+	m := make(map[book.Account]book.Balance)
 	for _, t := range ts {
 		for _, s := range t.Splits {
 			b := m[s.Account]
@@ -99,8 +89,8 @@ func tallyBalances(ts []journal.Transaction) map[journal.Account]journal.Balance
 	return m
 }
 
-func accountsUnder(m map[journal.Account]journal.Balance, root journal.Account) []journal.Account {
-	var as []journal.Account
+func accountsUnder(m map[book.Account]book.Balance, root book.Account) []book.Account {
+	var as []book.Account
 	for a := range m {
 		if a.Under(root) {
 			as = append(as, a)
@@ -110,11 +100,11 @@ func accountsUnder(m map[journal.Account]journal.Balance, root journal.Account) 
 	return as
 }
 
-func sortAccounts(as []journal.Account) {
+func sortAccounts(as []book.Account) {
 	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
 }
 
-type writeBalancesFn func(w io.Writer, m map[journal.Account]journal.Balance, root journal.Account) error
+type writeBalancesFn func(w io.Writer, m map[book.Account]book.Balance, root book.Account) error
 
 func writeBalancesFunc(format string) (writeBalancesFn, error) {
 	switch format {
@@ -127,13 +117,13 @@ func writeBalancesFunc(format string) (writeBalancesFn, error) {
 	}
 }
 
-func writeBalancesTab(w io.Writer, m map[journal.Account]journal.Balance, root journal.Account) error {
+func writeBalancesTab(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
 	type item struct {
 		account string
 		balance string
 	}
 	var is []item
-	var total journal.Balance
+	var total book.Balance
 	for _, a := range accountsUnder(m, root) {
 		is = append(is, item{
 			account: string(a),
@@ -160,7 +150,7 @@ func writeBalancesTab(w io.Writer, m map[journal.Account]journal.Balance, root j
 // its balance is printed comma separated, aligned after the units for
 // single unit accounts.
 // These are assumed to be trading accounts and less important.
-func writeBalancesPretty(w io.Writer, m map[journal.Account]journal.Balance, root journal.Account) error {
+func writeBalancesPretty(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
 	items := makeBalanceItems(m, root)
 	return colfmt.Format(w, items)
 }
@@ -173,7 +163,7 @@ type balanceItem struct {
 	extraBalance string
 }
 
-func (i *balanceItem) addBalance(b journal.Balance) {
+func (i *balanceItem) addBalance(b book.Balance) {
 	switch len(b) {
 	case 0:
 	case 1:
@@ -185,11 +175,11 @@ func (i *balanceItem) addBalance(b journal.Balance) {
 	}
 }
 
-func makeBalanceItems(m map[journal.Account]journal.Balance, root journal.Account) []balanceItem {
+func makeBalanceItems(m map[book.Account]book.Balance, root book.Account) []balanceItem {
 	var items []balanceItem
-	var total journal.Balance
+	var total book.Balance
 	rlen := len(root.Parts())
-	_ = journal.WalkAccountTree(accountsUnder(m, root), func(n journal.AccountNode) error {
+	_ = book.WalkAccountTree(accountsUnder(m, root), func(n book.AccountNode) error {
 		a := n.Account
 		if !a.Under(root) && a != root {
 			return nil

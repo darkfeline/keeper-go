@@ -19,7 +19,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"go.felesatra.moe/keeper/journal"
+	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/parse"
 )
 
@@ -32,21 +32,17 @@ var ledgerCmd = &cobra.Command{
 	Short: "Print ledger for account",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		f, err := os.Open(args[0])
+		b, err := compileFile(args[0])
 		if err != nil {
 			return err
 		}
-		defer f.Close()
-		r, err := parse.Parse(f)
+		a := book.Account(args[1])
+		items := makeLedgerItems(a, b.AccountEntries)
+		f, err := getFormatter(format)
 		if err != nil {
 			return err
 		}
-		li := makeLedgerItems(journal.Account(args[1]), r.Lines)
-		fm, err := getFormatter(format)
-		if err != nil {
-			return err
-		}
-		_ = fm.Format(os.Stdout, li)
+		_ = f(os.Stdout, items)
 		return nil
 	},
 }
@@ -62,7 +58,7 @@ type ledgerItem struct {
 	error       string
 }
 
-func (l *ledgerItem) setBalance(b journal.Balance) {
+func (l *ledgerItem) setBalance(b book.Balance) {
 	switch len(b) {
 	default:
 		l.balancex = "(more)"
@@ -76,9 +72,9 @@ func (l *ledgerItem) setBalance(b journal.Balance) {
 	}
 }
 
-func makeLedgerItems(a journal.Account, l []interface{}) []ledgerItem {
+func makeLedgerItems(a book.Account, l []interface{}) []ledgerItem {
 	var is []ledgerItem
-	var b journal.Balance
+	var b book.Balance
 lines:
 	for _, l := range l {
 		switch l := l.(type) {
