@@ -186,6 +186,8 @@ func sortAccounts(as []book.Account) {
 	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
 }
 
+// indent returns a whitespace prefix for the given number of levels
+// of indentation.
 func indent(n int) string {
 	var b strings.Builder
 	for i := 0; i < n; i++ {
