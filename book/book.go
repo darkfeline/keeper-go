@@ -16,6 +16,8 @@ package book
 
 import (
 	"fmt"
+
+	"cloud.google.com/go/civil"
 )
 
 type Book struct {
@@ -24,16 +26,58 @@ type Book struct {
 	Balance        TBalance
 }
 
-func Compile(src []byte) (*Book, error) {
+type Option interface {
+	option()
+}
+
+func Compile(src []byte, o ...Option) (*Book, error) {
 	e, err := buildEntries(src)
 	if err != nil {
 		return nil, err
 	}
+	sortEntries(e)
+	op := buildOptions(o)
+	if d := op.starting; d.IsValid() {
+		e = entriesStarting(e, d)
+	}
+	if d := op.ending; d.IsValid() {
+		e = entriesEnding(e, d)
+	}
 	return compileFromEntries(e), nil
 }
 
+func Starting(d civil.Date) Option {
+	return optionSetter(func(o *options) {
+		o.starting = d
+	})
+}
+
+func Ending(d civil.Date) Option {
+	return optionSetter(func(o *options) {
+		o.ending = d
+	})
+}
+
+func buildOptions(o []Option) options {
+	var op options
+	for _, o := range o {
+		o.(optionSetter)(&op)
+	}
+	return op
+}
+
+type optionSetter func(*options)
+
+func (optionSetter) option() {}
+
+type options struct {
+	starting civil.Date
+	ending   civil.Date
+}
+
+// compileFromEntries compiles a Book from entries.
+// Entries should be sorted.
 func compileFromEntries(e []Entry) *Book {
-	sortEntries(e)
 	b := &Book{
 		AccountEntries: make(map[Account][]Entry),
 		Balance:        make(TBalance),

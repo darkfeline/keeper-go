@@ -25,11 +25,6 @@ func TestCompileFromEntries(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
 	e := []Entry{
-		BalanceAssert{
-			EntryDate: civil.Date{2000, 1, 2},
-			Account:   "Assets:Cash",
-			Declared:  Balance{{Number: -232, Unit: u}},
-		},
 		Transaction{
 			EntryDate:   civil.Date{2000, 1, 2},
 			Description: "buy stuff",
@@ -43,6 +38,11 @@ func TestCompileFromEntries(t *testing.T) {
 					Amount:  Amount{Number: 123, Unit: u},
 				},
 			},
+		},
+		BalanceAssert{
+			EntryDate: civil.Date{2000, 1, 2},
+			Account:   "Assets:Cash",
+			Declared:  Balance{{Number: -232, Unit: u}},
 		},
 	}
 	got := compileFromEntries(e)
