@@ -21,10 +21,9 @@ import (
 )
 
 // walkAccountTree calls the given function for every account in the tree of accounts.
+// The input slice is sorted in place.
 // If parent accounts are missing, they are also visited as virtual nodes.
 func walkAccountTree(a []book.Account, f func(accountNode) error) error {
-	new := make([]book.Account, len(a))
-	copy(new, a)
 	sortAccounts(new)
 	var last []string
 	for _, a := range new {

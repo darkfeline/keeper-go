@@ -23,6 +23,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/cmd/internal/colfmt"
 )
 
@@ -146,9 +147,9 @@ func makeBalanceItems(m book.TBalance, root book.Account) []balanceItem {
 	var items []balanceItem
 	var total book.Balance
 	rlen := len(root.Parts())
-	_ = book.WalkAccountTree(accountsUnder(m, root), func(n book.AccountNode) error {
+	_ = walkAccountTree(accountsUnder(m, root), func(n accountNode) error {
 		a := n.Account
-		if !a.Under(root) && a != root {
+		if !acctUnder(a, root) && a != root {
 			return nil
 		}
 		i := balanceItem{
