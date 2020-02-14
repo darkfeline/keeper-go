@@ -87,6 +87,116 @@ func TestCompile(t *testing.T) {
 	})
 }
 
+func TestCompile_balances(t *testing.T) {
+	t.Parallel()
+	u := Unit{Symbol: "USD", Scale: 100}
+	e := []Entry{
+		Transaction{
+			EntryDate:   civil.Date{2000, 1, 2},
+			Description: "buy stuff",
+			Splits: []Split{
+				{
+					Account: "Assets:Cash",
+					Amount:  Amount{Number: -123, Unit: u},
+				},
+				{
+					Account: "Expenses:Food",
+					Amount:  Amount{Number: 123, Unit: u},
+				},
+			},
+		},
+		BalanceAssert{
+			EntryDate: civil.Date{2000, 1, 2},
+			Account:   "Assets:Cash",
+			Declared:  Balance{{Number: -232, Unit: u}},
+		},
+		Transaction{
+			EntryDate:   civil.Date{2000, 1, 3},
+			Description: "buy stuff",
+			Splits: []Split{
+				{
+					Account: "Assets:Cash",
+					Amount:  Amount{Number: -123, Unit: u},
+				},
+				{
+					Account: "Expenses:Food",
+					Amount:  Amount{Number: 123, Unit: u},
+				},
+			},
+		},
+		BalanceAssert{
+			EntryDate: civil.Date{2000, 1, 3},
+			Account:   "Assets:Cash",
+			Declared:  Balance{{Number: -232, Unit: u}},
+		},
+	}
+	got := compile(e, make(TBalance))
+	t.Run("entries", func(t *testing.T) {
+		want := []Entry{
+			Transaction{
+				EntryDate:   civil.Date{2000, 1, 2},
+				Description: "buy stuff",
+				Splits: []Split{
+					{
+						Account: "Assets:Cash",
+						Amount:  Amount{Number: -123, Unit: u},
+					},
+					{
+						Account: "Expenses:Food",
+						Amount:  Amount{Number: 123, Unit: u},
+					},
+				},
+				Balances: TBalance{
+					"Assets:Cash":   Balance{{Number: -123, Unit: u}},
+					"Expenses:Food": Balance{{Number: 123, Unit: u}},
+				},
+			},
+			BalanceAssert{
+				EntryDate: civil.Date{2000, 1, 2},
+				Account:   "Assets:Cash",
+				Declared:  Balance{{Number: -232, Unit: u}},
+				Actual:    Balance{{Number: -123, Unit: u}},
+				Diff:      Balance{{Number: 109, Unit: u}},
+			},
+			Transaction{
+				EntryDate:   civil.Date{2000, 1, 3},
+				Description: "buy stuff",
+				Splits: []Split{
+					{
+						Account: "Assets:Cash",
+						Amount:  Amount{Number: -123, Unit: u},
+					},
+					{
+						Account: "Expenses:Food",
+						Amount:  Amount{Number: 123, Unit: u},
+					},
+				},
+				Balances: TBalance{
+					"Assets:Cash":   Balance{{Number: -246, Unit: u}},
+					"Expenses:Food": Balance{{Number: 246, Unit: u}},
+				},
+			},
+			BalanceAssert{
+				EntryDate: civil.Date{2000, 1, 3},
+				Account:   "Assets:Cash",
+				Declared:  Balance{{Number: -232, Unit: u}},
+				Actual:    Balance{{Number: -246, Unit: u}},
+				Diff:      Balance{{Number: -14, Unit: u}},
+			},
+		}
+		if diff := cmp.Diff(want, got.Entries); diff != "" {
+			t.Errorf("entry mismatch (-want +got):\n%s", diff)
+		}
+	})
+	t.Run("balance", func(t *testing.T) {
+		want := TBalance{
+			"Assets:Cash":   Balance{{Number: -246, Unit: u}},
+			"Expenses:Food": Balance{{Number: 246, Unit: u}},
+		}
+		compareBalances(t, want, got.Balance)
+	})
+}
+
 func compareBalances(t *testing.T, want, got TBalance) {
 	t.Helper()
 	wantKeys := make(map[Account]struct{})

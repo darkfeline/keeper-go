@@ -98,12 +98,12 @@ func (b *Book) compileEntry(e Entry) {
 		for _, s := range e.Splits {
 			k := s.Account
 			b.Balance[k] = b.Balance[k].Add(s.Amount)
-			tbal[k] = b.Balance[k]
+			tbal[k] = b.Balance[k].CleanCopy()
 		}
 		e.Balances = tbal
 		b.addEntry(e)
 	case BalanceAssert:
-		e.Actual = b.Balance[e.Account]
+		e.Actual = b.Balance[e.Account].CleanCopy()
 		e.Diff = balanceDiff(e.Actual, e.Declared)
 		b.addEntry(e)
 	default:
