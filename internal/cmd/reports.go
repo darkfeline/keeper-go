@@ -41,16 +41,13 @@ var balanceCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		panic(0) // XXXXXXXXX
-		ts := r.Transactions()
-		m := tallyBalances(ts)
-		wf, err := writeBalancesFunc(format)
+		f, err := getTbalFormatter()
 		if err != nil {
 			return err
 		}
-		wf(os.Stdout, m, "Assets")
+		f(os.Stdout, b.Balances, "Assets")
 		fmt.Println()
-		wf(os.Stdout, m, "Liabilities")
+		f(os.Stdout, b.Balances, "Liabilities")
 		return nil
 	},
 }
@@ -64,60 +61,31 @@ var incomeCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		panic(0) // XXXXXXXXX
-		ts := r.Transactions()
-		m := tallyBalances(ts)
-		wf, err := writeBalancesFunc(format)
+		f, err := getTbalFormatter()
 		if err != nil {
 			return err
 		}
-		wf(os.Stdout, m, "Income")
+		f(os.Stdout, b.Balances, "Income")
 		fmt.Println()
-		wf(os.Stdout, m, "Expenses")
+		f(os.Stdout, b.Balances, "Expenses")
 		return nil
 	},
 }
 
-func tallyBalances(ts []book.Transaction) map[book.Account]book.Balance {
-	m := make(map[book.Account]book.Balance)
-	for _, t := range ts {
-		for _, s := range t.Splits {
-			b := m[s.Account]
-			m[s.Account] = b.Add(s.Amount)
-		}
-	}
-	return m
-}
+type tbalFormatter func(w io.Writer, m book.TBalance, root book.Account) error
 
-func accountsUnder(m map[book.Account]book.Balance, root book.Account) []book.Account {
-	var as []book.Account
-	for a := range m {
-		if a.Under(root) {
-			as = append(as, a)
-		}
-	}
-	sortAccounts(as)
-	return as
-}
-
-func sortAccounts(as []book.Account) {
-	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
-}
-
-type writeBalancesFn func(w io.Writer, m map[book.Account]book.Balance, root book.Account) error
-
-func writeBalancesFunc(format string) (writeBalancesFn, error) {
+func getTbalFormatter(format string) (tbalFormatter, error) {
 	switch format {
 	case tabFmt:
-		return writeBalancesTab, nil
+		return formatTbalTab, nil
 	case prettyFmt:
-		return writeBalancesPretty, nil
+		return formatTbalPretty, nil
 	default:
 		return nil, fmt.Errorf("unknown format %v", format)
 	}
 }
 
-func writeBalancesTab(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
+func formatTbalTab(w io.Writer, m book.TBalance, root book.Account) error {
 	type item struct {
 		account string
 		balance string
@@ -143,14 +111,14 @@ func writeBalancesTab(w io.Writer, m map[book.Account]book.Balance, root book.Ac
 	return bw.Flush()
 }
 
-// writeBalancesPretty writes balances prettily.
+// formatTbalPretty writes balances prettily.
 // The amounts are right justified and aligned.
 // The units are left justified and aligned.
 // If there is more than one unit type in an account,
 // its balance is printed comma separated, aligned after the units for
 // single unit accounts.
 // These are assumed to be trading accounts and less important.
-func writeBalancesPretty(w io.Writer, m map[book.Account]book.Balance, root book.Account) error {
+func formatTbalPretty(w io.Writer, m book.TBalance, root book.Account) error {
 	items := makeBalanceItems(m, root)
 	return colfmt.Format(w, items)
 }
@@ -169,13 +137,13 @@ func (i *balanceItem) addBalance(b book.Balance) {
 	case 1:
 		a := b[0]
 		i.amount = a.Scalar()
-		i.unit = a.UnitType.Symbol
+		i.unit = a.Unit.Symbol
 	default:
 		i.extraBalance = b.String()
 	}
 }
 
-func makeBalanceItems(m map[book.Account]book.Balance, root book.Account) []balanceItem {
+func makeBalanceItems(m book.TBalance, root book.Account) []balanceItem {
 	var items []balanceItem
 	var total book.Balance
 	rlen := len(root.Parts())
@@ -201,6 +169,21 @@ func makeBalanceItems(m map[book.Account]book.Balance, root book.Account) []bala
 	i.addBalance(total)
 	items = append(items, i)
 	return items
+}
+
+func accountsUnder(m book.TBalance, root book.Account) []book.Account {
+	var as []book.Account
+	for a := range m {
+		if a.Under(root) {
+			as = append(as, a)
+		}
+	}
+	sortAccounts(as)
+	return as
+}
+
+func sortAccounts(as []book.Account) {
+	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
 }
 
 func indent(n int) string {

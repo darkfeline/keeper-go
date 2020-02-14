@@ -16,10 +16,12 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
 	"go.felesatra.moe/keeper/book"
+	"go.felesatra.moe/keeper/cmd/internal/colfmt"
 )
 
 func init() {
@@ -74,15 +76,15 @@ func (l *ledgerItem) setBalance(b book.Balance) {
 func makeLedgerItems(a book.Account, e []book.Entry) []ledgerItem {
 	var items []ledgerItem
 	for _, e := range e {
-		item := ledgerItem{
+		i := ledgerItem{
 			date: e.Date().String(),
 			line: fmt.Sprintf("L%d", e.Pos().Line),
 		}
 
 		switch e := e.(type) {
 		case book.Transaction:
-			item := item
-			item.description = e.Description
+			i := i
+			i.description = e.Description
 			if len(e.Splits) == 0 {
 				panic(fmt.Sprintf("no splits for %#v", e))
 			}
@@ -90,24 +92,37 @@ func makeLedgerItems(a book.Account, e []book.Entry) []ledgerItem {
 				if s.Account != a {
 					continue
 				}
-				item := item
-				item.amount = s.Amount.String()
-				items = append(items, item)
+				i := i
+				i.amount = s.Amount.String()
+				items = append(items, i)
 			}
 			items[len(items)-1].setBalance(e.Balance[a])
 		case book.BalanceAssert:
 			if l.Account != a {
 				panic(fmt.Sprintf("got balance for account %s not %s", l.Account, a))
 			}
-			item := item
-			item.setBalance(e.Actual)
+			i := i
+			i.setBalance(e.Actual)
 			if len(e.Diff) != 0 {
-				item.error = fmt.Sprintf("declared %s (diff %s)", e.Declared, e.Diff)
+				i.error = fmt.Sprintf("declared %s (diff %s)", e.Declared, e.Diff)
 			}
-			items = append(items, item)
+			items = append(items, i)
 		default:
 			panic(fmt.Sprintf("unknown entry type %T", l))
 		}
 	}
 	return is
+}
+
+type formatter func(io.Writer, interface{}) error
+
+func getFormatter(format string) (formatter, error) {
+	switch format {
+	case tabFmt:
+		return colfmt.FormatTab, nil
+	case prettyFmt:
+		return colfmt.Format, nil
+	default:
+		return nil, fmt.Errorf("unknown format %v", format)
+	}
 }

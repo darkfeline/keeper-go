@@ -16,14 +16,12 @@ package cmd
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 
 	"cloud.google.com/go/civil"
 	"github.com/spf13/cobra"
 	"go.felesatra.moe/keeper/book"
-	"go.felesatra.moe/keeper/cmd/internal/colfmt"
 )
 
 var rootCmd = &cobra.Command{
@@ -56,6 +54,28 @@ func Execute() {
 	}
 }
 
+func startDate() (civil.Date, error) {
+	if startDateStr == "" {
+		return civil.Date{}, nil
+	}
+	d, err := civil.ParseDate(startDateStr)
+	if err != nil {
+		return civil.Date{}, err
+	}
+	return d, nil
+}
+
+func endDate() (civil.Date, error) {
+	if endDateStr == "" {
+		return civil.Date{}, nil
+	}
+	d, err := civil.ParseDate(endDateStr)
+	if err != nil {
+		return civil.Date{}, err
+	}
+	return d, nil
+}
+
 func compileFile(path string) (*book.Book, error) {
 	src, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -81,39 +101,4 @@ func compile(src []byte) (*book.Book, error) {
 		o = append(o, book.Ending(d))
 	}
 	return book.Compile(src, o...)
-}
-
-func startDate() (civil.Date, error) {
-	if startDateStr == "" {
-		return civil.Date{}, nil
-	}
-	d, err := civil.ParseDate(startDateStr)
-	if err != nil {
-		return civil.Date{}, err
-	}
-	return d, nil
-}
-
-func endDate() (civil.Date, error) {
-	if endDateStr == "" {
-		return civil.Date{}, nil
-	}
-	d, err := civil.ParseDate(endDateStr)
-	if err != nil {
-		return civil.Date{}, err
-	}
-	return d, nil
-}
-
-type formatter func(io.Writer, interface{}) error
-
-func getFormatter(format string) (formatter, error) {
-	switch format {
-	case tabFmt:
-		return colfmt.FormatTab, nil
-	case prettyFmt:
-		return colfmt.Format, nil
-	default:
-		return nil, fmt.Errorf("unknown format %v", format)
-	}
 }
