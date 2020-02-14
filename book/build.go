@@ -86,6 +86,10 @@ func (b *builder) build(t []ast.Entry) ([]Entry, error) {
 	return entries, nil
 }
 
+func (b *builder) nodePos(e ast.Node) token.Position {
+	return b.fset.Position(e.Pos())
+}
+
 func (b *builder) errorf(pos token.Pos, format string, v ...interface{}) {
 	b.errs.Add(b.fset.Position(pos), fmt.Sprintf(format, v...))
 }
@@ -130,6 +134,7 @@ func (b *builder) buildBalanceHeader(n ast.BalanceHeader) (BalanceAssert, error)
 		b.errorf(n.Date.Pos(), "%s", err)
 		return a, err
 	}
+	a.EntryPos = b.nodePos(n)
 
 	a.Account = Account(n.Account.Value)
 	return a, nil
@@ -146,6 +151,7 @@ func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
 		b.errorf(n.Date.Pos(), "%s", err)
 		return t, err
 	}
+	t.EntryPos = b.nodePos(n)
 	t.Description = parseString(n.Description.Value)
 
 	var empty *Split

@@ -20,6 +20,7 @@ import (
 
 	"cloud.google.com/go/civil"
 	"github.com/google/go-cmp/cmp"
+	"go.felesatra.moe/keeper/kpr/token"
 )
 
 func TestBuildEntries_simple(t *testing.T) {
@@ -39,11 +40,13 @@ Expenses:Stuff
 	want := []Entry{
 		BalanceAssert{
 			EntryDate: civil.Date{2001, 2, 3},
+			EntryPos:  token.Position{Offset: 13, Line: 2, Column: 1},
 			Account:   "Some:account",
 			Declared:  Balance{{Number: -120, Unit: u}},
 		},
 		Transaction{
 			EntryDate:   civil.Date{2001, 2, 3},
+			EntryPos:    token.Position{Offset: 51, Line: 3, Column: 1},
 			Description: "Buy stuff",
 			Splits: []Split{
 				{
