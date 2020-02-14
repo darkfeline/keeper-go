@@ -17,7 +17,6 @@ package book
 import (
 	"cloud.google.com/go/civil"
 
-	"go.felesatra.moe/keeper/journal"
 	"go.felesatra.moe/keeper/kpr/token"
 )
 
@@ -30,10 +29,10 @@ type Entry interface {
 type BalanceAssert struct {
 	EntryPos  token.Position
 	EntryDate civil.Date
-	Account   journal.Account
-	Declared  journal.Balance
-	Actual    journal.Balance
-	Diff      journal.Balance
+	Account   Account
+	Declared  Balance
+	Actual    Balance
+	Diff      Balance
 }
 
 func (b BalanceAssert) Position() token.Position {
@@ -52,7 +51,7 @@ type Transaction struct {
 	EntryPos    token.Position
 	EntryDate   civil.Date
 	Description string
-	Splits      []journal.Split
+	Splits      []Split
 	Balances    TBalance
 }
 
@@ -66,13 +65,9 @@ func (t Transaction) Date() civil.Date {
 
 func (Transaction) entry() {}
 
-// TBalance is a "trial balance".
-type TBalance map[journal.Account]journal.Balance
-
-func (b TBalance) Copy() TBalance {
-	new := make(TBalance)
-	for k, v := range b {
-		new[k] = v
-	}
-	return new
+// Split is one split in a transaction.
+// This describes a change in the amount of one unit for one account.
+type Split struct {
+	Account Account
+	Amount  Amount
 }

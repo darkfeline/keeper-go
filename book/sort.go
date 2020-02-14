@@ -20,10 +20,9 @@ import (
 	"time"
 
 	"cloud.google.com/go/civil"
-	"go.felesatra.moe/keeper/journal"
 )
 
-func SortByDate(e []Entry) {
+func sortEntries(e []Entry) {
 	type pair struct {
 		k int64
 		v Entry
@@ -40,19 +39,17 @@ func SortByDate(e []Entry) {
 	}
 }
 
-// entryKey returns a sort key corresponding to an journal.
 func entryKey(e Entry) int64 {
 	switch e := e.(type) {
-	case journal.Transaction:
+	case Transaction:
 		return dateKey(e.Date())
-	case journal.BalanceAssert:
+	case BalanceAssert:
 		return dateKey(e.Date()) + 1
 	default:
 		panic(fmt.Sprintf("unknown Entry type %T", e))
 	}
 }
 
-// dateKey returns a sort key corresponding to a Date.
 func dateKey(d civil.Date) int64 {
 	return d.In(time.UTC).Unix()
 }

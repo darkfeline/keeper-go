@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package journal
+package book
 
 import (
 	"fmt"
@@ -25,16 +25,16 @@ import (
 	"go.felesatra.moe/keeper/kpr/token"
 )
 
-func Build(src []byte) ([]Entry, error) {
+func buildEntries(src []byte) ([]Entry, error) {
 	fset := token.NewFileSet()
 	t, err := parser.ParseBytes(fset, "", src, 0)
 	if err != nil {
-		return nil, fmt.Errorf("build journal: %s", err)
+		return nil, fmt.Errorf("build entries: %s", err)
 	}
 	b := newBuilder(fset)
 	entries, err := b.build(t)
 	if err != nil {
-		return entries, fmt.Errorf("build journal: %s", err)
+		return entries, fmt.Errorf("build entries: %s", err)
 	}
 	return entries, nil
 }
@@ -99,7 +99,7 @@ func (b *builder) buildSingleBalance(n ast.SingleBalance) (BalanceAssert, error)
 	if err != nil {
 		return a, err
 	}
-	a.Balance = a.Balance.Add(amount)
+	a.Declared = a.Declared.Add(amount)
 	return a, nil
 }
 
@@ -114,7 +114,7 @@ func (b *builder) buildMultiBalance(n ast.MultiBalance) (BalanceAssert, error) {
 		if err != nil {
 			return e, err
 		}
-		e.Balance = e.Balance.Add(amount)
+		e.Declared = e.Declared.Add(amount)
 	}
 	return e, nil
 }

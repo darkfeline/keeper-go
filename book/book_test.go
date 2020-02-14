@@ -19,60 +19,59 @@ import (
 
 	"cloud.google.com/go/civil"
 	"github.com/google/go-cmp/cmp"
-	"go.felesatra.moe/keeper/journal"
 )
 
-func TestCompile(t *testing.T) {
+func TestCompileFromEntries(t *testing.T) {
 	t.Parallel()
-	u := journal.Unit{Symbol: "USD", Scale: 100}
-	e := []journal.Entry{
-		journal.BalanceAssert{
+	u := Unit{Symbol: "USD", Scale: 100}
+	e := []Entry{
+		BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Cash",
-			Balance:   journal.Balance{{Number: -232, Unit: u}},
+			Declared:  Balance{{Number: -232, Unit: u}},
 		},
-		journal.Transaction{
+		Transaction{
 			EntryDate:   civil.Date{2000, 1, 2},
 			Description: "buy stuff",
-			Splits: []journal.Split{
+			Splits: []Split{
 				{
 					Account: "Assets:Cash",
-					Amount:  journal.Amount{Number: -123, Unit: u},
+					Amount:  Amount{Number: -123, Unit: u},
 				},
 				{
 					Account: "Expenses:Food",
-					Amount:  journal.Amount{Number: 123, Unit: u},
+					Amount:  Amount{Number: 123, Unit: u},
 				},
 			},
 		},
 	}
-	got := Compile(e)
+	got := compileFromEntries(e)
 	t.Run("entries", func(t *testing.T) {
 		want := []Entry{
 			Transaction{
 				EntryDate:   civil.Date{2000, 1, 2},
 				Description: "buy stuff",
-				Splits: []journal.Split{
+				Splits: []Split{
 					{
 						Account: "Assets:Cash",
-						Amount:  journal.Amount{Number: -123, Unit: u},
+						Amount:  Amount{Number: -123, Unit: u},
 					},
 					{
 						Account: "Expenses:Food",
-						Amount:  journal.Amount{Number: 123, Unit: u},
+						Amount:  Amount{Number: 123, Unit: u},
 					},
 				},
 				Balances: TBalance{
-					"Assets:Cash":   journal.Balance{{Number: -123, Unit: u}},
-					"Expenses:Food": journal.Balance{{Number: 123, Unit: u}},
+					"Assets:Cash":   Balance{{Number: -123, Unit: u}},
+					"Expenses:Food": Balance{{Number: 123, Unit: u}},
 				},
 			},
 			BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 2},
 				Account:   "Assets:Cash",
-				Declared:  journal.Balance{{Number: -232, Unit: u}},
-				Actual:    journal.Balance{{Number: -123, Unit: u}},
-				Diff:      journal.Balance{{Number: 109, Unit: u}},
+				Declared:  Balance{{Number: -232, Unit: u}},
+				Actual:    Balance{{Number: -123, Unit: u}},
+				Diff:      Balance{{Number: 109, Unit: u}},
 			},
 		}
 		if diff := cmp.Diff(want, got.Entries); diff != "" {
@@ -81,8 +80,8 @@ func TestCompile(t *testing.T) {
 	})
 	t.Run("balance", func(t *testing.T) {
 		want := TBalance{
-			"Assets:Cash":   journal.Balance{{Number: -123, Unit: u}},
-			"Expenses:Food": journal.Balance{{Number: 123, Unit: u}},
+			"Assets:Cash":   Balance{{Number: -123, Unit: u}},
+			"Expenses:Food": Balance{{Number: 123, Unit: u}},
 		}
 		compareBalances(t, want, got.Balance)
 	})
@@ -90,7 +89,7 @@ func TestCompile(t *testing.T) {
 
 func compareBalances(t *testing.T, want, got TBalance) {
 	t.Helper()
-	wantKeys := make(map[journal.Account]struct{})
+	wantKeys := make(map[Account]struct{})
 	for k := range want {
 		wantKeys[k] = struct{}{}
 	}

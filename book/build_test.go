@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package journal
+package book
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestBuild_simple(t *testing.T) {
+func TestBuildEntries_simple(t *testing.T) {
 	t.Parallel()
 	const input = `unit USD 100
 bal 2001-02-03 Some:account -1.20 USD
@@ -31,7 +31,7 @@ Some:account -1.2 USD
 Expenses:Stuff
 .
 `
-	got, err := Build([]byte(input))
+	got, err := buildEntries([]byte(input))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +40,7 @@ Expenses:Stuff
 		BalanceAssert{
 			EntryDate: civil.Date{2001, 2, 3},
 			Account:   "Some:account",
-			Balance:   Balance{{Number: -120, Unit: u}},
+			Declared:  Balance{{Number: -120, Unit: u}},
 		},
 		Transaction{
 			EntryDate:   civil.Date{2001, 2, 3},
@@ -62,34 +62,19 @@ Expenses:Stuff
 	}
 }
 
-// func TestParse_unbalanced_transaction(t *testing.T) {
-// 	t.Parallel()
-// 	const input = `unit USD 100
-// tx 2001-02-03 "Buy stuff"
-// Some:account -1.2 USD
-// Expenses:Stuff 1.3 USD
-// .
-// `
-// 	got := parseTestInput(t, input)
-// 	if len(got.Errors) == 0 {
-// 		t.Errorf("Expected errors")
-// 	}
-// }
-//
-// func TestParse_failed_balance_check(t *testing.T) {
-// 	t.Parallel()
-// 	const input = `unit USD 100
-// tx 2001-02-03 "Buy stuff"
-// Some:account -1.2 USD
-// Expenses:Stuff
-// .
-// bal 2001-02-03 Some:account -1 USD
-// `
-// 	got := parseTestInput(t, input)
-// 	if len(got.Errors) == 0 {
-// 		t.Errorf("Expected errors")
-// 	}
-// }
+func TestParse_unbalanced_transaction(t *testing.T) {
+	t.Parallel()
+	const input = `unit USD 100
+tx 2001-02-03 "Buy stuff"
+Some:account -1.2 USD
+Expenses:Stuff 1.3 USD
+.
+`
+	_, err := buildEntries([]byte(input))
+	if err == nil {
+		t.Errorf("Expected errors")
+	}
+}
 
 func TestCombineDecimalUnit(t *testing.T) {
 	t.Parallel()

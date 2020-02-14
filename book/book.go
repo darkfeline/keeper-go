@@ -16,69 +16,59 @@ package book
 
 import (
 	"fmt"
-
-	"go.felesatra.moe/keeper/journal"
 )
 
 type Book struct {
 	Entries        []Entry
-	AccountEntries map[journal.Account][]Entry
+	AccountEntries map[Account][]Entry
 	Balance        TBalance
 }
 
-// Compile compiles entries into a book.
-// The input slice is reordered in place.
-func Compile(e []journal.Entry) *Book {
-	return CompileWithBalance(e, make(TBalance))
+func Compile(src []byte) (*Book, error) {
+	e, err := buildEntries(src)
+	if err != nil {
+		return nil, err
+	}
+	return compileFromEntries(e), nil
 }
 
-// CompileWithBalance compiles entries into a book, with the given initial balance.
-// The input slice is reordered in place.
-func CompileWithBalance(e []journal.Entry, initial TBalance) *Book {
-	journal.SortByDate(e)
+func compileFromEntries(e []Entry) *Book {
+	sortEntries(e)
 	b := &Book{
-		AccountEntries: make(map[journal.Account][]Entry),
-		Balance:        initial,
+		AccountEntries: make(map[Account][]Entry),
+		Balance:        make(TBalance),
 	}
 	for _, e := range e {
-		switch e := e.(type) {
-		case journal.Transaction:
-			tbal := make(TBalance)
-			for _, s := range e.Splits {
-				k := s.Account
-				b.Balance[k] = b.Balance[k].Add(s.Amount)
-				tbal[k] = b.Balance[k]
-			}
-			r := Transaction{
-				EntryPos:    e.EntryPos,
-				EntryDate:   e.EntryDate,
-				Description: e.Description,
-				Splits:      e.Splits,
-				Balances:    tbal,
-			}
-			b.addEntry(r)
-		case journal.BalanceAssert:
-			r := BalanceAssert{
-				EntryPos:  e.EntryPos,
-				EntryDate: e.EntryDate,
-				Account:   e.Account,
-				Declared:  e.Balance,
-				Actual:    b.Balance[e.Account],
-			}
-			r.Diff = balanceDiff(r.Actual, r.Declared)
-			b.addEntry(r)
-		default:
-			panic(fmt.Sprintf("unknown Entry type %T", e))
-		}
+		b.compileEntry(e)
 	}
 	return b
+}
+
+func (b *Book) compileEntry(e Entry) {
+	switch e := e.(type) {
+	case Transaction:
+		tbal := make(TBalance)
+		for _, s := range e.Splits {
+			k := s.Account
+			b.Balance[k] = b.Balance[k].Add(s.Amount)
+			tbal[k] = b.Balance[k]
+		}
+		e.Balances = tbal
+		b.addEntry(e)
+	case BalanceAssert:
+		e.Actual = b.Balance[e.Account]
+		e.Diff = balanceDiff(e.Actual, e.Declared)
+		b.addEntry(e)
+	default:
+		panic(fmt.Sprintf("unknown Entry type %T", e))
+	}
 }
 
 func (b *Book) addEntry(e Entry) {
 	b.Entries = append(b.Entries, e)
 	switch e := e.(type) {
 	case Transaction:
-		seen := make(map[journal.Account]bool)
+		seen := make(map[Account]bool)
 		for _, s := range e.Splits {
 			if seen[s.Account] {
 				continue
@@ -93,12 +83,12 @@ func (b *Book) addEntry(e Entry) {
 	}
 }
 
-func (b *Book) addAccountEntry(a journal.Account, e Entry) {
+func (b *Book) addAccountEntry(a Account, e Entry) {
 	m, k := b.AccountEntries, a
 	m[k] = append(m[k], e)
 }
 
-func balanceDiff(x, y journal.Balance) journal.Balance {
+func balanceDiff(x, y Balance) Balance {
 	diff := x.CleanCopy()
 	for _, a := range y {
 		a.Number = -a.Number

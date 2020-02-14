@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package journal
+package book
 
 import (
 	"fmt"
@@ -123,4 +123,15 @@ func (b Balance) String() string {
 		s[i] = a.String()
 	}
 	return strings.Join(s, ", ")
+}
+
+// TBalance is a "trial balance".
+type TBalance map[Account]Balance
+
+func (b TBalance) Copy() TBalance {
+	new := make(TBalance)
+	for k, v := range b {
+		new[k] = v
+	}
+	return new
 }
