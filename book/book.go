@@ -37,13 +37,16 @@ func Compile(src []byte, o ...Option) (*Book, error) {
 	}
 	sortEntries(e)
 	op := buildOptions(o)
+	initial := make(TBalance)
 	if d := op.starting; d.IsValid() {
-		e = entriesStarting(e, d)
+		e := entriesStarting(e, d)
+		b := compile(e, initial)
+		initial = b.Balance
 	}
 	if d := op.ending; d.IsValid() {
 		e = entriesEnding(e, d)
 	}
-	return compileFromEntries(e), nil
+	return compile(e, initial), nil
 }
 
 func Starting(d civil.Date) Option {
@@ -77,10 +80,10 @@ type options struct {
 
 // compileFromEntries compiles a Book from entries.
 // Entries should be sorted.
-func compileFromEntries(e []Entry) *Book {
+func compile(e []Entry, initial TBalance) *Book {
 	b := &Book{
 		AccountEntries: make(map[Account][]Entry),
-		Balance:        make(TBalance),
+		Balance:        initial,
 	}
 	for _, e := range e {
 		b.compileEntry(e)

@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestCompileFromEntries(t *testing.T) {
+func TestCompile(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
 	e := []Entry{
@@ -45,7 +45,7 @@ func TestCompileFromEntries(t *testing.T) {
 			Declared:  Balance{{Number: -232, Unit: u}},
 		},
 	}
-	got := compileFromEntries(e)
+	got := compile(e, make(TBalance))
 	t.Run("entries", func(t *testing.T) {
 		want := []Entry{
 			Transaction{

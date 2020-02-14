@@ -21,6 +21,7 @@ import (
 
 	"cloud.google.com/go/civil"
 	"github.com/spf13/cobra"
+	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/cmd/internal/colfmt"
 )
 
@@ -52,6 +53,25 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func compileBook(src []byte) (*book.Book, error) {
+	var o []book.Option
+	d, err := startDate()
+	if err != nil {
+		return nil, err
+	}
+	if d.IsValid() {
+		o = append(o, book.Starting(d))
+	}
+	d, err = endDate()
+	if err != nil {
+		return nil, err
+	}
+	if d.IsValid() {
+		o = append(o, book.Ending(d))
+	}
+	return book.Compile(src, o...)
 }
 
 func startDate() (civil.Date, error) {
