@@ -27,6 +27,10 @@ type Amount struct {
 	Unit   Unit
 }
 
+func (a Amount) Scalar() string {
+	return decFormat(a.Number, a.Unit.Scale)
+}
+
 func (a Amount) String() string {
 	return fmt.Sprintf("%s %s", decFormat(a.Number, a.Unit.Scale), a.Unit.Symbol)
 }

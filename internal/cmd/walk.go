@@ -24,9 +24,9 @@ import (
 // The input slice is sorted in place.
 // If parent accounts are missing, they are also visited as virtual nodes.
 func walkAccountTree(a []book.Account, f func(accountNode) error) error {
-	sortAccounts(new)
+	sortAccounts(a)
 	var last []string
-	for _, a := range new {
+	for _, a := range a {
 		parts := acctParts(a)
 		common := commonPrefix(last, parts)
 		vlen := len(parts)

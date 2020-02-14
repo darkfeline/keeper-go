@@ -45,9 +45,9 @@ var balanceCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		f(os.Stdout, b.Balances, "Assets")
+		f(os.Stdout, b.Balance, "Assets")
 		fmt.Println()
-		f(os.Stdout, b.Balances, "Liabilities")
+		f(os.Stdout, b.Balance, "Liabilities")
 		return nil
 	},
 }
@@ -65,16 +65,16 @@ var incomeCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		f(os.Stdout, b.Balances, "Income")
+		f(os.Stdout, b.Balance, "Income")
 		fmt.Println()
-		f(os.Stdout, b.Balances, "Expenses")
+		f(os.Stdout, b.Balance, "Expenses")
 		return nil
 	},
 }
 
 type tbalFormatter func(w io.Writer, m book.TBalance, root book.Account) error
 
-func getTbalFormatter(format string) (tbalFormatter, error) {
+func getTbalFormatter() (tbalFormatter, error) {
 	switch format {
 	case tabFmt:
 		return formatTbalTab, nil
@@ -146,14 +146,14 @@ func (i *balanceItem) addBalance(b book.Balance) {
 func makeBalanceItems(m book.TBalance, root book.Account) []balanceItem {
 	var items []balanceItem
 	var total book.Balance
-	rlen := len(root.Parts())
+	rlen := len(acctParts(root))
 	_ = walkAccountTree(accountsUnder(m, root), func(n accountNode) error {
 		a := n.Account
 		if !acctUnder(a, root) && a != root {
 			return nil
 		}
 		i := balanceItem{
-			prefix: indent(len(a.Parts())-rlen) + a.Leaf(),
+			prefix: indent(len(acctParts(a))-rlen) + acctLeaf(a),
 		}
 		b := m[a]
 		i.addBalance(b)
@@ -174,7 +174,7 @@ func makeBalanceItems(m book.TBalance, root book.Account) []balanceItem {
 func accountsUnder(m book.TBalance, root book.Account) []book.Account {
 	var as []book.Account
 	for a := range m {
-		if a.Under(root) {
+		if acctUnder(a, root) {
 			as = append(as, a)
 		}
 	}

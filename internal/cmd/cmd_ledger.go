@@ -78,7 +78,7 @@ func makeLedgerItems(a book.Account, e []book.Entry) []ledgerItem {
 	for _, e := range e {
 		i := ledgerItem{
 			date: e.Date().String(),
-			line: fmt.Sprintf("L%d", e.Pos().Line),
+			line: fmt.Sprintf("L%d", e.Position().Line),
 		}
 
 		switch e := e.(type) {
@@ -96,10 +96,10 @@ func makeLedgerItems(a book.Account, e []book.Entry) []ledgerItem {
 				i.amount = s.Amount.String()
 				items = append(items, i)
 			}
-			items[len(items)-1].setBalance(e.Balance[a])
+			items[len(items)-1].setBalance(e.Balances[a])
 		case book.BalanceAssert:
-			if l.Account != a {
-				panic(fmt.Sprintf("got balance for account %s not %s", l.Account, a))
+			if e.Account != a {
+				panic(fmt.Sprintf("got balance for account %s not %s", e.Account, a))
 			}
 			i := i
 			i.setBalance(e.Actual)
@@ -108,10 +108,10 @@ func makeLedgerItems(a book.Account, e []book.Entry) []ledgerItem {
 			}
 			items = append(items, i)
 		default:
-			panic(fmt.Sprintf("unknown entry type %T", l))
+			panic(fmt.Sprintf("unknown entry type %T", e))
 		}
 	}
-	return is
+	return items
 }
 
 type formatter func(io.Writer, interface{}) error

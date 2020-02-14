@@ -22,7 +22,7 @@ import (
 )
 
 func acctConcat(parts []string) book.Account {
-	return book.Account(strings.Join(":", parts))
+	return book.Account(strings.Join(parts, ":"))
 }
 
 func acctParts(a book.Account) []string {
@@ -31,7 +31,7 @@ func acctParts(a book.Account) []string {
 
 // acctLeaf returns the leaf part of the Account (after the last colon).
 func acctLeaf(a book.Account) string {
-	p := a.Parts()
+	p := acctParts(a)
 	return p[len(p)-1]
 }
 
