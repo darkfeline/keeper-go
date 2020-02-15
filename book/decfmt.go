@@ -16,26 +16,38 @@ package book
 
 import (
 	"fmt"
+	"strings"
 )
 
 // decFormat does decimal formatting for n/scale.
 // scale must be a positive multiple of 10.
 func decFormat(n int64, scale int64) string {
-	if scale <= 1 {
-		return fmt.Sprintf("%d", n)
+	var b strings.Builder
+	if n < 0 {
+		b.WriteRune('-')
+		n = -n
 	}
-	return fmt.Sprintf("%d."+fracFmtStr(scale), n/scale, abs(n%scale))
+	d := fmt.Sprintf("%d", n)
+	split := len(d) - log10(scale)
+	before, after := d[:split], d[split:]
+	for i, r := range before {
+		b.WriteRune(r)
+		if i := len(before) - i; i > 1 && i%3 == 1 {
+			b.WriteRune(',')
+		}
+	}
+	if len(after) == 0 {
+		return b.String()
+	}
+	b.WriteRune('.')
+	b.WriteString(after)
+	return b.String()
 }
 
-func fracFmtStr(scale int64) string {
+func log10(scale int64) int {
 	n := 0
 	for ; scale > 1; scale /= 10 {
 		n++
 	}
-	return fmt.Sprintf("%%0%dd", n)
-}
-
-func abs(x int64) int64 {
-	y := x >> 63
-	return (x ^ y) - y
+	return n
 }

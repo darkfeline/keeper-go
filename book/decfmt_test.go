@@ -26,10 +26,11 @@ func TestDecFormat(t *testing.T) {
 		scale int64
 		want  string
 	}{
-		{1234, 1, "1234"},
+		{1234, 1, "1,234"},
 		{12345, 100, "123.45"},
 		{-12345, 100, "-123.45"},
 		{10000, 100, "100.00"},
+		{12345678, 1, "12,345,678"},
 	}
 	for _, c := range cases {
 		c := c
@@ -38,28 +39,6 @@ func TestDecFormat(t *testing.T) {
 			got := decFormat(c.n, c.scale)
 			if got != c.want {
 				t.Errorf("Format(%v, %v) = %#v; want %#v", c.n, c.scale, got, c.want)
-			}
-		})
-	}
-}
-
-func TestFracFmtStr(t *testing.T) {
-	t.Parallel()
-	cases := []struct {
-		scale int64
-		want  string
-	}{
-		{10, "%01d"},
-		{100, "%02d"},
-		{1000, "%03d"},
-	}
-	for _, c := range cases {
-		c := c
-		t.Run(fmt.Sprint(c.scale), func(t *testing.T) {
-			t.Parallel()
-			got := fracFmtStr(c.scale)
-			if got != c.want {
-				t.Errorf("digitsFormat(%v) = %#v; want %#v", c.scale, got, c.want)
 			}
 		})
 	}
