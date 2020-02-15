@@ -55,6 +55,9 @@ func (u Unit) String() string {
 type Account string
 
 func (a Account) Parts() []string {
+	if a == "" {
+		return nil
+	}
 	return strings.Split(string(a), ":")
 }
 
