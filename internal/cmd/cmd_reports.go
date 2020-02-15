@@ -156,6 +156,9 @@ func makeBalanceItems(m book.TBalance, root book.Account) []balanceItem {
 			prefix: indent(a.Level()-rlen) + a.Leaf(),
 		}
 		b := m[a]
+		if n.Leaf && b.Empty() {
+			return nil
+		}
 		i.addBalance(b)
 		items = append(items, i)
 		for _, a := range b {
