@@ -25,27 +25,37 @@ import (
 // If parent accounts are missing, they are also visited as virtual nodes.
 func walkAccountTree(a []book.Account, f func(accountNode) error) error {
 	sortAccounts(a)
-	var last []string
-	for _, a := range a {
-		parts := a.Parts()
-		common := commonPrefix(last, parts)
-		vlen := len(parts)
-		for i := len(common) + 1; i < vlen; i++ {
-			n := accountNode{
-				Account: acctConcat(parts[:i]),
-				Virtual: true,
-			}
-			if err := f(n); err != nil {
-				return fmt.Errorf("map account tree: %w", err)
-			}
+	var last book.Account
+	for i, cur := range a {
+		if err := walkBetweenLast(last, cur, f); err != nil {
+			return err
 		}
-		n := accountNode{
-			Account: a,
+		n := accountNode{Account: cur, Leaf: true}
+		if i+1 < len(a) {
+			if next := a[i+1]; next.Under(cur) {
+				n.Leaf = false
+			}
 		}
 		if err := f(n); err != nil {
 			return fmt.Errorf("map account tree: %w", err)
 		}
-		last = parts
+		last = cur
+	}
+	return nil
+}
+
+// walkBetweenLast walks the accounts between the last account and
+// the current account as virtual nodes.
+func walkBetweenLast(last, cur book.Account, f func(accountNode) error) error {
+	parts := cur.Parts()
+	for i := len(commonPrefix(last.Parts(), parts)) + 1; i < len(parts); i++ {
+		n := accountNode{
+			Account: acctConcat(parts[:i]),
+			Virtual: true,
+		}
+		if err := f(n); err != nil {
+			return fmt.Errorf("map account tree: %w", err)
+		}
 	}
 	return nil
 }
@@ -68,4 +78,6 @@ type accountNode struct {
 	Account book.Account
 	// Virtual is true if this Account is a missing parent account.
 	Virtual bool
+	// Leaf is true if this Account is a leaf in the walked tree.
+	Leaf bool
 }

@@ -35,9 +35,9 @@ func TestWalkAccountTree(t *testing.T) {
 			a:    []book.Account{"IJN:Ayanami", "USS:Laffey"},
 			want: []accountNode{
 				{Account: "IJN", Virtual: true},
-				{Account: "IJN:Ayanami"},
+				{Account: "IJN:Ayanami", Leaf: true},
 				{Account: "USS", Virtual: true},
-				{Account: "USS:Laffey"},
+				{Account: "USS:Laffey", Leaf: true},
 			},
 		},
 		{
@@ -50,10 +50,23 @@ func TestWalkAccountTree(t *testing.T) {
 				{Account: "Expenses", Virtual: true},
 				{Account: "Expenses:Foo", Virtual: true},
 				{Account: "Expenses:Foo:Bar", Virtual: true},
-				{Account: "Expenses:Foo:Bar:Baz"},
+				{Account: "Expenses:Foo:Bar:Baz", Leaf: true},
 				{Account: "Expenses:Spam", Virtual: true},
 				{Account: "Expenses:Spam:Eggs", Virtual: true},
-				{Account: "Expenses:Spam:Eggs:Ham"},
+				{Account: "Expenses:Spam:Eggs:Ham", Leaf: true},
+			},
+		},
+		{
+			desc: "with parent",
+			a: []book.Account{
+				"Expenses:Foo",
+				"Expenses:Foo:Bar:Baz",
+			},
+			want: []accountNode{
+				{Account: "Expenses", Virtual: true},
+				{Account: "Expenses:Foo"},
+				{Account: "Expenses:Foo:Bar", Virtual: true},
+				{Account: "Expenses:Foo:Bar:Baz", Leaf: true},
 			},
 		},
 	}
