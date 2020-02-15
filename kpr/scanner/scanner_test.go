@@ -136,6 +136,13 @@ Some:account4 123.45 USD
 			},
 		},
 		{
+			desc: "account with underscore",
+			text: `Some:account_4`,
+			want: []result{
+				{1, token.ACCOUNT, `Some:account_4`},
+			},
+		},
+		{
 			desc: "decimal with comma",
 			text: `tx 2001-02-03 "Some description"
 Some:account 2,123.45 USD

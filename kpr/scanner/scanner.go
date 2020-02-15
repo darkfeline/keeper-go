@@ -76,7 +76,7 @@ func (s *Scanner) Scan() (pos token.Pos, tok token.Token, lit string) {
 			return r.Pos, r.Tok, r.Lit
 		default:
 			if s.offset >= len(s.src) || s.state == nil {
-				return s.f.Pos(s.offset), token.EOF, ""
+				return s.f.Pos(len(s.src)), token.EOF, ""
 			}
 			s.state = s.state(s)
 		}
@@ -86,8 +86,10 @@ func (s *Scanner) Scan() (pos token.Pos, tok token.Token, lit string) {
 // next reads and returns the next rune, which may be invalid.
 // utf8.RuneError is returned for decoding errors.
 func (s *Scanner) next() rune {
-	if s.offset == len(s.src) {
-		panic("next at end of scan buffer")
+	if s.offset >= len(s.src) {
+		s.pending = append(s.pending, utf8.RuneError)
+		s.offset += 1
+		return utf8.RuneError
 	}
 	r, n := utf8.DecodeRune(s.src[s.offset:])
 	s.pending = append(s.pending, r)
@@ -203,7 +205,7 @@ const (
 	upper        = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	letters      = lower + upper
 	identChars   = letters
-	accountChars = identChars + digits + ":"
+	accountChars = identChars + digits + ":_"
 	decimalChars = digits + ","
 )
 
@@ -247,22 +249,17 @@ func lexIdent(s *Scanner) stateFn {
 	case unicode.IsSpace(r):
 		s.emit(token.IDENT)
 		return lexStart
-	case r == ':':
+	case r == ':', r == '_':
 		return lexAccount
 	default:
 		s.emit(token.IDENT)
-		s.errorf(s.offset, "unexpected rune %c in IDENT", r)
-		return lexIllegal
+		return lexStart
 	}
 }
 
 func lexAccount(s *Scanner) stateFn {
 	s.acceptRun(accountChars)
 	s.emit(token.ACCOUNT)
-	if r := s.peek(); !unicode.IsSpace(r) {
-		s.errorf(s.offset, "unexpected rune %c in ACCOUNT", r)
-		return lexIllegal
-	}
 	return lexStart
 }
 
@@ -295,20 +292,12 @@ func lexDecimal(s *Scanner) stateFn {
 
 func lexDecimalAfterPoint(s *Scanner) stateFn {
 	s.acceptRun(decimalChars)
-	if r := s.peek(); !unicode.IsSpace(r) {
-		s.errorf(s.offset, "unexpected rune %c in DECIMAL", r)
-		return lexIllegal
-	}
 	s.emit(token.DECIMAL)
 	return lexStart
 }
 
 func lexDate(s *Scanner) stateFn {
 	s.acceptRun(digits + "-")
-	if r := s.peek(); !unicode.IsSpace(r) {
-		s.errorf(s.offset, "unexpected rune %c in DATE", r)
-		return lexIllegal
-	}
 	s.emit(token.DATE)
 	return lexStart
 }
