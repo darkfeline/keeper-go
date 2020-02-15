@@ -43,7 +43,7 @@ var checkCmd = &cobra.Command{
 					continue
 				}
 				bad = true
-				fmt.Printf("%s %s balance declared %s, actual %s (diff %s)",
+				fmt.Printf("%s %s balance declared %s, actual %s (diff %s)\n",
 					e.Date(), e.Declared, e.Actual, e.Diff)
 			}
 		}
