@@ -65,6 +65,14 @@ func (a Account) Level() int {
 	return len(a.Parts())
 }
 
+func (a Account) Parent() Account {
+	p := a.Parts()
+	if len(p) == 0 {
+		return ""
+	}
+	return Account(strings.Join(p[:len(p)-1], ":"))
+}
+
 // Leaf returns the leaf part of the Account (after the last colon).
 func (a Account) Leaf() string {
 	p := a.Parts()
