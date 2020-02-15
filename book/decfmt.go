@@ -33,7 +33,7 @@ func decFormat(n int64, scale int64) string {
 	for i, r := range before {
 		b.WriteRune(r)
 		if i := len(before) - i; i > 1 && i%3 == 1 {
-			b.WriteRune(',')
+			b.WriteRune(' ')
 		}
 	}
 	if len(after) == 0 {
