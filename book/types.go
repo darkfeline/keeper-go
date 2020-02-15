@@ -104,6 +104,10 @@ func (b Balance) Add(a Amount) Balance {
 	return b
 }
 
+func (b Balance) Empty() bool {
+	return len(b.CleanCopy()) == 0
+}
+
 // Equal returns true if the two balances are equal.
 func (b Balance) Equal(b2 Balance) bool {
 	c, c2 := b.CleanCopy(), b2.CleanCopy()
