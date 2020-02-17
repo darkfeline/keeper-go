@@ -342,10 +342,8 @@ func lexAccount(s *Scanner) stateFn {
 func lexDigit(s *Scanner) stateFn {
 	s.acceptRun(digits)
 	switch r := s.next(); {
-	case r == ',':
+	case r == ',', r == '.':
 		return lexDecimal
-	case r == '.':
-		return lexDecimalAfterPoint
 	case r == '-':
 		return lexDate
 	default:
@@ -356,16 +354,7 @@ func lexDigit(s *Scanner) stateFn {
 }
 
 func lexDecimal(s *Scanner) stateFn {
-	s.acceptRun(digits + ",")
-	if s.accept(".") {
-		return lexDecimalAfterPoint
-	}
-	s.emit(token.DECIMAL)
-	return lexExprEnd
-}
-
-func lexDecimalAfterPoint(s *Scanner) stateFn {
-	s.acceptRun(digits + ",")
+	s.acceptRun(digits + ".,")
 	s.emit(token.DECIMAL)
 	return lexExprEnd
 }
