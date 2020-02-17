@@ -12,24 +12,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package token defines lexical tokens for parsing keeper files.
 package token
+
+// Token is the set of lexical tokens for keeper files.
+type Token int
 
 //go:generate stringer -type=Token
 
-type Token int
-
 const (
+	// Special
 	ILLEGAL Token = iota
 	EOF
 	COMMENT
 
+	// Syntactic
 	NEWLINE
 	DOT
 
 	// Values
 	STRING
-	IDENT
+	UNIT_SYM
 	ACCOUNT
 	DECIMAL
 	DATE
+
+	// Keywords
+	TX
+	BALANCE
+	UNIT
 )
+
+// IsKeyword returns true for tokens corresponding to keywords; it
+// returns false otherwise.
+func (t Token) IsKeyword() bool {
+	switch t {
+	case TX, BALANCE, UNIT:
+		return true
+	default:
+		return false
+	}
+}

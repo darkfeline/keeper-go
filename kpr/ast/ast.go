@@ -12,19 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package ast declares the types used to represent syntax trees for
+// keeper files.
 package ast
 
 import (
 	"go.felesatra.moe/keeper/kpr/token"
 )
 
-// Entries
-
+// All entry nodes implement Entry.
 type Entry interface {
 	Node
 	entry()
 }
 
+// A BadEntry node is a placeholder for an entry containing syntax
+// errors for which a correct entry node cannot be created.
 type BadEntry struct {
 	From, To token.Pos
 }
@@ -39,6 +42,7 @@ func (b BadEntry) End() token.Pos {
 
 func (BadEntry) entry() {}
 
+// A BalanceHeader contains the fields shared by balance entry nodes.
 type BalanceHeader struct {
 	TokPos  token.Pos
 	Date    BasicValue // DATE
@@ -53,6 +57,8 @@ func (b BalanceHeader) End() token.Pos {
 	return b.Account.End()
 }
 
+// A SingleBalance node represents a balance entry node on a single
+// line.
 type SingleBalance struct {
 	BalanceHeader
 	Amount Amount
@@ -64,6 +70,8 @@ func (b SingleBalance) End() token.Pos {
 
 func (SingleBalance) entry() {}
 
+// A MultiBalance node represents a balance entry node spanning
+// multiple lines.
 type MultiBalance struct {
 	BalanceHeader
 	Amounts []LineNode // AmountLine, BadLine
@@ -76,6 +84,7 @@ func (b MultiBalance) End() token.Pos {
 
 func (MultiBalance) entry() {}
 
+// An UnitDecl node represents a unit declaration entry node.
 type UnitDecl struct {
 	TokPos token.Pos
 	Unit   BasicValue // IDENT
@@ -92,6 +101,7 @@ func (u UnitDecl) End() token.Pos {
 
 func (UnitDecl) entry() {}
 
+// A Transaction node represents a transaction entry node.
 type Transaction struct {
 	TokPos      token.Pos
 	Date        BasicValue // DATE
@@ -110,13 +120,14 @@ func (t Transaction) End() token.Pos {
 
 func (Transaction) entry() {}
 
-// Line nodes
-
+// All line nodes implement LineNode.
 type LineNode interface {
 	Node
 	lineNode()
 }
 
+// A BadLine node is a placeholder for a line containing syntax
+// errors for which a correct line node cannot be created.
 type BadLine struct {
 	From, To token.Pos
 }
@@ -131,6 +142,7 @@ func (b BadLine) End() token.Pos {
 
 func (BadLine) lineNode() {}
 
+// A Split node represents a split line node in a transaction.
 type Split struct {
 	Account BasicValue // STRING
 	Amount  *Amount
@@ -149,19 +161,20 @@ func (s Split) End() token.Pos {
 
 func (Split) lineNode() {}
 
+// An AmountLine node represents an amount line node.
 type AmountLine struct {
 	Amount
 }
 
 func (AmountLine) lineNode() {}
 
-// Simple nodes
-
+// All node types implement the Node interface.
 type Node interface {
-	Pos() token.Pos
-	End() token.Pos
+	Pos() token.Pos // position of first character belonging to the node
+	End() token.Pos // position of first character immediately after the node
 }
 
+// A Dot node represents a dot ending a multiple line entry.
 type Dot struct {
 	TokPos token.Pos
 }
@@ -174,6 +187,7 @@ func (d Dot) End() token.Pos {
 	return token.Pos(int(d.TokPos) + 1)
 }
 
+// An Amount node represents an amount.
 type Amount struct {
 	Decimal BasicValue // DECIMAL
 	Unit    BasicValue // IDENT
@@ -187,9 +201,10 @@ func (a Amount) End() token.Pos {
 	return a.Unit.End()
 }
 
+// A BasicValue node represents a basic single token value.
 type BasicValue struct {
 	ValuePos token.Pos
-	Kind     token.Token // STRING, IDENT, ACCOUNT, DECIMAL, DATE
+	Kind     token.Token // STRING, UNIT_SYM, ACCOUNT, DECIMAL, DATE
 	Value    string
 }
 

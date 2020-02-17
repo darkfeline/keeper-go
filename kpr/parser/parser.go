@@ -12,6 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/*
+Package parser implements a parser for keeper files. Input may be
+provided in a variety of forms (see the various Parse* functions); the
+output is an abstract syntax tree (AST). The parser is invoked through
+one of the Parse* functions.
+
+The parser accepts a larger language than is syntactically permitted,
+for simplicity, and for improved robustness in the presence of syntax
+errors.
+*/
 package parser
 
 import (
@@ -22,18 +32,33 @@ import (
 	"go.felesatra.moe/keeper/kpr/token"
 )
 
+// A Mode value is a set of flags (or 0). They control the amount of
+// source code parsed and other optional parser functionality.
 type Mode uint
 
+/*
+ParseBytes parses the contents of a keeper file and
+returns the corresponding ast.Entry nodes.
+
+ParseBytes parses the source from src and the filename
+is only used when recording position information.
+
+The mode parameter controls the amount of source text parsed and other
+optional parser functionality. Position information is recorded in the
+file set fset, which must not be nil.
+
+If syntax errors were found, the result is a partial AST (with
+ast.Bad* nodes representing the fragments of erroneous source
+code). Multiple errors are returned via a scanner.ErrorList which is
+sorted by file position.
+*/
 func ParseBytes(fset *token.FileSet, filename string, src []byte, mode Mode) ([]ast.Entry, error) {
 	p := &parser{
 		f: fset.AddFile(filename, -1, len(src)),
 	}
 	p.s.Init(p.f, src, p.errs.Add, 0)
 	entries := p.parse()
-	if len(p.errs) > 0 {
-		return entries, p.errs
-	}
-	return entries, nil
+	return entries, p.errs.Err()
 }
 
 type parser struct {
@@ -91,12 +116,10 @@ func (p *parser) scanLine() token.Pos {
 func (p *parser) scanUntilEntry() token.Pos {
 	for {
 		pos := p.scanLine()
-		_, tok, lit := p.peek()
-		if tok != token.IDENT {
+		switch _, tok, _ := p.peek(); {
+		default:
 			continue
-		}
-		switch lit {
-		case "unit", "tx", "bal", "balance":
+		case tok.IsKeyword():
 			return pos
 		}
 	}
@@ -125,13 +148,13 @@ func (p *parser) errorf(pos token.Pos, format string, v ...interface{}) {
 func (p *parser) parse() []ast.Entry {
 	var entries []ast.Entry
 	for {
-		switch pos, tok, lit := p.scan(); tok {
-		case token.EOF:
+		switch pos, tok, lit := p.scan(); {
+		case tok == token.EOF:
 			return entries
-		case token.IDENT:
-			e := p.parseEntry(pos, lit)
+		case tok.IsKeyword():
+			e := p.parseEntry(pos, tok, lit)
 			entries = append(entries, e)
-		case token.NEWLINE:
+		case tok == token.NEWLINE:
 		default:
 			p.errorf(pos, "bad token %s %s", tok, lit)
 			e := p.scanUntilEntryAsBad(pos)
@@ -140,16 +163,16 @@ func (p *parser) parse() []ast.Entry {
 	}
 }
 
-func (p *parser) parseEntry(pos token.Pos, lit string) ast.Entry {
-	switch lit {
-	case "tx":
+func (p *parser) parseEntry(pos token.Pos, tok token.Token, lit string) ast.Entry {
+	switch tok {
+	case token.TX:
 		return p.parseTransaction(pos)
-	case "unit":
+	case token.UNIT:
 		return p.parseUnitDecl(pos)
-	case "bal", "balance":
+	case token.BALANCE:
 		return p.parseBalance(pos)
 	default:
-		p.errorf(pos, "bad entry IDENT %s", lit)
+		p.errorf(pos, "bad entry keyword %s", lit)
 		return p.scanUntilEntryAsBad(pos)
 	}
 }
@@ -262,9 +285,9 @@ func (p *parser) parseAmount() (ast.Amount, error) {
 	a.Decimal = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
-	if tok != token.IDENT {
+	if tok != token.UNIT_SYM {
 		p.unread(pos, tok, lit)
-		p.errorf(pos, "in amount expected IDENT not %s %s", tok, lit)
+		p.errorf(pos, "in amount expected UNIT_SYM not %s %s", tok, lit)
 		return a, fmt.Errorf("bad token %s", tok)
 	}
 	a.Unit = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
@@ -277,8 +300,8 @@ func (p *parser) parseUnitDecl(pos token.Pos) ast.Entry {
 	}
 
 	pos, tok, lit := p.scan()
-	if tok != token.IDENT {
-		p.errorf(pos, "in unit decl expected IDENT not %s %s", tok, lit)
+	if tok != token.UNIT_SYM {
+		p.errorf(pos, "in unit decl expected UNIT_SYM not %s %s", tok, lit)
 		p.unread(pos, tok, lit)
 		return p.scanLineAsBadEntry(u.Pos())
 	}

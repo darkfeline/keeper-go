@@ -25,8 +25,8 @@ import (
 
 func TestParseBytes(t *testing.T) {
 	t.Parallel()
-	const input = `bal 2001-02-03 Some:account 123.45 USD
-bal 2001-02-05 Some:account
+	const input = `balance 2001-02-03 Some:account 123.45 USD
+balance 2001-02-05 Some:account
 123.45 USD
 56700 JPY
 .
@@ -44,62 +44,62 @@ Expenses:Stuff -1.2 USD
 		ast.SingleBalance{
 			BalanceHeader: ast.BalanceHeader{
 				TokPos:  1,
-				Date:    val(5, token.DATE, "2001-02-03"),
-				Account: val(16, token.ACCOUNT, "Some:account"),
+				Date:    val(9, token.DATE, "2001-02-03"),
+				Account: val(20, token.ACCOUNT, "Some:account"),
 			},
 			Amount: ast.Amount{
-				Decimal: val(29, token.DECIMAL, "123.45"),
-				Unit:    val(36, token.IDENT, "USD"),
+				Decimal: val(33, token.DECIMAL, "123.45"),
+				Unit:    val(40, token.UNIT_SYM, "USD"),
 			},
 		},
 		ast.MultiBalance{
 			BalanceHeader: ast.BalanceHeader{
-				TokPos:  40,
-				Date:    val(44, token.DATE, "2001-02-05"),
-				Account: val(55, token.ACCOUNT, "Some:account"),
+				TokPos:  44,
+				Date:    val(52, token.DATE, "2001-02-05"),
+				Account: val(63, token.ACCOUNT, "Some:account"),
 			},
 			Amounts: []ast.LineNode{
 				ast.AmountLine{
 					Amount: ast.Amount{
-						Decimal: val(68, token.DECIMAL, "123.45"),
-						Unit:    val(75, token.IDENT, "USD"),
+						Decimal: val(76, token.DECIMAL, "123.45"),
+						Unit:    val(83, token.UNIT_SYM, "USD"),
 					},
 				},
 				ast.AmountLine{
 					Amount: ast.Amount{
-						Decimal: val(79, token.DECIMAL, "56700"),
-						Unit:    val(85, token.IDENT, "JPY"),
+						Decimal: val(87, token.DECIMAL, "56700"),
+						Unit:    val(93, token.UNIT_SYM, "JPY"),
 					},
 				},
 			},
-			Dot: ast.Dot{TokPos: 89},
+			Dot: ast.Dot{TokPos: 97},
 		},
 		ast.UnitDecl{
-			TokPos: 91,
-			Unit:   val(96, token.IDENT, "USD"),
-			Scale:  val(100, token.DECIMAL, "100"),
+			TokPos: 99,
+			Unit:   val(104, token.UNIT_SYM, "USD"),
+			Scale:  val(108, token.DECIMAL, "100"),
 		},
 		ast.Transaction{
-			TokPos:      104,
-			Date:        val(107, token.DATE, "2001-02-03"),
-			Description: val(118, token.STRING, `"Buy stuff"`),
+			TokPos:      112,
+			Date:        val(115, token.DATE, "2001-02-03"),
+			Description: val(126, token.STRING, `"Buy stuff"`),
 			Splits: []ast.LineNode{
 				ast.Split{
-					Account: val(130, token.ACCOUNT, "Some:account"),
+					Account: val(138, token.ACCOUNT, "Some:account"),
 					Amount: &ast.Amount{
-						Decimal: val(143, token.DECIMAL, "1.2"),
-						Unit:    val(147, token.IDENT, "USD"),
+						Decimal: val(151, token.DECIMAL, "1.2"),
+						Unit:    val(155, token.UNIT_SYM, "USD"),
 					},
 				},
 				ast.Split{
-					Account: val(151, token.ACCOUNT, "Expenses:Stuff"),
+					Account: val(159, token.ACCOUNT, "Expenses:Stuff"),
 					Amount: &ast.Amount{
-						Decimal: val(166, token.DECIMAL, "-1.2"),
-						Unit:    val(171, token.IDENT, "USD"),
+						Decimal: val(174, token.DECIMAL, "-1.2"),
+						Unit:    val(179, token.UNIT_SYM, "USD"),
 					},
 				},
 			},
-			Dot: ast.Dot{TokPos: 175},
+			Dot: ast.Dot{TokPos: 183},
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
@@ -128,7 +128,7 @@ Expenses:Stuff
 					Account: val(27, token.ACCOUNT, "Some:account"),
 					Amount: &ast.Amount{
 						Decimal: val(40, token.DECIMAL, "1.2"),
-						Unit:    val(44, token.IDENT, "USD"),
+						Unit:    val(44, token.UNIT_SYM, "USD"),
 					},
 				},
 				ast.Split{
@@ -146,7 +146,7 @@ Expenses:Stuff
 func TestParseBytes_empty_lines_ignored(t *testing.T) {
 	t.Parallel()
 	const input = `
-bal 2001-02-05 Some:account
+balance 2001-02-05 Some:account
 123.45 USD
 # some comment
 56700 JPY
@@ -167,51 +167,51 @@ Expenses:Stuff -1.2 USD
 		ast.MultiBalance{
 			BalanceHeader: ast.BalanceHeader{
 				TokPos:  2,
-				Date:    val(6, token.DATE, "2001-02-05"),
-				Account: val(17, token.ACCOUNT, "Some:account"),
+				Date:    val(10, token.DATE, "2001-02-05"),
+				Account: val(21, token.ACCOUNT, "Some:account"),
 			},
 			Amounts: []ast.LineNode{
 				ast.AmountLine{
 					Amount: ast.Amount{
-						Decimal: val(30, token.DECIMAL, "123.45"),
-						Unit:    val(37, token.IDENT, "USD"),
+						Decimal: val(34, token.DECIMAL, "123.45"),
+						Unit:    val(41, token.UNIT_SYM, "USD"),
 					},
 				},
 				ast.AmountLine{
 					Amount: ast.Amount{
-						Decimal: val(56, token.DECIMAL, "56700"),
-						Unit:    val(62, token.IDENT, "JPY"),
+						Decimal: val(60, token.DECIMAL, "56700"),
+						Unit:    val(66, token.UNIT_SYM, "JPY"),
 					},
 				},
 			},
-			Dot: ast.Dot{TokPos: 66},
+			Dot: ast.Dot{TokPos: 70},
 		},
 		ast.UnitDecl{
-			TokPos: 83,
-			Unit:   val(88, token.IDENT, "USD"),
-			Scale:  val(92, token.DECIMAL, "100"),
+			TokPos: 87,
+			Unit:   val(92, token.UNIT_SYM, "USD"),
+			Scale:  val(96, token.DECIMAL, "100"),
 		},
 		ast.Transaction{
-			TokPos:      96,
-			Date:        val(99, token.DATE, "2001-02-03"),
-			Description: val(110, token.STRING, `"Buy stuff"`),
+			TokPos:      100,
+			Date:        val(103, token.DATE, "2001-02-03"),
+			Description: val(114, token.STRING, `"Buy stuff"`),
 			Splits: []ast.LineNode{
 				ast.Split{
-					Account: val(122, token.ACCOUNT, "Some:account"),
+					Account: val(126, token.ACCOUNT, "Some:account"),
 					Amount: &ast.Amount{
-						Decimal: val(135, token.DECIMAL, "1.2"),
-						Unit:    val(139, token.IDENT, "USD"),
+						Decimal: val(139, token.DECIMAL, "1.2"),
+						Unit:    val(143, token.UNIT_SYM, "USD"),
 					},
 				},
 				ast.Split{
-					Account: val(158, token.ACCOUNT, "Expenses:Stuff"),
+					Account: val(162, token.ACCOUNT, "Expenses:Stuff"),
 					Amount: &ast.Amount{
-						Decimal: val(173, token.DECIMAL, "-1.2"),
-						Unit:    val(178, token.IDENT, "USD"),
+						Decimal: val(177, token.DECIMAL, "-1.2"),
+						Unit:    val(182, token.UNIT_SYM, "USD"),
 					},
 				},
 			},
-			Dot: ast.Dot{TokPos: 182},
+			Dot: ast.Dot{TokPos: 186},
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {

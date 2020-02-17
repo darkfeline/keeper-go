@@ -23,8 +23,15 @@ import (
 	"go.felesatra.moe/keeper/kpr/token"
 )
 
+// An ErrorHandler may be provided to Scanner.Init. If a syntax error
+// is encountered and a handler was installed, the handler is called
+// with a position and an error message. The position points to the
+// beginning of the offending token.
 type ErrorHandler func(token.Position, string)
 
+// A Scanner holds the scanner's internal state while processing a
+// given text. It can be allocated as part of another data structure
+// but must be initialized via Init before use.
 type Scanner struct {
 	// Static state
 	f    *token.File
@@ -43,6 +50,7 @@ type Scanner struct {
 	ErrorCount int
 }
 
+// A mode value is a set of flags (or 0). They control scanner behavior.
 type Mode uint
 
 const (
@@ -55,7 +63,24 @@ type result struct {
 	Lit string
 }
 
+// Init prepares the scanner s to tokenize the text src by setting the
+// scanner at the beginning of src. The scanner uses the file set file
+// for position information and it adds line information for each
+// line. It is ok to re-use the same file when re-scanning the same
+// file as line information which is already present is ignored. Init
+// causes a panic if the file size does not match the src size.
+//
+// Calls to Scan will invoke the error handler err if they encounter a
+// syntax error and err is not nil. Also, for each error encountered,
+// the Scanner field ErrorCount is incremented by one. The mode
+// parameter determines how comments are handled.
+//
+// Note that Init may call err if there is an error in the first
+// character of the file.
 func (s *Scanner) Init(file *token.File, src []byte, err ErrorHandler, mode Mode) {
+	if file.Size() != len(src) {
+		panic("src size does not match file")
+	}
 	s.f = file
 	s.src = src
 	s.err = err
@@ -69,6 +94,24 @@ func (s *Scanner) Init(file *token.File, src []byte, err ErrorHandler, mode Mode
 	s.ErrorCount = 0
 }
 
+/*
+Scan scans the next token and returns the token position, the token,
+and its literal string if applicable. The source end is indicated by
+token.EOF.
+
+In all cases, the literal string is the scanned token.
+
+For more tolerant parsing, Scan will return a valid token if possible
+even if a syntax error was encountered. Thus, even if the resulting
+token sequence contains no illegal tokens, a client may not assume
+that no error occurred. Instead it must check the scanner's ErrorCount
+or the number of calls of the error handler, if there was one
+installed.
+
+Scan adds line information to the file added to the file set with
+Init. Token positions are relative to that file and thus relative to
+the file set.
+*/
 func (s *Scanner) Scan() (pos token.Pos, tok token.Token, lit string) {
 	for {
 		select {
@@ -83,13 +126,14 @@ func (s *Scanner) Scan() (pos token.Pos, tok token.Token, lit string) {
 	}
 }
 
+const eof rune = -1
+
 // next reads and returns the next rune, which may be invalid.
 // utf8.RuneError is returned for decoding errors.
 func (s *Scanner) next() rune {
 	if s.offset >= len(s.src) {
-		s.pending = append(s.pending, utf8.RuneError)
-		s.offset += 1
-		return utf8.RuneError
+		s.pending = append(s.pending, eof)
+		return eof
 	}
 	r, n := utf8.DecodeRune(s.src[s.offset:])
 	s.pending = append(s.pending, r)
@@ -104,6 +148,7 @@ func (s *Scanner) next() rune {
 func (s *Scanner) unread() {
 	last := len(s.pending) - 1
 	switch r := s.pending[last]; r {
+	case eof:
 	case utf8.RuneError:
 		s.offset -= 1
 	default:
@@ -113,7 +158,8 @@ func (s *Scanner) unread() {
 }
 
 func (s *Scanner) peek() rune {
-	r, _ := utf8.DecodeRune(s.src[s.offset:])
+	r := s.next()
+	s.unread()
 	return r
 }
 
@@ -128,9 +174,8 @@ func (s *Scanner) accept(valid string) bool {
 
 // acceptRun reads all contiguous runes in the valid string.
 func (s *Scanner) acceptRun(valid string) {
-	for strings.IndexRune(valid, s.next()) >= 0 {
+	for s.accept(valid) {
 	}
-	s.unread()
 }
 
 // acceptNonSpace reads all contiguous runes that are not space.
@@ -164,10 +209,20 @@ func (s *Scanner) errorf(offset int, format string, v ...interface{}) {
 	s.err(s.f.Position(s.f.Pos(offset)), fmt.Sprintf(format, v...))
 }
 
+const (
+	digits  = "0123456789"
+	lower   = "abcdefghijklmnopqrstuvwxyz"
+	upper   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	letters = lower + upper
+)
+
 type stateFn func(*Scanner) stateFn
 
 func lexStart(s *Scanner) stateFn {
 	switch r := s.next(); {
+	default:
+		s.errorf(s.offset-1, "bad rune %c at start of token", r)
+		return lexIllegal
 	case r == '#':
 		return lexComment
 	case r == '\n':
@@ -179,7 +234,7 @@ func lexStart(s *Scanner) stateFn {
 	case r == '"':
 		return lexString
 	case unicode.IsLetter(r):
-		return lexIdent
+		return lexLetter
 	case unicode.IsDigit(r):
 		return lexDigit
 	case r == '-':
@@ -187,9 +242,6 @@ func lexStart(s *Scanner) stateFn {
 	case unicode.IsSpace(r):
 		s.ignore()
 		return lexStart
-	default:
-		s.errorf(s.offset-1, "bad rune %c at start of token", r)
-		return lexIllegal
 	}
 }
 
@@ -199,31 +251,31 @@ func lexIllegal(s *Scanner) stateFn {
 	return lexStart
 }
 
-const (
-	digits       = "0123456789"
-	lower        = "abcdefghijklmnopqrstuvwxyz"
-	upper        = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	letters      = lower + upper
-	identChars   = letters
-	accountChars = identChars + digits + ":_"
-	decimalChars = digits + ","
-)
-
 func lexComment(s *Scanner) stateFn {
 	for {
 		r := s.next()
-		if r == '\n' {
-			s.unread()
-			if s.mode&ScanComments != 0 {
-				s.emit(token.COMMENT)
-			} else {
-				s.ignore()
-			}
-			s.next()
-			s.emit(token.NEWLINE)
-			return lexStart
+		if r != '\n' {
+			continue
 		}
+		s.unread()
+		if s.mode&ScanComments != 0 {
+			s.emit(token.COMMENT)
+		} else {
+			s.ignore()
+		}
+		return lexStart
 	}
+}
+
+// Expression-like tokens cannot be followed by expression-like characters.
+func lexExprEnd(s *Scanner) stateFn {
+	switch next := s.peek(); {
+	case unicode.IsLetter(next), unicode.IsDigit(next):
+		fallthrough
+	case next == '-', next == ':', next == '_':
+		s.errorf(s.offset, "token followed by non-space %c", next)
+	}
+	return lexStart
 }
 
 func lexString(s *Scanner) stateFn {
@@ -231,7 +283,7 @@ func lexString(s *Scanner) stateFn {
 		switch r := s.next(); r {
 		case '"':
 			s.emit(token.STRING)
-			return lexStart
+			return lexExprEnd
 		case '\\':
 			s.next()
 		case '\n':
@@ -243,24 +295,48 @@ func lexString(s *Scanner) stateFn {
 	}
 }
 
-func lexIdent(s *Scanner) stateFn {
-	s.acceptRun(identChars)
-	switch r := s.peek(); true {
-	case unicode.IsSpace(r):
-		s.emit(token.IDENT)
-		return lexStart
-	case r == ':', r == '_':
+func lexLetter(s *Scanner) stateFn {
+	s.acceptRun(letters)
+	switch pending := string(s.pending); {
+	case pending == "tx":
+		s.emit(token.TX)
+		return lexExprEnd
+	case pending == "balance":
+		s.emit(token.BALANCE)
+		return lexExprEnd
+	case pending == "unit":
+		s.emit(token.UNIT)
+		return lexExprEnd
+	case s.accept(digits + ":_"):
 		return lexAccount
+	case isUpper(pending):
+		s.emit(token.UNIT_SYM)
+		return lexExprEnd
 	default:
-		s.emit(token.IDENT)
-		return lexStart
+		s.errorf(s.start, "invalid token")
+		s.emit(token.ILLEGAL)
+		return lexExprEnd
 	}
 }
 
+func isUpper(s string) bool {
+	for _, r := range s {
+		if !unicode.IsUpper(r) {
+			return false
+		}
+	}
+	return true
+}
+
 func lexAccount(s *Scanner) stateFn {
-	s.acceptRun(accountChars)
+	s.acceptRun(letters + digits + ":_")
+	if pending := string(s.pending); !strings.Contains(pending, ":") {
+		s.errorf(s.start, "invalid token")
+		s.emit(token.ILLEGAL)
+		return lexExprEnd
+	}
 	s.emit(token.ACCOUNT)
-	return lexStart
+	return lexExprEnd
 }
 
 func lexDigit(s *Scanner) stateFn {
@@ -272,32 +348,30 @@ func lexDigit(s *Scanner) stateFn {
 		return lexDecimalAfterPoint
 	case r == '-':
 		return lexDate
-	case unicode.IsSpace(r):
-		s.unread()
-		s.emit(token.DECIMAL)
-		return lexStart
 	default:
 		s.unread()
 		s.emit(token.DECIMAL)
-		s.errorf(s.offset, "unexpected rune %c in DECIMAL", r)
-		return lexIllegal
+		return lexExprEnd
 	}
 }
 
 func lexDecimal(s *Scanner) stateFn {
-	s.acceptRun(decimalChars)
-	s.accept(".")
-	return lexDecimalAfterPoint
+	s.acceptRun(digits + ",")
+	if s.accept(".") {
+		return lexDecimalAfterPoint
+	}
+	s.emit(token.DECIMAL)
+	return lexExprEnd
 }
 
 func lexDecimalAfterPoint(s *Scanner) stateFn {
-	s.acceptRun(decimalChars)
+	s.acceptRun(digits + ",")
 	s.emit(token.DECIMAL)
-	return lexStart
+	return lexExprEnd
 }
 
 func lexDate(s *Scanner) stateFn {
 	s.acceptRun(digits + "-")
 	s.emit(token.DATE)
-	return lexStart
+	return lexExprEnd
 }

@@ -80,10 +80,7 @@ func (b *builder) build(t []ast.Entry) ([]Entry, error) {
 			panic(fmt.Sprintf("unknown entry node %T", n))
 		}
 	}
-	if len(b.errs) > 0 {
-		return entries, b.errs
-	}
-	return entries, nil
+	return entries, b.errs.Err()
 }
 
 func (b *builder) nodePos(e ast.Node) token.Position {
@@ -198,7 +195,7 @@ func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
 
 func (b *builder) buildAmount(n ast.Amount) (Amount, error) {
 	assertKind(n.Decimal, token.DECIMAL)
-	assertKind(n.Unit, token.IDENT)
+	assertKind(n.Unit, token.UNIT_SYM)
 
 	d, err := parseDecimal(n.Decimal.Value)
 	if err != nil {
@@ -226,7 +223,7 @@ func (b *builder) buildAmount(n ast.Amount) (Amount, error) {
 }
 
 func (b *builder) addUnit(n ast.UnitDecl) {
-	assertKind(n.Unit, token.IDENT)
+	assertKind(n.Unit, token.UNIT_SYM)
 	assertKind(n.Scale, token.DECIMAL)
 
 	d, err := parseDecimal(n.Scale.Value)

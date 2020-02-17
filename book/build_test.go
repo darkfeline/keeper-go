@@ -26,7 +26,7 @@ import (
 func TestBuildEntries_simple(t *testing.T) {
 	t.Parallel()
 	const input = `unit USD 100
-bal 2001-02-03 Some:account -1.20 USD
+balance 2001-02-03 Some:account -1.20 USD
 tx 2001-02-03 "Buy stuff"
 Some:account -1.2 USD
 Expenses:Stuff
@@ -46,7 +46,7 @@ Expenses:Stuff
 		},
 		Transaction{
 			EntryDate:   civil.Date{2001, 2, 3},
-			EntryPos:    token.Position{Offset: 51, Line: 3, Column: 1},
+			EntryPos:    token.Position{Offset: 55, Line: 3, Column: 1},
 			Description: "Buy stuff",
 			Splits: []Split{
 				{
