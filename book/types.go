@@ -27,6 +27,7 @@ type Amount struct {
 	Unit   Unit
 }
 
+// Scalar returns the amount number without the unit as a formatted string.
 func (a Amount) Scalar() string {
 	return decFormat(a.Number, a.Unit.Scale)
 }
@@ -54,6 +55,8 @@ func (u Unit) String() string {
 // Accounts are colon separated paths, like "Income:Salary".
 type Account string
 
+// Parts returns the parts of the account between the colons.
+// An empty slice is returned for the zero value.
 func (a Account) Parts() []string {
 	if a == "" {
 		return nil
@@ -61,10 +64,13 @@ func (a Account) Parts() []string {
 	return strings.Split(string(a), ":")
 }
 
+// Level returns the nesting level of the account, which is equivalent
+// to the number of parts.
 func (a Account) Level() int {
 	return len(a.Parts())
 }
 
+// Parent returns the parent account.
 func (a Account) Parent() Account {
 	p := a.Parts()
 	if len(p) == 0 {
@@ -104,6 +110,7 @@ func (b Balance) Add(a Amount) Balance {
 	return b
 }
 
+// Empty returns true if the balance is empty/zero.
 func (b Balance) Empty() bool {
 	return len(b.CleanCopy()) == 0
 }
@@ -147,13 +154,5 @@ func (b Balance) String() string {
 	return strings.Join(s, ", ")
 }
 
-// TBalance is a "trial balance".
+// TBalance is a "trial balance", containing the balances of multiple accounts.
 type TBalance map[Account]Balance
-
-func (b TBalance) Copy() TBalance {
-	new := make(TBalance)
-	for k, v := range b {
-		new[k] = v
-	}
-	return new
-}

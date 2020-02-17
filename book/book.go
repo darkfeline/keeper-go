@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package book provides an accessible API for working with keeper files.
 package book
 
 import (
@@ -20,16 +21,22 @@ import (
 	"cloud.google.com/go/civil"
 )
 
+// A Book represents accounting information compiled from keeper file source.
 type Book struct {
-	Entries        []Entry
+	// Entries are all of the entries, sorted chronologically.
+	Entries []Entry
+	// AccountEntries are the entries that affect each account.
 	AccountEntries map[Account][]Entry
-	Balance        TBalance
+	// Balance is the final balance for all acounts.
+	Balance TBalance
 }
 
+// An Option is passed to Compile to configure compilation.
 type Option interface {
 	option()
 }
 
+// Compile compiles keeper file source into a Book.
 func Compile(src []byte, o ...Option) (*Book, error) {
 	e, err := buildEntries(src)
 	if err != nil {
@@ -49,12 +56,17 @@ func Compile(src []byte, o ...Option) (*Book, error) {
 	return compile(e, initial), nil
 }
 
+// Starting returns an option that limits a compiled book to entries
+// starting from the given date.  Entries preceding the given date
+// will still be parsed to determine account balances.
 func Starting(d civil.Date) Option {
 	return optionSetter(func(o *options) {
 		o.starting = d
 	})
 }
 
+// Starting returns an option that limits a compiled book to entries
+// ending on the given date.
 func Ending(d civil.Date) Option {
 	return optionSetter(func(o *options) {
 		o.ending = d
@@ -78,7 +90,7 @@ type options struct {
 	ending   civil.Date
 }
 
-// compileFromEntries compiles a Book from entries.
+// compile compiles a Book from entries.
 // Entries should be sorted.
 func compile(e []Entry, initial TBalance) *Book {
 	b := &Book{

@@ -25,6 +25,10 @@ import (
 	"go.felesatra.moe/keeper/kpr/token"
 )
 
+// buildEntries builds entries from keeper file source.
+// This is done in a single pass on an entry by entry basis, so
+// balances are not tracked.
+// Each transaction must still balance to zero however.
 func buildEntries(src []byte) ([]Entry, error) {
 	fset := token.NewFileSet()
 	t, err := parser.ParseBytes(fset, "", src, 0)

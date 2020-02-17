@@ -20,12 +20,14 @@ import (
 	"go.felesatra.moe/keeper/kpr/token"
 )
 
+// All entry types implement Entry.
 type Entry interface {
 	Date() civil.Date
 	Position() token.Position
 	entry()
 }
 
+// A BalanceAssert entry represents a balance assertion.
 type BalanceAssert struct {
 	EntryPos  token.Position
 	EntryDate civil.Date
@@ -45,14 +47,16 @@ func (b BalanceAssert) Date() civil.Date {
 
 func (BalanceAssert) entry() {}
 
-// Transaction describes a bookkeeping transaction.
-// The sum of all split amounts for all unit types should be zero.
+// A Transaction entry describes a bookkeeping transaction.
+// The total balance of all splits should be zero.
 type Transaction struct {
 	EntryPos    token.Position
 	EntryDate   civil.Date
 	Description string
 	Splits      []Split
-	Balances    TBalance
+	// Balances contains the balance for all accounts mentioned in
+	// the transaction immediately after the transaction.
+	Balances TBalance
 }
 
 func (t Transaction) Position() token.Position {
