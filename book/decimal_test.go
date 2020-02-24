@@ -21,19 +21,20 @@ import (
 func TestParseDecimal(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		desc string
 		s    string
 		want decimal
 	}{
-		{"no dot", "123", decimal{123, 1}},
-		{"dot at end", "123.", decimal{123, 1}},
-		{"dot", "123.45", decimal{12345, 100}},
-		{"negative", "-123.45", decimal{-12345, 100}},
-		{"comma", "2,123.45", decimal{212345, 100}},
+		{"123", decimal{123, 1}},
+		{"123.", decimal{123, 1}},
+		{"123.45", decimal{12345, 100}},
+		{"-123.45", decimal{-12345, 100}},
+		{"2,123.45", decimal{212345, 100}},
+		{"0.02", decimal{2, 100}},
+		{"-0.02", decimal{-2, 100}},
 	}
 	for _, c := range cases {
 		c := c
-		t.Run(c.desc, func(t *testing.T) {
+		t.Run(c.s, func(t *testing.T) {
 			t.Parallel()
 			got, err := parseDecimal(c.s)
 			if err != nil {

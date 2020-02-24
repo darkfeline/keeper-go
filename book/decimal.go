@@ -34,35 +34,36 @@ func parseDecimal(s string) (decimal, error) {
 	if len(s) == 0 {
 		return decimal{}, errors.New("parse decimal: empty string")
 	}
+	neg := s[0] == '-'
 	s = strings.Replace(s, ",", "", -1)
-	p := len(s)
+	split := len(s)
 	for i, b := range s {
 		if b == '.' {
-			p = i
+			split = i
 			break
 		}
 	}
-	x, err := strconv.ParseInt(s[:p], 10, 64)
+	before, err := strconv.ParseInt(s[:split], 10, 64)
 	if err != nil {
 		return decimal{}, fmt.Errorf("parse decimal %#v: %s", s, err)
 	}
-	var y int64
-	if p+1 < len(s) {
-		y, err = strconv.ParseInt(s[p+1:], 10, 64)
+	var after int64
+	if split+1 < len(s) {
+		after, err = strconv.ParseInt(s[split+1:], 10, 64)
 		if err != nil {
 			return decimal{}, fmt.Errorf("parse decimal %#v: %s", s, err)
 		}
 	}
-	p = len(s) - p
-	if p > 0 {
-		p--
+	if neg {
+		after = -after
 	}
-	if x < 0 {
-		y = -y
+	split = len(s) - split
+	if split > 0 {
+		split--
 	}
-	scale := int64(math.Pow10(p))
+	scale := int64(math.Pow10(split))
 	return decimal{
-		number: x*scale + y,
+		number: before*scale + after,
 		scale:  scale,
 	}, nil
 }
