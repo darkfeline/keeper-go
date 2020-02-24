@@ -27,8 +27,9 @@ func decFormat(n int64, scale int64) string {
 		b.WriteRune('-')
 		n = -n
 	}
-	d := fmt.Sprintf("%d", n)
-	split := len(d) - log10(scale)
+	logScale := log10(scale)
+	d := fmt.Sprintf("%0*d", logScale+1, n)
+	split := len(d) - logScale
 	before, after := d[:split], d[split:]
 	for i, r := range before {
 		b.WriteRune(r)
