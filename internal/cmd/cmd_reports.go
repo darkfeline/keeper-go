@@ -166,11 +166,30 @@ func makeBalanceItems(m book.TBalance, root book.Account) []balanceItem {
 		}
 		return nil
 	})
-	i := balanceItem{
-		prefix: "Total",
+	total = total.CleanCopy()
+	switch len(total) {
+	case 0:
+		items = append(items, balanceItem{
+			prefix: "Total",
+		})
+	case 1:
+		i := balanceItem{
+			prefix: "Total",
+		}
+		i.addBalance(total)
+		items = append(items, i)
+	default:
+		i := balanceItem{
+			prefix: "Total",
+		}
+		i.addBalance(book.Balance{total[0]})
+		items = append(items, i)
+		for _, a := range total[1:] {
+			var i balanceItem
+			i.addBalance(book.Balance{a})
+			items = append(items, i)
+		}
 	}
-	i.addBalance(total)
-	items = append(items, i)
 	return items
 }
 
