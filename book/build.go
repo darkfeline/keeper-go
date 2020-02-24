@@ -16,7 +16,6 @@ package book
 
 import (
 	"fmt"
-	"log"
 	"unicode"
 
 	"cloud.google.com/go/civil"
@@ -192,8 +191,6 @@ func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
 		bal = bal.Add(a).CleanCopy()
 	}
 	if len(bal) != 0 {
-		log.Printf("%#v", bal)
-		log.Printf("%s", bal.String())
 		b.errorf(n.Pos(), "transaction doesn't balance (off by %s)", bal)
 		return t, fmt.Errorf("transaction doesn't balance (off by %s)", bal)
 	}
