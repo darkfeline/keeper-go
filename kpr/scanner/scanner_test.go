@@ -161,6 +161,13 @@ Some:account 2,123.45 USD
 				{61, token.NEWLINE, "\n"},
 			},
 		},
+		{
+			desc: "unit with digit",
+			text: `VTR123`,
+			want: []result{
+				{1, token.UNIT_SYM, `VTR123`},
+			},
+		},
 	}
 	for _, c := range cases {
 		c := c

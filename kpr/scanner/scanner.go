@@ -201,6 +201,7 @@ func (s *Scanner) ignore() {
 	s.start = s.offset
 }
 
+// record an error.
 func (s *Scanner) errorf(offset int, format string, v ...interface{}) {
 	s.ErrorCount++
 	if s.err == nil {
@@ -233,8 +234,10 @@ func lexStart(s *Scanner) stateFn {
 		return lexStart
 	case r == '"':
 		return lexString
-	case unicode.IsLetter(r):
-		return lexLetter
+	case unicode.IsUpper(r):
+		return lexUpper
+	case unicode.IsLower(r):
+		return lexLower
 	case unicode.IsDigit(r):
 		return lexDigit
 	case r == '-':
@@ -293,6 +296,46 @@ func lexString(s *Scanner) stateFn {
 			return lexStart
 		}
 	}
+}
+
+func lexUpper(s *Scanner) stateFn {
+	for {
+		switch r := s.next(); {
+		case unicode.IsUpper(r):
+		case unicode.IsDigit(r):
+		case unicode.IsLower(r):
+			return lexAccount
+		case r == '_':
+			return lexAccount
+		case r == ':':
+			return lexAccount
+		default:
+			s.unread()
+			s.emit(token.UNIT_SYM)
+			return lexExprEnd
+		}
+	}
+}
+
+func lexLower(s *Scanner) stateFn {
+	s.acceptRun(letters)
+	switch pending := string(s.pending); pending {
+	case "tx":
+		s.emit(token.TX)
+		return lexExprEnd
+	case "balance":
+		s.emit(token.BALANCE)
+		return lexExprEnd
+	case "unit":
+		s.emit(token.UNIT)
+		return lexExprEnd
+	}
+	if s.accept(digits + ":_") {
+		return lexAccount
+	}
+	s.errorf(s.start, "invalid token")
+	s.emit(token.ILLEGAL)
+	return lexExprEnd
 }
 
 func lexLetter(s *Scanner) stateFn {
