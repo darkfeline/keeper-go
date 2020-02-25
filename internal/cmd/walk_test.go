@@ -69,6 +69,20 @@ func TestWalkAccountTree(t *testing.T) {
 				{Account: "Expenses:Foo:Bar:Baz", Leaf: true},
 			},
 		},
+		{
+			desc: "bug 1",
+			a: []book.Account{
+				"Assets:2019:Foo",
+				"Assets:2020:Foo",
+			},
+			want: []accountNode{
+				{Account: "Assets", Virtual: true},
+				{Account: "Assets:2019", Virtual: true},
+				{Account: "Assets:2019:Foo", Leaf: true},
+				{Account: "Assets:2020", Virtual: true},
+				{Account: "Assets:2020:Foo", Leaf: true},
+			},
+		},
 	}
 	for _, c := range cases {
 		c := c
@@ -102,6 +116,8 @@ func TestCommonPrefix(t *testing.T) {
 		{"longer b", []string{"foo"}, []string{"foo", "bar"}, []string{"foo"}},
 		{"diverge", []string{"foo", "baz"}, []string{"foo", "bar"}, []string{"foo"}},
 		{"same", []string{"foo", "bar"}, []string{"foo", "bar"}, []string{"foo", "bar"}},
+		{"bug 1", []string{"Assets", "2019", "Foo"},
+			[]string{"Assets", "2020", "Foo"}, []string{"Assets"}},
 	}
 	for _, c := range cases {
 		c := c

@@ -63,12 +63,10 @@ func walkBetweenLast(last, cur book.Account, f func(accountNode) error) error {
 func commonPrefix(a, b []string) []string {
 	var prefix []string
 	for i, v := range a {
-		if i >= len(b) {
+		if i >= len(b) || v != b[i] {
 			return prefix
 		}
-		if v == b[i] {
-			prefix = append(prefix, v)
-		}
+		prefix = append(prefix, v)
 	}
 	return prefix
 }
