@@ -29,7 +29,6 @@ import (
 
 func init() {
 	rootCmd.AddCommand(balanceCmd)
-	rootCmd.AddCommand(incomeCmd)
 }
 
 var balanceCmd = &cobra.Command{
@@ -52,6 +51,10 @@ var balanceCmd = &cobra.Command{
 	},
 }
 
+func init() {
+	rootCmd.AddCommand(incomeCmd)
+}
+
 var incomeCmd = &cobra.Command{
 	Use:   "income",
 	Short: "Print income statement",
@@ -65,9 +68,32 @@ var incomeCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		f(os.Stdout, b.Balance, "Income")
+		f(os.Stdout, b.DiffBalance, "Income")
 		fmt.Println()
-		f(os.Stdout, b.Balance, "Expenses")
+		f(os.Stdout, b.DiffBalance, "Expenses")
+		return nil
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(equityCmd)
+}
+
+var equityCmd = &cobra.Command{
+	Use:   "equity",
+	Short: "Print equity",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		b, err := compileFile(args[0])
+		if err != nil {
+			return err
+		}
+		f, err := getTbalFormatter()
+		if err != nil {
+			return err
+		}
+		f(os.Stdout, b.Balance, "Equity")
+		fmt.Println()
 		return nil
 	},
 }

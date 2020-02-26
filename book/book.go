@@ -27,8 +27,11 @@ type Book struct {
 	Entries []Entry
 	// AccountEntries are the entries that affect each account.
 	AccountEntries map[Account][]Entry
-	// Balance is the final balance for all acounts.
+	// Balance is the final balance for all accounts.
 	Balance TBalance
+	// DiffBalance is the balance in the given time period for all accounts.
+	// This is useful for income and expense accounts.
+	DiffBalance TBalance
 }
 
 // An Option is passed to Compile to configure compilation.
@@ -46,15 +49,16 @@ func Compile(src []byte, o ...Option) (*Book, error) {
 	op := buildOptions(o)
 	initial := make(TBalance)
 	if d := op.starting; d.IsValid() {
-		e := entriesStarting(e, d)
-		b := compile(e, initial)
+		b := compile(entriesEnding(e, d.AddDays(-1)), initial)
 		initial = b.Balance
+		e = entriesStarting(e, d)
 	}
 	if d := op.ending; d.IsValid() {
 		e = entriesEnding(e, d)
 	}
 	b := compile(e, initial)
 	b.Balance.Clean()
+	b.DiffBalance.Clean()
 	return b, nil
 }
 
@@ -98,6 +102,7 @@ func compile(e []Entry, initial TBalance) *Book {
 	b := &Book{
 		AccountEntries: make(map[Account][]Entry),
 		Balance:        initial,
+		DiffBalance:    make(TBalance),
 	}
 	for _, e := range e {
 		b.compileEntry(e)
@@ -111,6 +116,7 @@ func (b *Book) compileEntry(e Entry) {
 		tbal := make(TBalance)
 		for _, s := range e.Splits {
 			k := s.Account
+			b.DiffBalance[k] = b.DiffBalance[k].Add(s.Amount)
 			bal := b.Balance[k].Add(s.Amount)
 			b.Balance[k] = bal
 			tbal[k] = bal
