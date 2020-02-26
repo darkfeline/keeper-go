@@ -303,6 +303,7 @@ func lexUpper(s *Scanner) stateFn {
 		switch r := s.next(); {
 		case unicode.IsUpper(r):
 		case unicode.IsDigit(r):
+			return lexAccount
 		case unicode.IsLower(r):
 			return lexAccount
 		case r == '_':
