@@ -15,6 +15,7 @@
 package book
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -128,5 +129,20 @@ func TestBalance_Equal_ignore_zero(t *testing.T) {
 	}
 	if !b.Equal(a) {
 		t.Errorf("b.Equal(a) returned false")
+	}
+}
+
+func TestBalance_CleanCopy(t *testing.T) {
+	t.Parallel()
+	b := Balance{
+		Amount{Number: 0, Unit: Unit{Symbol: "VTRA", Scale: 1000}},
+		Amount{Number: 3456, Unit: Unit{Symbol: "VTRB", Scale: 1000}},
+	}
+	got := b.CleanCopy()
+	want := Balance{
+		Amount{Number: 3456, Unit: Unit{Symbol: "VTRB", Scale: 1000}},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("b.CleanCopy() = %#v; want %#v", got, want)
 	}
 }

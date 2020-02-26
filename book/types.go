@@ -156,3 +156,16 @@ func (b Balance) String() string {
 
 // TBalance is a "trial balance", containing the balances of multiple accounts.
 type TBalance map[Account]Balance
+
+// Clean cleans all balances and deletes accounts with empty
+// balances.
+func (b TBalance) Clean() {
+	for k, v := range b {
+		bal := v.CleanCopy()
+		if len(bal) == 0 {
+			delete(b, k)
+		} else {
+			b[k] = bal
+		}
+	}
+}

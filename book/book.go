@@ -53,7 +53,9 @@ func Compile(src []byte, o ...Option) (*Book, error) {
 	if d := op.ending; d.IsValid() {
 		e = entriesEnding(e, d)
 	}
-	return compile(e, initial), nil
+	b := compile(e, initial)
+	b.Balance.Clean()
+	return b, nil
 }
 
 // Starting returns an option that limits a compiled book to entries
@@ -109,9 +111,11 @@ func (b *Book) compileEntry(e Entry) {
 		tbal := make(TBalance)
 		for _, s := range e.Splits {
 			k := s.Account
-			b.Balance[k] = b.Balance[k].Add(s.Amount)
-			tbal[k] = b.Balance[k].CleanCopy()
+			bal := b.Balance[k].Add(s.Amount)
+			b.Balance[k] = bal
+			tbal[k] = bal
 		}
+		tbal.Clean()
 		e.Balances = tbal
 		b.addEntry(e)
 	case BalanceAssert:
