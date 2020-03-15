@@ -119,9 +119,18 @@ func (p *parser) scanUntilEntry() token.Pos {
 		switch _, tok, _ := p.peek(); {
 		default:
 			continue
-		case tok.IsKeyword():
+		case isEntryKeyword(tok):
 			return pos
 		}
+	}
+}
+
+func isEntryKeyword(tok token.Token) bool {
+	switch tok {
+	case token.TX, token.BALANCE, token.UNIT:
+		return true
+	default:
+		return false
 	}
 }
 
@@ -151,7 +160,7 @@ func (p *parser) parse() []ast.Entry {
 		switch pos, tok, lit := p.scan(); {
 		case tok == token.EOF:
 			return entries
-		case tok.IsKeyword():
+		case isEntryKeyword(tok):
 			e := p.parseEntry(pos, tok, lit)
 			entries = append(entries, e)
 		case tok == token.NEWLINE:
@@ -205,14 +214,14 @@ func (p *parser) parseTransaction(pos token.Pos) ast.Entry {
 	t.Splits = p.parseSplits()
 
 	pos, tok, lit = p.scan()
-	if tok != token.DOT {
+	if tok != token.END {
 		panic(fmt.Sprintf("unexpected token %s %s in transaction", tok, lit))
 	}
-	t.Dot = ast.Dot{TokPos: pos}
+	t.EndTok = ast.End{TokPos: pos}
 
 	pos, tok, lit = p.scan()
 	if tok != token.NEWLINE {
-		p.errorf(pos, "after dot bad token %s %s", tok, lit)
+		p.errorf(pos, "after end bad token %s %s", tok, lit)
 		_ = p.scanLine()
 	}
 
@@ -229,7 +238,7 @@ func (p *parser) parseSplits() []ast.LineNode {
 			splits = append(splits, s)
 		case token.NEWLINE:
 			continue
-		case token.DOT:
+		case token.END:
 			p.unread(pos, tok, lit)
 			return splits
 		default:
@@ -396,11 +405,11 @@ func (p *parser) parseBalanceMultipleAmounts(h ast.BalanceHeader) ast.Entry {
 			b.Amounts = append(b.Amounts, ast.AmountLine{Amount: a})
 		case token.NEWLINE:
 			continue
-		case token.DOT:
-			b.Dot = ast.Dot{TokPos: pos}
+		case token.END:
+			b.EndTok = ast.End{TokPos: pos}
 			pos, tok, lit = p.scan()
 			if tok != token.NEWLINE {
-				p.errorf(pos, "after dot bad token %s %s", tok, lit)
+				p.errorf(pos, "after end bad token %s %s", tok, lit)
 				_ = p.scanLine()
 			}
 			return b

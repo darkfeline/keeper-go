@@ -229,9 +229,6 @@ func lexStart(s *Scanner) stateFn {
 	case r == '\n':
 		s.emit(token.NEWLINE)
 		return lexStart
-	case r == '.':
-		s.emit(token.DOT)
-		return lexStart
 	case r == '"':
 		return lexString
 	case unicode.IsUpper(r):
@@ -329,6 +326,9 @@ func lexLower(s *Scanner) stateFn {
 		return lexExprEnd
 	case "unit":
 		s.emit(token.UNIT)
+		return lexExprEnd
+	case "end":
+		s.emit(token.END)
 		return lexExprEnd
 	}
 	if s.accept(digits + ":_") {

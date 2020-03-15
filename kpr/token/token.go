@@ -28,7 +28,6 @@ const (
 
 	// Syntactic
 	NEWLINE
-	DOT
 
 	// Values
 	STRING
@@ -41,15 +40,5 @@ const (
 	TX
 	BALANCE
 	UNIT
+	END
 )
-
-// IsKeyword returns true for tokens corresponding to keywords; it
-// returns false otherwise.
-func (t Token) IsKeyword() bool {
-	switch t {
-	case TX, BALANCE, UNIT:
-		return true
-	default:
-		return false
-	}
-}

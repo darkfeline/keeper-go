@@ -35,7 +35,7 @@ func TestLexer(t *testing.T) {
 tx 2001-02-03 "Some description"
 Some:account 123.45 USD
 Some:account -123.45 USD
-.
+end
 balance 2001-02-03 Some:account 123.45 USD
 `,
 			want: []result{
@@ -55,14 +55,14 @@ balance 2001-02-03 Some:account 123.45 USD
 				{84, token.DECIMAL, `-123.45`},
 				{92, token.UNIT_SYM, `USD`},
 				{95, token.NEWLINE, "\n"},
-				{96, token.DOT, `.`},
-				{97, token.NEWLINE, "\n"},
-				{98, token.BALANCE, `balance`},
-				{106, token.DATE, `2001-02-03`},
-				{117, token.ACCOUNT, `Some:account`},
-				{130, token.DECIMAL, `123.45`},
-				{137, token.UNIT_SYM, `USD`},
-				{140, token.NEWLINE, "\n"},
+				{96, token.END, `end`},
+				{99, token.NEWLINE, "\n"},
+				{100, token.BALANCE, `balance`},
+				{108, token.DATE, `2001-02-03`},
+				{119, token.ACCOUNT, `Some:account`},
+				{132, token.DECIMAL, `123.45`},
+				{139, token.UNIT_SYM, `USD`},
+				{142, token.NEWLINE, "\n"},
 			},
 		},
 		{
@@ -70,7 +70,7 @@ balance 2001-02-03 Some:account 123.45 USD
 			text: `tx 2001-02-03 "Some description"  # blah
 Some:account 123.45 USD #gascogne is cute
 Some:account -123.45 USD
-.
+end
 `,
 			want: []result{
 				{1, token.TX, `tx`},
@@ -85,8 +85,8 @@ Some:account -123.45 USD
 				{97, token.DECIMAL, `-123.45`},
 				{105, token.UNIT_SYM, `USD`},
 				{108, token.NEWLINE, "\n"},
-				{109, token.DOT, `.`},
-				{110, token.NEWLINE, "\n"},
+				{109, token.END, `end`},
+				{112, token.NEWLINE, "\n"},
 			},
 		},
 		{
@@ -94,7 +94,7 @@ Some:account -123.45 USD
 			text: `tx 2001-02-03 "Some description"  # blah
 Some:account 123.45 USD #gascogne is cute
 Some:account -123.45 USD
-.
+end
 `,
 			mode: ScanComments,
 			want: []result{
@@ -112,15 +112,15 @@ Some:account -123.45 USD
 				{97, token.DECIMAL, `-123.45`},
 				{105, token.UNIT_SYM, `USD`},
 				{108, token.NEWLINE, "\n"},
-				{109, token.DOT, `.`},
-				{110, token.NEWLINE, "\n"},
+				{109, token.END, `end`},
+				{112, token.NEWLINE, "\n"},
 			},
 		},
 		{
 			desc: "account with number",
 			text: `tx 2001-02-03 "Some description"
 Some:account4 123.45 USD
-.
+end
 `,
 			want: []result{
 				{1, token.TX, `tx`},
@@ -131,8 +131,8 @@ Some:account4 123.45 USD
 				{48, token.DECIMAL, `123.45`},
 				{55, token.UNIT_SYM, `USD`},
 				{58, token.NEWLINE, "\n"},
-				{59, token.DOT, `.`},
-				{60, token.NEWLINE, "\n"},
+				{59, token.END, `end`},
+				{62, token.NEWLINE, "\n"},
 			},
 		},
 		{
@@ -146,7 +146,7 @@ Some:account4 123.45 USD
 			desc: "decimal with comma",
 			text: `tx 2001-02-03 "Some description"
 Some:account 2,123.45 USD
-.
+end
 `,
 			want: []result{
 				{1, token.TX, `tx`},
@@ -157,8 +157,8 @@ Some:account 2,123.45 USD
 				{47, token.DECIMAL, `2,123.45`},
 				{56, token.UNIT_SYM, `USD`},
 				{59, token.NEWLINE, "\n"},
-				{60, token.DOT, `.`},
-				{61, token.NEWLINE, "\n"},
+				{60, token.END, `end`},
+				{63, token.NEWLINE, "\n"},
 			},
 		},
 	}

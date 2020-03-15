@@ -12,20 +12,20 @@ func _() {
 	_ = x[EOF-1]
 	_ = x[COMMENT-2]
 	_ = x[NEWLINE-3]
-	_ = x[DOT-4]
-	_ = x[STRING-5]
-	_ = x[UNIT_SYM-6]
-	_ = x[ACCOUNT-7]
-	_ = x[DECIMAL-8]
-	_ = x[DATE-9]
-	_ = x[TX-10]
-	_ = x[BALANCE-11]
-	_ = x[UNIT-12]
+	_ = x[STRING-4]
+	_ = x[UNIT_SYM-5]
+	_ = x[ACCOUNT-6]
+	_ = x[DECIMAL-7]
+	_ = x[DATE-8]
+	_ = x[TX-9]
+	_ = x[BALANCE-10]
+	_ = x[UNIT-11]
+	_ = x[END-12]
 }
 
-const _Token_name = "ILLEGALEOFCOMMENTNEWLINEDOTSTRINGUNIT_SYMACCOUNTDECIMALDATETXBALANCEUNIT"
+const _Token_name = "ILLEGALEOFCOMMENTNEWLINESTRINGUNIT_SYMACCOUNTDECIMALDATETXBALANCEUNITEND"
 
-var _Token_index = [...]uint8{0, 7, 10, 17, 24, 27, 33, 41, 48, 55, 59, 61, 68, 72}
+var _Token_index = [...]uint8{0, 7, 10, 17, 24, 30, 38, 45, 52, 56, 58, 65, 69, 72}
 
 func (i Token) String() string {
 	if i < 0 || i >= Token(len(_Token_index)-1) {

@@ -75,11 +75,11 @@ func (SingleBalance) entry() {}
 type MultiBalance struct {
 	BalanceHeader
 	Amounts []LineNode // AmountLine, BadLine
-	Dot     Dot
+	EndTok  End
 }
 
 func (b MultiBalance) End() token.Pos {
-	return b.Dot.End()
+	return b.EndTok.End()
 }
 
 func (MultiBalance) entry() {}
@@ -107,7 +107,7 @@ type Transaction struct {
 	Date        BasicValue // DATE
 	Description BasicValue // STRING
 	Splits      []LineNode // Split, BadLine
-	Dot         Dot
+	EndTok      End
 }
 
 func (t Transaction) Pos() token.Pos {
@@ -115,7 +115,7 @@ func (t Transaction) Pos() token.Pos {
 }
 
 func (t Transaction) End() token.Pos {
-	return t.Dot.End()
+	return t.EndTok.End()
 }
 
 func (Transaction) entry() {}
@@ -174,17 +174,17 @@ type Node interface {
 	End() token.Pos // position of first character immediately after the node
 }
 
-// A Dot node represents a dot ending a multiple line entry.
-type Dot struct {
+// An End node represents an end keyword ending a multiple line entry.
+type End struct {
 	TokPos token.Pos
 }
 
-func (d Dot) Pos() token.Pos {
+func (d End) Pos() token.Pos {
 	return d.TokPos
 }
 
-func (d Dot) End() token.Pos {
-	return token.Pos(int(d.TokPos) + 1)
+func (d End) End() token.Pos {
+	return token.Pos(int(d.TokPos) + 3)
 }
 
 // An Amount node represents an amount.

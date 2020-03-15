@@ -29,12 +29,12 @@ func TestParseBytes(t *testing.T) {
 balance 2001-02-05 Some:account
 123.45 USD
 56700 JPY
-.
+end
 unit USD 100
 tx 2001-02-03 "Buy stuff"
 Some:account 1.2 USD
 Expenses:Stuff -1.2 USD
-.
+end
 `
 	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
 	if err != nil {
@@ -72,34 +72,34 @@ Expenses:Stuff -1.2 USD
 					},
 				},
 			},
-			Dot: ast.Dot{TokPos: 97},
+			EndTok: ast.End{TokPos: 97},
 		},
 		ast.UnitDecl{
-			TokPos: 99,
-			Unit:   val(104, token.UNIT_SYM, "USD"),
-			Scale:  val(108, token.DECIMAL, "100"),
+			TokPos: 101,
+			Unit:   val(106, token.UNIT_SYM, "USD"),
+			Scale:  val(110, token.DECIMAL, "100"),
 		},
 		ast.Transaction{
-			TokPos:      112,
-			Date:        val(115, token.DATE, "2001-02-03"),
-			Description: val(126, token.STRING, `"Buy stuff"`),
+			TokPos:      114,
+			Date:        val(117, token.DATE, "2001-02-03"),
+			Description: val(128, token.STRING, `"Buy stuff"`),
 			Splits: []ast.LineNode{
 				ast.Split{
-					Account: val(138, token.ACCOUNT, "Some:account"),
+					Account: val(140, token.ACCOUNT, "Some:account"),
 					Amount: &ast.Amount{
-						Decimal: val(151, token.DECIMAL, "1.2"),
-						Unit:    val(155, token.UNIT_SYM, "USD"),
+						Decimal: val(153, token.DECIMAL, "1.2"),
+						Unit:    val(157, token.UNIT_SYM, "USD"),
 					},
 				},
 				ast.Split{
-					Account: val(159, token.ACCOUNT, "Expenses:Stuff"),
+					Account: val(161, token.ACCOUNT, "Expenses:Stuff"),
 					Amount: &ast.Amount{
-						Decimal: val(174, token.DECIMAL, "-1.2"),
-						Unit:    val(179, token.UNIT_SYM, "USD"),
+						Decimal: val(176, token.DECIMAL, "-1.2"),
+						Unit:    val(181, token.UNIT_SYM, "USD"),
 					},
 				},
 			},
-			Dot: ast.Dot{TokPos: 183},
+			EndTok: ast.End{TokPos: 185},
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
@@ -112,7 +112,7 @@ func TestParseBytes_split_without_amount(t *testing.T) {
 	const input = `tx 2001-02-03 "Buy stuff"
 Some:account 1.2 USD
 Expenses:Stuff
-.
+end
 `
 	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
 	if err != nil {
@@ -135,7 +135,7 @@ Expenses:Stuff
 					Account: val(48, token.ACCOUNT, "Expenses:Stuff"),
 				},
 			},
-			Dot: ast.Dot{TokPos: 63},
+			EndTok: ast.End{TokPos: 63},
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
@@ -150,14 +150,14 @@ balance 2001-02-05 Some:account
 123.45 USD
 # some comment
 56700 JPY
-.
+end
 # some comment
 unit USD 100
 tx 2001-02-03 "Buy stuff"
 Some:account 1.2 USD
 # some comment
 Expenses:Stuff -1.2 USD
-.
+end
 `
 	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
 	if err != nil {
@@ -184,34 +184,34 @@ Expenses:Stuff -1.2 USD
 					},
 				},
 			},
-			Dot: ast.Dot{TokPos: 70},
+			EndTok: ast.End{TokPos: 70},
 		},
 		ast.UnitDecl{
-			TokPos: 87,
-			Unit:   val(92, token.UNIT_SYM, "USD"),
-			Scale:  val(96, token.DECIMAL, "100"),
+			TokPos: 89,
+			Unit:   val(94, token.UNIT_SYM, "USD"),
+			Scale:  val(98, token.DECIMAL, "100"),
 		},
 		ast.Transaction{
-			TokPos:      100,
-			Date:        val(103, token.DATE, "2001-02-03"),
-			Description: val(114, token.STRING, `"Buy stuff"`),
+			TokPos:      102,
+			Date:        val(105, token.DATE, "2001-02-03"),
+			Description: val(116, token.STRING, `"Buy stuff"`),
 			Splits: []ast.LineNode{
 				ast.Split{
-					Account: val(126, token.ACCOUNT, "Some:account"),
+					Account: val(128, token.ACCOUNT, "Some:account"),
 					Amount: &ast.Amount{
-						Decimal: val(139, token.DECIMAL, "1.2"),
-						Unit:    val(143, token.UNIT_SYM, "USD"),
+						Decimal: val(141, token.DECIMAL, "1.2"),
+						Unit:    val(145, token.UNIT_SYM, "USD"),
 					},
 				},
 				ast.Split{
-					Account: val(162, token.ACCOUNT, "Expenses:Stuff"),
+					Account: val(164, token.ACCOUNT, "Expenses:Stuff"),
 					Amount: &ast.Amount{
-						Decimal: val(177, token.DECIMAL, "-1.2"),
-						Unit:    val(182, token.UNIT_SYM, "USD"),
+						Decimal: val(179, token.DECIMAL, "-1.2"),
+						Unit:    val(184, token.UNIT_SYM, "USD"),
 					},
 				},
 			},
-			Dot: ast.Dot{TokPos: 186},
+			EndTok: ast.End{TokPos: 188},
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
