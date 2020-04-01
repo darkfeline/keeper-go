@@ -97,7 +97,7 @@ func (p *parser) peek() (token.Pos, token.Token, string) {
 }
 
 // scanLine scans up to and including the next newline
-// and returns the position of the newline token.
+// and returns the position of the newline (or EOF) token.
 func (p *parser) scanLine() token.Pos {
 	for {
 		pos, tok, _ := p.scan()
