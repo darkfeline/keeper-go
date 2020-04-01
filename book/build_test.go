@@ -65,7 +65,7 @@ end
 	}
 }
 
-func TestParse_unbalanced_transaction(t *testing.T) {
+func TestBuildEntries_unbalanced(t *testing.T) {
 	t.Parallel()
 	const input = `unit USD 100
 tx 2001-02-03 "Buy stuff"
