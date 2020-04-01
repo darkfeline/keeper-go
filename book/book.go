@@ -43,7 +43,7 @@ func (b *Book) BalanceErr() error {
 		case BalanceAssert:
 			if !e.Diff.Empty() {
 				msg := fmt.Sprintf("balance for %s declared to be %s, but was %s (diff %s)",
-					e.Account, e.Actual, e.Declared, e.Diff)
+					e.Account, e.Declared, e.Actual, e.Diff)
 				err.Add(e.EntryPos, msg)
 			}
 		}
