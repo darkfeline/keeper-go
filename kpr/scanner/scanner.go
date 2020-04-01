@@ -40,11 +40,12 @@ type Scanner struct {
 	mode Mode
 
 	// Scanning state
-	start   int // starting offset of pending
-	offset  int // current scan offset
-	pending []rune
-	state   stateFn
-	results chan result
+	start      int // starting offset of pending
+	offset     int // current scan offset
+	pending    []rune
+	state      stateFn
+	results    chan result
+	scannedEOF bool
 
 	// Public state
 	ErrorCount int
@@ -118,7 +119,14 @@ func (s *Scanner) Scan() (pos token.Pos, tok token.Token, lit string) {
 		case r := <-s.results:
 			return r.Pos, r.Tok, r.Lit
 		default:
-			if s.offset >= len(s.src) || s.state == nil {
+			if s.state == nil {
+				panic("nil state in scanner")
+			}
+			if s.offset >= len(s.src) {
+				if s.scannedEOF {
+					panic("scanned beyond EOF")
+				}
+				s.scannedEOF = true
 				return s.f.Pos(len(s.src)), token.EOF, ""
 			}
 			s.state = s.state(s)
