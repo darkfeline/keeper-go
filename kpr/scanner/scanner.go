@@ -122,13 +122,6 @@ func (s *Scanner) Scan() (pos token.Pos, tok token.Token, lit string) {
 			if s.state == nil {
 				panic("nil state in scanner")
 			}
-			if s.offset >= len(s.src) {
-				if s.scannedEOF {
-					panic("scanned beyond EOF")
-				}
-				s.scannedEOF = true
-				return s.f.Pos(len(s.src)), token.EOF, ""
-			}
 			s.state = s.state(s)
 		}
 	}
@@ -203,6 +196,15 @@ func (s *Scanner) emit(tok token.Token) {
 	s.ignore()
 }
 
+func (s *Scanner) emitEOF() {
+	s.ignore()
+	s.results <- result{
+		Pos: s.f.Pos(len(s.src)),
+		Tok: token.EOF,
+		Lit: "",
+	}
+}
+
 // ignore throws away all pending runes.
 func (s *Scanner) ignore() {
 	s.pending = s.pending[:0]
@@ -232,6 +234,13 @@ func lexStart(s *Scanner) stateFn {
 	default:
 		s.errorf(s.offset-1, "bad rune %c at start of token", r)
 		return lexIllegal
+	case r == eof:
+		if s.scannedEOF {
+			panic("scanned beyond EOF")
+		}
+		s.scannedEOF = true
+		s.emitEOF()
+		return lexStart
 	case r == '#':
 		return lexComment
 	case r == '\n':
