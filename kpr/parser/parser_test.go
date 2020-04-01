@@ -243,6 +243,29 @@ Expenses:Stuff 1.2 USD
 	}
 }
 
+func TestParseBytes_truncated_split(t *testing.T) {
+	t.Parallel()
+	const input = `unit USD 100
+tx 2001-02-03 "Buy stuff"
+Some:account
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err == nil {
+		t.Errorf("Expected error")
+	}
+	want := []ast.Entry{
+		ast.UnitDecl{
+			TokPos: 1,
+			Unit:   val(6, token.UNIT_SYM, "USD"),
+			Scale:  val(10, token.DECIMAL, "100"),
+		},
+		ast.BadEntry{From: 14, To: 53},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestParseBytes_invalid_token(t *testing.T) {
 	t.Parallel()
 	const input = `.`
