@@ -21,7 +21,7 @@ import (
 	"go.felesatra.moe/keeper/kpr/token"
 )
 
-func TestLexer(t *testing.T) {
+func TestScanner(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		desc string
