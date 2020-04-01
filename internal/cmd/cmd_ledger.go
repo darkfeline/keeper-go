@@ -104,7 +104,7 @@ func makeLedgerItems(a book.Account, e []book.Entry) []ledgerItem {
 			i := i
 			i.description = "(balance)"
 			i.setBalance(e.Actual)
-			if len(e.Diff) != 0 {
+			if !e.Diff.Empty() {
 				i.error = fmt.Sprintf("declared %s (diff %s)", e.Declared, e.Diff)
 			}
 			items = append(items, i)
