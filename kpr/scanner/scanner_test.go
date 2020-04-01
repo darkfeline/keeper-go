@@ -193,6 +193,21 @@ Expenses:Stuff 1.2 USD
 	}
 }
 
+func TestScanner_bad_token(t *testing.T) {
+	t.Parallel()
+	const src = `.`
+	s, got, _ := scanString(src, 0)
+	if s.ErrorCount == 0 {
+		t.Errorf("Expected errors")
+	}
+	want := []result{
+		{1, token.ILLEGAL, `.`},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("token mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func scanString(src string, mode Mode) (Scanner, []result, ErrorList) {
 	fs := token.NewFileSet()
 	f := fs.AddFile("", -1, len(src))
