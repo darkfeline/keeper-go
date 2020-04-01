@@ -160,10 +160,10 @@ func (p *parser) parse() []ast.Entry {
 		switch pos, tok, lit := p.scan(); {
 		case tok == token.EOF:
 			return entries
+		case tok == token.NEWLINE:
 		case isEntryKeyword(tok):
 			e := p.parseEntry(pos, tok, lit)
 			entries = append(entries, e)
-		case tok == token.NEWLINE:
 		default:
 			p.errorf(pos, "bad token %s %s", tok, lit)
 			e := p.scanUntilEntryAsBad(pos)
