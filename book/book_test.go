@@ -197,6 +197,24 @@ func TestCompile_balances(t *testing.T) {
 	})
 }
 
+func TestBalanceDiff(t *testing.T) {
+	t.Parallel()
+	t.Run("bug", func(t *testing.T) {
+		t.Parallel()
+		actual := Balance{}
+		declared := Balance{
+			{Number: -200, Unit: Unit{Symbol: "USD", Scale: 100}},
+		}
+		got := balanceDiff(actual, declared)
+		want := Balance{
+			{Number: 200, Unit: Unit{Symbol: "USD", Scale: 100}},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("balance mismatch (-want +got):\n%s", diff)
+		}
+	})
+}
+
 func compareBalances(t *testing.T, want, got TBalance) {
 	t.Helper()
 	wantKeys := make(map[Account]struct{})
