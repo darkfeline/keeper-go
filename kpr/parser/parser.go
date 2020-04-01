@@ -25,6 +25,7 @@ errors.
 package parser
 
 import (
+	"errors"
 	"fmt"
 
 	"go.felesatra.moe/keeper/kpr/ast"
@@ -100,8 +101,9 @@ func (p *parser) peek() (token.Pos, token.Token, string) {
 // and returns the position of the newline (or EOF) token.
 func (p *parser) scanLine() token.Pos {
 	for {
-		pos, tok, _ := p.scan()
+		pos, tok, lit := p.scan()
 		if tok == token.EOF {
+			p.unread(pos, tok, lit)
 			return pos
 		}
 		if tok != token.NEWLINE {
@@ -116,14 +118,15 @@ func (p *parser) scanLine() token.Pos {
 // newline token.
 func (p *parser) scanUntilEntry() token.Pos {
 	for {
-		pos := p.scanLine()
-		switch _, tok, _ := p.peek(); {
+		startPos := p.scanLine()
+		switch pos, tok, lit := p.peek(); {
 		default:
 			continue
 		case tok == token.EOF:
-			return pos
+			p.unread(pos, tok, lit)
+			return startPos
 		case isEntryKeyword(tok):
-			return pos
+			return startPos
 		}
 	}
 }
@@ -214,11 +217,16 @@ func (p *parser) parseTransaction(pos token.Pos) ast.Entry {
 		return p.scanUntilEntryAsBad(t.Pos())
 	}
 
-	t.Splits = p.parseSplits()
+	var err error
+	t.Splits, err = p.parseSplits()
+	if err != nil {
+		// parseSplits already reported the error.
+		return p.scanUntilEntryAsBad(t.Pos())
+	}
 
 	pos, tok, lit = p.scan()
 	if tok != token.END {
-		panic(fmt.Sprintf("unexpected token %s %s in transaction", tok, lit))
+		panic("unexpected token")
 	}
 	t.EndTok = ast.End{TokPos: pos}
 
@@ -231,7 +239,7 @@ func (p *parser) parseTransaction(pos token.Pos) ast.Entry {
 	return t
 }
 
-func (p *parser) parseSplits() []ast.LineNode {
+func (p *parser) parseSplits() ([]ast.LineNode, error) {
 	var splits []ast.LineNode
 	for {
 		switch pos, tok, lit := p.scan(); tok {
@@ -243,7 +251,11 @@ func (p *parser) parseSplits() []ast.LineNode {
 			continue
 		case token.END:
 			p.unread(pos, tok, lit)
-			return splits
+			return splits, nil
+		case token.EOF:
+			p.unread(pos, tok, lit)
+			p.errorf(pos, "EOF in transaction")
+			return nil, errors.New("EOF in transaction")
 		default:
 			p.errorf(pos, "in split bad token %s %s", tok, lit)
 			n := p.scanLineAsBad(pos)
@@ -416,6 +428,10 @@ func (p *parser) parseBalanceMultipleAmounts(h ast.BalanceHeader) ast.Entry {
 				_ = p.scanLine()
 			}
 			return b
+		case token.EOF:
+			p.unread(pos, tok, lit)
+			p.errorf(pos, "EOF in multi-line balance")
+			return p.scanUntilEntryAsBad(h.Pos())
 		default:
 			p.errorf(pos, "in balance bad token %s %s", tok, lit)
 			a := p.scanLineAsBad(pos)
