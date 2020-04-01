@@ -219,6 +219,30 @@ end
 	}
 }
 
+func TestParseBytes_unterminated_tx(t *testing.T) {
+	t.Parallel()
+	const input = `unit USD 100
+tx 2001-02-03 "Buy stuff"
+Some:account -1.2 USD
+Expenses:Stuff 1.2 USD
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err == nil {
+		t.Errorf("Expected error")
+	}
+	want := []ast.Entry{
+		ast.UnitDecl{
+			TokPos: 1,
+			Unit:   val(6, token.UNIT_SYM, "USD"),
+			Scale:  val(10, token.DECIMAL, "100"),
+		},
+		ast.BadEntry{From: 14, To: 85},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func val(pos token.Pos, tok token.Token, lit string) ast.BasicValue {
 	return ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 }
