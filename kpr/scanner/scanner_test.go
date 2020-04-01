@@ -186,25 +186,7 @@ Some:account -1.2 USD
 Expenses:Stuff 1.2 USD
 .
 `
-	fs := token.NewFileSet()
-	f := fs.AddFile("", -1, len(src))
-	var s Scanner
-	var errs ErrorList
-	s.Init(f, []byte(src), errs.Add, 0)
-	var got []result
-pump:
-	for {
-		switch pos, tok, lit := s.Scan(); tok {
-		case token.EOF:
-			break pump
-		default:
-			got = append(got, result{
-				Pos: pos,
-				Tok: tok,
-				Lit: lit,
-			})
-		}
-	}
+	s, got, _ := scanString(src, 0)
 	if s.ErrorCount == 0 {
 		t.Errorf("Expected errors")
 		t.Logf("Got tokens: %+v", got)
