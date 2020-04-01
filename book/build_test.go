@@ -30,7 +30,7 @@ balance 2001-02-03 Some:account -1.20 USD
 tx 2001-02-03 "Buy stuff"
 Some:account -1.2 USD
 Expenses:Stuff
-.
+end
 `
 	got, err := buildEntries([]byte(input))
 	if err != nil {
@@ -71,7 +71,7 @@ func TestParse_unbalanced_transaction(t *testing.T) {
 tx 2001-02-03 "Buy stuff"
 Some:account -1.2 USD
 Expenses:Stuff 1.3 USD
-.
+end
 `
 	_, err := buildEntries([]byte(input))
 	if err == nil {
