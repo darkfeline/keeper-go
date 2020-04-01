@@ -111,14 +111,17 @@ func (p *parser) scanLine() token.Pos {
 	}
 }
 
-// scanUntilEntry scans until before the beginning of the next potential entry
-// and returns the position of the preceding newline token.
+// scanUntilEntry scans until before the beginning of the next
+// potential entry (or EOF) and returns the position of the preceding
+// newline token.
 func (p *parser) scanUntilEntry() token.Pos {
 	for {
 		pos := p.scanLine()
 		switch _, tok, _ := p.peek(); {
 		default:
 			continue
+		case tok == token.EOF:
+			return pos
 		case isEntryKeyword(tok):
 			return pos
 		}
