@@ -15,11 +15,7 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/spf13/cobra"
-	"go.felesatra.moe/keeper/book"
 )
 
 func init() {
@@ -35,21 +31,8 @@ var checkCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		bad := false
-		for _, e := range b.Entries {
-			switch e := e.(type) {
-			case book.BalanceAssert:
-				if len(e.Diff) == 0 {
-					continue
-				}
-				bad = true
-				fmt.Printf("%s %s %s balance declared %s, actual %s (diff %s)\n",
-					e.Position(), e.Date(),
-					e.Account, e.Declared, e.Actual, e.Diff)
-			}
-		}
-		if bad {
-			return errors.New("errors found")
+		if err := b.BalanceErr(); err != nil {
+			return err
 		}
 		return nil
 	},

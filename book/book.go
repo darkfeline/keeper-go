@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/civil"
+	"go.felesatra.moe/keeper/kpr/scanner"
 )
 
 // A Book represents accounting information compiled from keeper file source.
@@ -34,12 +35,30 @@ type Book struct {
 	DiffBalance TBalance
 }
 
+// BalanceErr returns non-nil if the book has balance assertion errors.
+func (b *Book) BalanceErr() error {
+	var err scanner.ErrorList
+	for _, e := range b.Entries {
+		switch e := e.(type) {
+		case BalanceAssert:
+			if !e.Diff.Empty() {
+				msg := fmt.Sprintf("balance for %s declared to be %s, but was %s (diff %s)",
+					e.Account, e.Actual, e.Declared, e.Diff)
+				err.Add(e.EntryPos, msg)
+			}
+		}
+	}
+	return err.Err()
+}
+
 // An Option is passed to Compile to configure compilation.
 type Option interface {
 	option()
 }
 
 // Compile compiles keeper file source into a Book.
+// Balance assertion errors are not returned here, to enable the
+// caller to inspect the transactions to identify the error.
 func Compile(src []byte, o ...Option) (*Book, error) {
 	e, err := buildEntries(src)
 	if err != nil {
