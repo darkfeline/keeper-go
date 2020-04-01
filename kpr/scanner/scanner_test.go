@@ -166,7 +166,11 @@ end
 		c := c
 		t.Run(c.desc, func(t *testing.T) {
 			t.Parallel()
-			got := lexTestString(t, c.text, c.mode)
+			s, got, errs := scanString(c.text, c.mode)
+			if s.ErrorCount != 0 {
+				t.Errorf("scanner has non-zero ErrorCount %d: %s",
+					s.ErrorCount, errs)
+			}
 			if diff := cmp.Diff(c.want, got); diff != "" {
 				t.Errorf("token mismatch (-want +got):\n%s", diff)
 			}
@@ -207,8 +211,7 @@ pump:
 	}
 }
 
-func lexTestString(t *testing.T, src string, mode Mode) []result {
-	t.Helper()
+func scanString(src string, mode Mode) (Scanner, []result, ErrorList) {
 	fs := token.NewFileSet()
 	f := fs.AddFile("", -1, len(src))
 	var s Scanner
@@ -228,9 +231,5 @@ pump:
 			})
 		}
 	}
-	if s.ErrorCount != 0 {
-		t.Errorf("scanner has non-zero ErrorCount %d: %s",
-			s.ErrorCount, errs)
-	}
-	return got
+	return s, got, errs
 }
