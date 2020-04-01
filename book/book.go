@@ -180,7 +180,7 @@ func balanceDiff(x, y Balance) Balance {
 	diff := x.CleanCopy()
 	for _, a := range y {
 		a.Number = -a.Number
-		diff.Add(a)
+		diff = diff.Add(a)
 	}
 	return diff.CleanCopy()
 }
