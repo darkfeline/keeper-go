@@ -243,6 +243,24 @@ Expenses:Stuff 1.2 USD
 	}
 }
 
+func TestParseBytes_invalid_token(t *testing.T) {
+	t.Parallel()
+	const input = `.`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err == nil {
+		t.Errorf("Expected error")
+	}
+	want := []ast.Entry{
+		ast.BadEntry{
+			From: 1,
+			To:   2,
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func val(pos token.Pos, tok token.Token, lit string) ast.BasicValue {
 	return ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 }
