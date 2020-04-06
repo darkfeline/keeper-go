@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package token defines lexical tokens for parsing keeper files.
+// Package token defines constants representing the lexical tokens of
+// keeper files and basic operations on tokens (printing, predicates).
 package token
 
 // Token is the set of lexical tokens for keeper files.

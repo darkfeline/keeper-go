@@ -17,10 +17,6 @@ Package parser implements a parser for keeper files. Input may be
 provided in a variety of forms (see the various Parse* functions); the
 output is an abstract syntax tree (AST). The parser is invoked through
 one of the Parse* functions.
-
-The parser accepts a larger language than is syntactically permitted,
-for simplicity, and for improved robustness in the presence of syntax
-errors.
 */
 package parser
 

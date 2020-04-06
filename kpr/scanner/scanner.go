@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package scanner implements a scanner for keeper file text. It takes
+// a []byte as source which can then be tokenized through repeated
+// calls to the Scan method.
 package scanner
 
 import (
