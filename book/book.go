@@ -90,7 +90,7 @@ func Starting(d civil.Date) Option {
 	})
 }
 
-// Starting returns an option that limits a compiled book to entries
+// Ending returns an option that limits a compiled book to entries
 // ending on the given date.
 func Ending(d civil.Date) Option {
 	return optionSetter(func(o *options) {
