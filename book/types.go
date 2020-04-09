@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -33,6 +34,9 @@ func (a Amount) Scalar() string {
 }
 
 func (a Amount) String() string {
+	if (a.Unit == Unit{}) {
+		return strconv.FormatInt(a.Number, 10)
+	}
 	return fmt.Sprintf("%s %s", decFormat(a.Number, a.Unit.Scale), a.Unit.Symbol)
 }
 
