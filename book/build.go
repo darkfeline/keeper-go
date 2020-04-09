@@ -157,13 +157,12 @@ func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
 
 	var empty *Split
 	var bal Balance
+	t.Splits = make([]Split, len(n.Splits))
 	for i, n := range n.Splits {
 		n := n.(ast.Split)
 		assertKind(n.Account, token.ACCOUNT)
-		t.Splits = append(t.Splits, Split{
-			Account: Account(n.Account.Value),
-		})
 		s := &t.Splits[i]
+		s.Account = Account(n.Account.Value)
 		if n.Amount == nil {
 			if empty != nil {
 				b.errorf(n.Pos(), "more than one split missing amount")
