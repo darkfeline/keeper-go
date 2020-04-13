@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -49,7 +48,7 @@ const (
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		// Execute already prints the error.
 		os.Exit(1)
 	}
 }
