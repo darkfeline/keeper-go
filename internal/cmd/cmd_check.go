@@ -15,7 +15,11 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
+
+	"go.felesatra.moe/keeper/kpr/scanner"
 )
 
 func init() {
@@ -32,6 +36,7 @@ var checkCmd = &cobra.Command{
 			return err
 		}
 		if err := b.BalanceErr(); err != nil {
+			scanner.PrintError(os.Stderr, err)
 			return err
 		}
 		return nil
