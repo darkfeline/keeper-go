@@ -27,6 +27,12 @@ type Amount struct {
 	Unit   Unit
 }
 
+// Neg returns the amount with its sign negated.
+func (a Amount) Neg() Amount {
+	a.Number = -a.Number
+	return a
+}
+
 // Scalar returns the amount number without the unit as a formatted string.
 func (a Amount) Scalar() string {
 	return decFormat(a.Number, a.Unit.Scale)
@@ -112,6 +118,11 @@ func (b Balance) Add(a Amount) Balance {
 	return b
 }
 
+// Sub subtracts an amount from the balance.
+func (b Balance) Sub(a Amount) Balance {
+	return b.Add(a.Neg())
+}
+
 // Empty returns true if the balance is empty/zero.
 func (b Balance) Empty() bool {
 	for _, a := range b {
@@ -126,8 +137,7 @@ func (b Balance) Empty() bool {
 func (b Balance) Equal(b2 Balance) bool {
 	b = b.CleanCopy()
 	for _, a := range b2 {
-		a.Number = -a.Number
-		b = b.Add(a)
+		b = b.Sub(a)
 	}
 	return b.Empty()
 }

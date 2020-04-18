@@ -184,8 +184,7 @@ func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
 			b.errorf(n.Pos(), "cannot infer missing split amount with balance %s", bal)
 			return t, fmt.Errorf("cannot infer missing split amount with balance %s", bal)
 		}
-		a := bal[0]
-		a.Number = -a.Number
+		a := bal[0].Neg()
 		empty.Amount = a
 		bal = bal.Add(a).CleanCopy()
 	}

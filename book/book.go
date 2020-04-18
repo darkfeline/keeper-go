@@ -179,8 +179,7 @@ func (b *Book) addAccountEntry(a Account, e Entry) {
 func balanceDiff(x, y Balance) Balance {
 	diff := x.CleanCopy()
 	for _, a := range y {
-		a.Number = -a.Number
-		diff = diff.Add(a)
+		diff = diff.Sub(a)
 	}
 	return diff.CleanCopy()
 }
