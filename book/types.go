@@ -120,13 +120,13 @@ func (b Balance) Empty() bool {
 
 // Equal returns true if the two balances are equal.
 func (b Balance) Equal(b2 Balance) bool {
-	c, c2 := b.CleanCopy(), b2.CleanCopy()
-	if len(c) != len(c2) {
+	b, b2 = b.CleanCopy(), b2.CleanCopy()
+	if len(b) != len(b2) {
 		return false
 	}
-	c.sort()
-	c2.sort()
-	return reflect.DeepEqual(c, c2)
+	b.sort()
+	b2.sort()
+	return reflect.DeepEqual(b, b2)
 }
 
 // CleanCopy returns a copy of the balance without units that have
