@@ -16,7 +16,6 @@ package book
 
 import (
 	"fmt"
-	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -125,13 +124,12 @@ func (b Balance) Empty() bool {
 
 // Equal returns true if the two balances are equal.
 func (b Balance) Equal(b2 Balance) bool {
-	b, b2 = b.CleanCopy(), b2.CleanCopy()
-	if len(b) != len(b2) {
-		return false
+	b = b.CleanCopy()
+	for _, a := range b2 {
+		a.Number = -a.Number
+		b = b.Add(a)
 	}
-	b.sort()
-	b2.sort()
-	return reflect.DeepEqual(b, b2)
+	return b.Empty()
 }
 
 // CleanCopy returns a copy of the balance without units that have
