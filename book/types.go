@@ -158,7 +158,8 @@ func (b Balance) String() string {
 	return strings.Join(s, ", ")
 }
 
-// TBalance is a "trial balance", containing the balances of multiple accounts.
+// TBalance is a "trial balance" or "total balance", containing the
+// balances of multiple accounts.
 type TBalance map[Account]Balance
 
 // Clean cleans all balances and deletes accounts with empty
