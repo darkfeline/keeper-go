@@ -115,7 +115,12 @@ func (b Balance) Add(a Amount) Balance {
 
 // Empty returns true if the balance is empty/zero.
 func (b Balance) Empty() bool {
-	return len(b.CleanCopy()) == 0
+	for _, a := range b {
+		if a.Number != 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // Equal returns true if the two balances are equal.
