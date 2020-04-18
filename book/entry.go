@@ -34,7 +34,7 @@ type BalanceAssert struct {
 	Account   Account
 	Declared  Balance
 	Actual    Balance
-	Diff      Balance
+	Diff      Balance // Actual - Declared
 }
 
 func (b BalanceAssert) Position() token.Position {
