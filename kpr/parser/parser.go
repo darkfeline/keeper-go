@@ -305,9 +305,9 @@ func (p *parser) parseAmount() (ast.Amount, error) {
 	a.Decimal = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
-	if tok != token.UNIT_SYM {
+	if tok != token.USYMBOL {
 		p.unread(pos, tok, lit)
-		p.errorf(pos, "in amount expected UNIT_SYM not %s %s", tok, lit)
+		p.errorf(pos, "in amount expected USYMBOL not %s %s", tok, lit)
 		return a, fmt.Errorf("bad token %s", tok)
 	}
 	a.Unit = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
@@ -320,8 +320,8 @@ func (p *parser) parseUnitDecl(pos token.Pos) ast.Entry {
 	}
 
 	pos, tok, lit := p.scan()
-	if tok != token.UNIT_SYM {
-		p.errorf(pos, "in unit decl expected UNIT_SYM not %s %s", tok, lit)
+	if tok != token.USYMBOL {
+		p.errorf(pos, "in unit decl expected USYMBOL not %s %s", tok, lit)
 		p.unread(pos, tok, lit)
 		return p.scanLineAsBadEntry(u.Pos())
 	}

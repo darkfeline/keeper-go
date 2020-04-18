@@ -49,7 +49,7 @@ end
 			},
 			Amount: ast.Amount{
 				Decimal: val(33, token.DECIMAL, "123.45"),
-				Unit:    val(40, token.UNIT_SYM, "USD"),
+				Unit:    val(40, token.USYMBOL, "USD"),
 			},
 		},
 		ast.MultiBalance{
@@ -62,13 +62,13 @@ end
 				ast.AmountLine{
 					Amount: ast.Amount{
 						Decimal: val(76, token.DECIMAL, "123.45"),
-						Unit:    val(83, token.UNIT_SYM, "USD"),
+						Unit:    val(83, token.USYMBOL, "USD"),
 					},
 				},
 				ast.AmountLine{
 					Amount: ast.Amount{
 						Decimal: val(87, token.DECIMAL, "56700"),
-						Unit:    val(93, token.UNIT_SYM, "JPY"),
+						Unit:    val(93, token.USYMBOL, "JPY"),
 					},
 				},
 			},
@@ -76,7 +76,7 @@ end
 		},
 		ast.UnitDecl{
 			TokPos: 101,
-			Unit:   val(106, token.UNIT_SYM, "USD"),
+			Unit:   val(106, token.USYMBOL, "USD"),
 			Scale:  val(110, token.DECIMAL, "100"),
 		},
 		ast.Transaction{
@@ -88,14 +88,14 @@ end
 					Account: val(140, token.ACCOUNT, "Some:account"),
 					Amount: &ast.Amount{
 						Decimal: val(153, token.DECIMAL, "1.2"),
-						Unit:    val(157, token.UNIT_SYM, "USD"),
+						Unit:    val(157, token.USYMBOL, "USD"),
 					},
 				},
 				ast.Split{
 					Account: val(161, token.ACCOUNT, "Expenses:Stuff"),
 					Amount: &ast.Amount{
 						Decimal: val(176, token.DECIMAL, "-1.2"),
-						Unit:    val(181, token.UNIT_SYM, "USD"),
+						Unit:    val(181, token.USYMBOL, "USD"),
 					},
 				},
 			},
@@ -128,7 +128,7 @@ end
 					Account: val(27, token.ACCOUNT, "Some:account"),
 					Amount: &ast.Amount{
 						Decimal: val(40, token.DECIMAL, "1.2"),
-						Unit:    val(44, token.UNIT_SYM, "USD"),
+						Unit:    val(44, token.USYMBOL, "USD"),
 					},
 				},
 				ast.Split{
@@ -174,13 +174,13 @@ end
 				ast.AmountLine{
 					Amount: ast.Amount{
 						Decimal: val(34, token.DECIMAL, "123.45"),
-						Unit:    val(41, token.UNIT_SYM, "USD"),
+						Unit:    val(41, token.USYMBOL, "USD"),
 					},
 				},
 				ast.AmountLine{
 					Amount: ast.Amount{
 						Decimal: val(60, token.DECIMAL, "56700"),
-						Unit:    val(66, token.UNIT_SYM, "JPY"),
+						Unit:    val(66, token.USYMBOL, "JPY"),
 					},
 				},
 			},
@@ -188,7 +188,7 @@ end
 		},
 		ast.UnitDecl{
 			TokPos: 89,
-			Unit:   val(94, token.UNIT_SYM, "USD"),
+			Unit:   val(94, token.USYMBOL, "USD"),
 			Scale:  val(98, token.DECIMAL, "100"),
 		},
 		ast.Transaction{
@@ -200,14 +200,14 @@ end
 					Account: val(128, token.ACCOUNT, "Some:account"),
 					Amount: &ast.Amount{
 						Decimal: val(141, token.DECIMAL, "1.2"),
-						Unit:    val(145, token.UNIT_SYM, "USD"),
+						Unit:    val(145, token.USYMBOL, "USD"),
 					},
 				},
 				ast.Split{
 					Account: val(164, token.ACCOUNT, "Expenses:Stuff"),
 					Amount: &ast.Amount{
 						Decimal: val(179, token.DECIMAL, "-1.2"),
-						Unit:    val(184, token.UNIT_SYM, "USD"),
+						Unit:    val(184, token.USYMBOL, "USD"),
 					},
 				},
 			},
@@ -233,7 +233,7 @@ Expenses:Stuff 1.2 USD
 	want := []ast.Entry{
 		ast.UnitDecl{
 			TokPos: 1,
-			Unit:   val(6, token.UNIT_SYM, "USD"),
+			Unit:   val(6, token.USYMBOL, "USD"),
 			Scale:  val(10, token.DECIMAL, "100"),
 		},
 		ast.BadEntry{From: 14, To: 85},
@@ -256,7 +256,7 @@ Some:account
 	want := []ast.Entry{
 		ast.UnitDecl{
 			TokPos: 1,
-			Unit:   val(6, token.UNIT_SYM, "USD"),
+			Unit:   val(6, token.USYMBOL, "USD"),
 			Scale:  val(10, token.DECIMAL, "100"),
 		},
 		ast.BadEntry{From: 14, To: 53},

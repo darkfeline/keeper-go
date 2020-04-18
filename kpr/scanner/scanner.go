@@ -329,7 +329,7 @@ func lexUpper(s *Scanner) stateFn {
 			return lexAccount
 		default:
 			s.unread()
-			s.emit(token.UNIT_SYM)
+			s.emit(token.USYMBOL)
 			return lexExprEnd
 		}
 	}
@@ -374,7 +374,7 @@ func lexLetter(s *Scanner) stateFn {
 	case s.accept(digits + ":_"):
 		return lexAccount
 	case isUpper(pending):
-		s.emit(token.UNIT_SYM)
+		s.emit(token.USYMBOL)
 		return lexExprEnd
 	default:
 		s.errorf(s.start, "invalid token")

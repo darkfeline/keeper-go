@@ -32,7 +32,7 @@ const (
 
 	// Values
 	STRING
-	UNIT_SYM
+	USYMBOL
 	ACCOUNT
 	DECIMAL
 	DATE
