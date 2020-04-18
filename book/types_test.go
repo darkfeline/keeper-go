@@ -62,6 +62,17 @@ func ExampleAccount_Under() {
 	// true
 }
 
+func ExampleBalance_Add() {
+	var b Balance
+	b = b.Add(Amount{
+		Number: 500,
+		Unit:   Unit{Symbol: "USD", Scale: 100},
+	})
+	fmt.Println(b)
+	// Output:
+	// 5.00 USD
+}
+
 func TestBalance_Add_empty_balance(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
