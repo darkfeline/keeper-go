@@ -50,7 +50,7 @@ type Scanner struct {
 	results    chan result
 	scannedEOF bool
 
-	// Public state
+	// Public state - ok to modify
 	ErrorCount int
 }
 
