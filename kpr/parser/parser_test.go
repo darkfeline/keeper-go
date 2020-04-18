@@ -84,14 +84,14 @@ end
 			Date:        val(117, token.DATE, "2001-02-03"),
 			Description: val(128, token.STRING, `"Buy stuff"`),
 			Splits: []ast.LineNode{
-				ast.Split{
+				ast.SplitLine{
 					Account: val(140, token.ACCOUNT, "Some:account"),
 					Amount: &ast.Amount{
 						Decimal: val(153, token.DECIMAL, "1.2"),
 						Unit:    val(157, token.USYMBOL, "USD"),
 					},
 				},
-				ast.Split{
+				ast.SplitLine{
 					Account: val(161, token.ACCOUNT, "Expenses:Stuff"),
 					Amount: &ast.Amount{
 						Decimal: val(176, token.DECIMAL, "-1.2"),
@@ -124,14 +124,14 @@ end
 			Date:        val(4, token.DATE, "2001-02-03"),
 			Description: val(15, token.STRING, `"Buy stuff"`),
 			Splits: []ast.LineNode{
-				ast.Split{
+				ast.SplitLine{
 					Account: val(27, token.ACCOUNT, "Some:account"),
 					Amount: &ast.Amount{
 						Decimal: val(40, token.DECIMAL, "1.2"),
 						Unit:    val(44, token.USYMBOL, "USD"),
 					},
 				},
-				ast.Split{
+				ast.SplitLine{
 					Account: val(48, token.ACCOUNT, "Expenses:Stuff"),
 				},
 			},
@@ -196,14 +196,14 @@ end
 			Date:        val(105, token.DATE, "2001-02-03"),
 			Description: val(116, token.STRING, `"Buy stuff"`),
 			Splits: []ast.LineNode{
-				ast.Split{
+				ast.SplitLine{
 					Account: val(128, token.ACCOUNT, "Some:account"),
 					Amount: &ast.Amount{
 						Decimal: val(141, token.DECIMAL, "1.2"),
 						Unit:    val(145, token.USYMBOL, "USD"),
 					},
 				},
-				ast.Split{
+				ast.SplitLine{
 					Account: val(164, token.ACCOUNT, "Expenses:Stuff"),
 					Amount: &ast.Amount{
 						Decimal: val(179, token.DECIMAL, "-1.2"),

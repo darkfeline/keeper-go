@@ -261,7 +261,7 @@ func (p *parser) parseSplits() ([]ast.LineNode, error) {
 }
 
 func (p *parser) parseSplit() ast.LineNode {
-	var s ast.Split
+	var s ast.SplitLine
 	pos, tok, lit := p.scan()
 	if tok != token.ACCOUNT {
 		panic(fmt.Sprintf("unexpected %s %s in split", tok, lit))

@@ -159,7 +159,7 @@ func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
 	var bal Balance
 	t.Splits = make([]Split, len(n.Splits))
 	for i, n := range n.Splits {
-		n := n.(ast.Split)
+		n := n.(ast.SplitLine)
 		assertKind(n.Account, token.ACCOUNT)
 		s := &t.Splits[i]
 		s.Account = Account(n.Account.Value)

@@ -106,7 +106,7 @@ type Transaction struct {
 	TokPos      token.Pos
 	Date        BasicValue // DATE
 	Description BasicValue // STRING
-	Splits      []LineNode // Split, BadLine
+	Splits      []LineNode // SplitLine, BadLine
 	EndTok      End
 }
 
@@ -142,24 +142,24 @@ func (b BadLine) End() token.Pos {
 
 func (BadLine) lineNode() {}
 
-// A Split node represents a split line node in a transaction.
-type Split struct {
+// A SplitLine node represents a split line node in a transaction.
+type SplitLine struct {
 	Account BasicValue // STRING
 	Amount  *Amount
 }
 
-func (s Split) Pos() token.Pos {
+func (s SplitLine) Pos() token.Pos {
 	return s.Account.Pos()
 }
 
-func (s Split) End() token.Pos {
+func (s SplitLine) End() token.Pos {
 	if s.Amount == nil {
 		return s.Account.End()
 	}
 	return s.Amount.End()
 }
 
-func (Split) lineNode() {}
+func (SplitLine) lineNode() {}
 
 // An AmountLine node represents an amount line node.
 type AmountLine struct {
