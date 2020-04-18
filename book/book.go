@@ -83,7 +83,7 @@ func Compile(src []byte, o ...Option) (*Book, error) {
 
 // Starting returns an option that limits a compiled book to entries
 // starting from the given date.  Entries preceding the given date
-// will still be parsed to determine account balances.
+// will still be processed to determine account balances.
 func Starting(d civil.Date) Option {
 	return optionSetter(func(o *options) {
 		o.starting = d
