@@ -15,11 +15,52 @@
 package book
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
+
+func ExampleAccount_Parts() {
+	fmt.Printf("%#v\n", Account("Assets:Cash").Parts())
+	fmt.Printf("%#v\n", Account("Assets").Parts())
+	// Output:
+	// []string{"Assets", "Cash"}
+	// []string{"Assets"}
+}
+
+func ExampleAccount_Level() {
+	fmt.Println(Account("Assets:Cash").Level())
+	fmt.Println(Account("Assets").Level())
+	// Output:
+	// 2
+	// 1
+}
+
+func ExampleAccount_Parent() {
+	fmt.Printf("%#v\n", Account("Assets:Cash").Parent())
+	fmt.Printf("%#v\n", Account("Assets").Parent())
+	// Output:
+	// "Assets"
+	// ""
+}
+
+func ExampleAccount_Leaf() {
+	fmt.Printf("%#v\n", Account("Assets:Cash").Leaf())
+	fmt.Printf("%#v\n", Account("Assets").Leaf())
+	// Output:
+	// "Cash"
+	// "Assets"
+}
+
+func ExampleAccount_Under() {
+	fmt.Println(Account("Assets:Cash").Under("Assets"))
+	fmt.Println(Account("Assets:Cash:Wallet").Under("Assets"))
+	// Output:
+	// true
+	// true
+}
 
 func TestBalance_Add_empty_balance(t *testing.T) {
 	t.Parallel()

@@ -60,7 +60,6 @@ func (u Unit) String() string {
 type Account string
 
 // Parts returns the parts of the account between the colons.
-// An empty slice is returned for the zero value.
 func (a Account) Parts() []string {
 	if a == "" {
 		return nil
