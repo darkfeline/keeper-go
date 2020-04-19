@@ -15,7 +15,6 @@
 package book
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 )
@@ -41,7 +40,7 @@ func (a Amount) String() string {
 	if (a.Unit == Unit{}) {
 		return decFormat(a.Number, 1)
 	}
-	return fmt.Sprintf("%s %s", decFormat(a.Number, a.Unit.Scale), a.Unit.Symbol)
+	return decFormat(a.Number, a.Unit.Scale) + " " + a.Unit.Symbol
 }
 
 // Unit describes a unit, e.g., currency or commodity.
@@ -56,7 +55,7 @@ type Unit struct {
 }
 
 func (u Unit) String() string {
-	return fmt.Sprintf("%v (1/%v)", u.Symbol, u.Scale)
+	return u.Symbol
 }
 
 // Account is a bookkeeping account.
@@ -158,11 +157,10 @@ func (b Balance) sort() {
 }
 
 func (b Balance) String() string {
-	n := len(b)
-	if n == 0 {
+	if len(b) == 0 {
 		return "0"
 	}
-	s := make([]string, n)
+	s := make([]string, len(b))
 	for i, a := range b {
 		s[i] = a.String()
 	}
