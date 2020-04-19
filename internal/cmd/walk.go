@@ -17,15 +17,15 @@ package cmd
 import (
 	"fmt"
 
-	"go.felesatra.moe/keeper/book"
+	"go.felesatra.moe/keeper/journal"
 )
 
 // walkAccountTree calls the given function for every account in the tree of accounts.
 // The input slice is sorted in place.
 // If parent accounts are missing, they are also visited as virtual nodes.
-func walkAccountTree(a []book.Account, f func(accountNode) error) error {
+func walkAccountTree(a []journal.Account, f func(accountNode) error) error {
 	sortAccounts(a)
-	var last book.Account
+	var last journal.Account
 	for i, cur := range a {
 		if err := walkBetweenLast(last, cur, f); err != nil {
 			return err
@@ -46,7 +46,7 @@ func walkAccountTree(a []book.Account, f func(accountNode) error) error {
 
 // walkBetweenLast walks the accounts between the last account and
 // the current account as virtual nodes.
-func walkBetweenLast(last, cur book.Account, f func(accountNode) error) error {
+func walkBetweenLast(last, cur journal.Account, f func(accountNode) error) error {
 	parts := cur.Parts()
 	for i := len(commonPrefix(last.Parts(), parts)) + 1; i < len(parts); i++ {
 		n := accountNode{
@@ -73,7 +73,7 @@ func commonPrefix(a, b []string) []string {
 
 // accountNode is passed to functions by walkAccountTree.
 type accountNode struct {
-	Account book.Account
+	Account journal.Account
 	// Virtual is true if this Account is a missing parent account.
 	Virtual bool
 	// Leaf is true if this Account is a leaf in the walked tree.

@@ -19,20 +19,19 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-
-	"go.felesatra.moe/keeper/book"
+	"go.felesatra.moe/keeper/journal"
 )
 
 func TestWalkAccountTree(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		desc string
-		a    []book.Account
+		a    []journal.Account
 		want []accountNode
 	}{
 		{
 			desc: "simple",
-			a:    []book.Account{"IJN:Ayanami", "USS:Laffey"},
+			a:    []journal.Account{"IJN:Ayanami", "USS:Laffey"},
 			want: []accountNode{
 				{Account: "IJN", Virtual: true},
 				{Account: "IJN:Ayanami", Leaf: true},
@@ -42,7 +41,7 @@ func TestWalkAccountTree(t *testing.T) {
 		},
 		{
 			desc: "deep",
-			a: []book.Account{
+			a: []journal.Account{
 				"Expenses:Foo:Bar:Baz",
 				"Expenses:Spam:Eggs:Ham",
 			},
@@ -58,7 +57,7 @@ func TestWalkAccountTree(t *testing.T) {
 		},
 		{
 			desc: "with parent",
-			a: []book.Account{
+			a: []journal.Account{
 				"Expenses:Foo",
 				"Expenses:Foo:Bar:Baz",
 			},
@@ -71,7 +70,7 @@ func TestWalkAccountTree(t *testing.T) {
 		},
 		{
 			desc: "bug 1",
-			a: []book.Account{
+			a: []journal.Account{
 				"Assets:2019:Foo",
 				"Assets:2020:Foo",
 			},

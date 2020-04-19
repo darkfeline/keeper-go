@@ -20,8 +20,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/internal/colfmt"
+	"go.felesatra.moe/keeper/journal"
 )
 
 func init() {
@@ -37,7 +37,7 @@ var ledgerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		a := book.Account(args[1])
+		a := journal.Account(args[1])
 		items := makeLedgerItems(a, b.AccountEntries[a])
 		f, err := getFormatter(format)
 		if err != nil {
@@ -59,7 +59,7 @@ type ledgerItem struct {
 	error       string
 }
 
-func (l *ledgerItem) setBalance(b book.Balance) {
+func (l *ledgerItem) setBalance(b journal.Balance) {
 	switch len(b) {
 	default:
 		l.balancex = "(more)"
@@ -73,7 +73,7 @@ func (l *ledgerItem) setBalance(b book.Balance) {
 	}
 }
 
-func makeLedgerItems(a book.Account, e []book.Entry) []ledgerItem {
+func makeLedgerItems(a journal.Account, e []journal.Entry) []ledgerItem {
 	var items []ledgerItem
 	for _, e := range e {
 		i := ledgerItem{
@@ -82,7 +82,7 @@ func makeLedgerItems(a book.Account, e []book.Entry) []ledgerItem {
 		}
 
 		switch e := e.(type) {
-		case book.Transaction:
+		case journal.Transaction:
 			i := i
 			i.description = e.Description
 			if len(e.Splits) == 0 {
@@ -97,7 +97,7 @@ func makeLedgerItems(a book.Account, e []book.Entry) []ledgerItem {
 				items = append(items, i)
 			}
 			items[len(items)-1].setBalance(e.Balances[a])
-		case book.BalanceAssert:
+		case journal.BalanceAssert:
 			if e.Account != a {
 				panic(fmt.Sprintf("got balance for account %s not %s", e.Account, a))
 			}

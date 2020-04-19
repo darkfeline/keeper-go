@@ -23,8 +23,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"go.felesatra.moe/keeper/book"
 	"go.felesatra.moe/keeper/internal/colfmt"
+	"go.felesatra.moe/keeper/journal"
 )
 
 func init() {
@@ -98,7 +98,7 @@ var equityCmd = &cobra.Command{
 	},
 }
 
-type tbalFormatter func(w io.Writer, m book.TBalance, root book.Account) error
+type tbalFormatter func(w io.Writer, m journal.TBalance, root journal.Account) error
 
 func getTbalFormatter() (tbalFormatter, error) {
 	switch format {
@@ -111,13 +111,13 @@ func getTbalFormatter() (tbalFormatter, error) {
 	}
 }
 
-func formatTbalTab(w io.Writer, m book.TBalance, root book.Account) error {
+func formatTbalTab(w io.Writer, m journal.TBalance, root journal.Account) error {
 	type item struct {
 		account string
 		balance string
 	}
 	var is []item
-	var total book.Balance
+	var total journal.Balance
 	for _, a := range accountsUnder(m, root) {
 		is = append(is, item{
 			account: string(a),
@@ -144,7 +144,7 @@ func formatTbalTab(w io.Writer, m book.TBalance, root book.Account) error {
 // its balance is printed comma separated, aligned after the units for
 // single unit accounts.
 // These are assumed to be trading accounts and less important.
-func formatTbalPretty(w io.Writer, m book.TBalance, root book.Account) error {
+func formatTbalPretty(w io.Writer, m journal.TBalance, root journal.Account) error {
 	items := makeBalanceItems(m, root)
 	return colfmt.Format(w, items)
 }
@@ -157,7 +157,7 @@ type balanceItem struct {
 	extraBalance string
 }
 
-func (i *balanceItem) addBalance(b book.Balance) {
+func (i *balanceItem) addBalance(b journal.Balance) {
 	switch len(b) {
 	case 0:
 	case 1:
@@ -169,9 +169,9 @@ func (i *balanceItem) addBalance(b book.Balance) {
 	}
 }
 
-func makeBalanceItems(m book.TBalance, root book.Account) []balanceItem {
+func makeBalanceItems(m journal.TBalance, root journal.Account) []balanceItem {
 	var items []balanceItem
-	var total book.Balance
+	var total journal.Balance
 	rlen := root.Level()
 	_ = walkAccountTree(accountsUnder(m, root), func(n accountNode) error {
 		a := n.Account
@@ -208,19 +208,19 @@ func makeBalanceItems(m book.TBalance, root book.Account) []balanceItem {
 		i := balanceItem{
 			prefix: "Total",
 		}
-		i.addBalance(book.Balance{total[0]})
+		i.addBalance(journal.Balance{total[0]})
 		items = append(items, i)
 		for _, a := range total[1:] {
 			var i balanceItem
-			i.addBalance(book.Balance{a})
+			i.addBalance(journal.Balance{a})
 			items = append(items, i)
 		}
 	}
 	return items
 }
 
-func accountsUnder(m book.TBalance, root book.Account) []book.Account {
-	var as []book.Account
+func accountsUnder(m journal.TBalance, root journal.Account) []journal.Account {
+	var as []journal.Account
 	for a := range m {
 		if a.Under(root) {
 			as = append(as, a)

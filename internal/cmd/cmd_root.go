@@ -20,7 +20,7 @@ import (
 
 	"cloud.google.com/go/civil"
 	"github.com/spf13/cobra"
-	"go.felesatra.moe/keeper/book"
+	"go.felesatra.moe/keeper/journal"
 )
 
 var rootCmd = &cobra.Command{
@@ -75,7 +75,7 @@ func endDate() (civil.Date, error) {
 	return d, nil
 }
 
-func compileFile(path string) (*book.Book, error) {
+func compileFile(path string) (*journal.Book, error) {
 	src, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -83,21 +83,21 @@ func compileFile(path string) (*book.Book, error) {
 	return compile(src)
 }
 
-func compile(src []byte) (*book.Book, error) {
-	var o []book.Option
+func compile(src []byte) (*journal.Book, error) {
+	var o []journal.Option
 	d, err := startDate()
 	if err != nil {
 		return nil, err
 	}
 	if d.IsValid() {
-		o = append(o, book.Starting(d))
+		o = append(o, journal.Starting(d))
 	}
 	d, err = endDate()
 	if err != nil {
 		return nil, err
 	}
 	if d.IsValid() {
-		o = append(o, book.Ending(d))
+		o = append(o, journal.Ending(d))
 	}
-	return book.Compile(src, o...)
+	return journal.Compile(src, o...)
 }

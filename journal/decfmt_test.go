@@ -12,36 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package book
+package journal
 
 import (
+	"fmt"
 	"testing"
 )
 
-func TestParseDecimal(t *testing.T) {
+func TestDecFormat(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		s    string
-		want decimal
+		n     int64
+		scale int64
+		want  string
 	}{
-		{"123", decimal{123, 1}},
-		{"123.", decimal{123, 1}},
-		{"123.45", decimal{12345, 100}},
-		{"-123.45", decimal{-12345, 100}},
-		{"2,123.45", decimal{212345, 100}},
-		{"0.02", decimal{2, 100}},
-		{"-0.02", decimal{-2, 100}},
+		{1234, 1, "1,234"},
+		{12345, 100, "123.45"},
+		{-12345, 100, "-123.45"},
+		{10000, 100, "100.00"},
+		{12345678, 1, "12,345,678"},
+		{4, 100, "0.04"},
+		{0, 1, "0"},
+		{0, 100, "0.00"},
 	}
 	for _, c := range cases {
 		c := c
-		t.Run(c.s, func(t *testing.T) {
+		t.Run(fmt.Sprintf("n=%d scale=%d", c.n, c.scale), func(t *testing.T) {
 			t.Parallel()
-			got, err := parseDecimal(c.s)
-			if err != nil {
-				t.Fatal(err)
-			}
+			got := decFormat(c.n, c.scale)
 			if got != c.want {
-				t.Errorf("parseDecimal(%#v) = %#v, want %#v", c.s, got, c.want)
+				t.Errorf("Format(%v, %v) = %#v; want %#v", c.n, c.scale, got, c.want)
 			}
 		})
 	}

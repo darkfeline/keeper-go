@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package book implements bookkeeping with keeper files.
-package book
+// Package journal implements bookkeeping with keeper files.
+package journal
 
 import (
 	"fmt"

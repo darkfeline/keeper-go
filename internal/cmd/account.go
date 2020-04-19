@@ -18,13 +18,13 @@ import (
 	"sort"
 	"strings"
 
-	"go.felesatra.moe/keeper/book"
+	"go.felesatra.moe/keeper/journal"
 )
 
-func acctConcat(parts []string) book.Account {
-	return book.Account(strings.Join(parts, ":"))
+func acctConcat(parts []string) journal.Account {
+	return journal.Account(strings.Join(parts, ":"))
 }
 
-func sortAccounts(as []book.Account) {
+func sortAccounts(as []journal.Account) {
 	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
 }
