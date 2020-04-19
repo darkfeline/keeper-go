@@ -10,3 +10,5 @@ reconcile account balances.
 1. Enter transactions into keeper files.
 2. Reconcile balances.
 3. Produce trial balance.
+4. Produce financial statements: income statement, capital statement,
+   balance sheet, cash flow statement
