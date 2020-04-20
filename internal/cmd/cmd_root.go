@@ -30,14 +30,12 @@ var rootCmd = &cobra.Command{
 }
 
 var (
-	format       string
-	startDateStr string
-	endDateStr   string
+	format     string
+	endDateStr string
 )
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&format, "format", prettyFmt, "output format")
-	rootCmd.PersistentFlags().StringVar(&startDateStr, "start", "", "start date")
 	rootCmd.PersistentFlags().StringVar(&endDateStr, "end", "", "end date")
 }
 
@@ -51,17 +49,6 @@ func Execute() {
 		// Execute already prints the error.
 		os.Exit(1)
 	}
-}
-
-func startDate() (civil.Date, error) {
-	if startDateStr == "" {
-		return civil.Date{}, nil
-	}
-	d, err := civil.ParseDate(startDateStr)
-	if err != nil {
-		return civil.Date{}, err
-	}
-	return d, nil
 }
 
 func endDate() (civil.Date, error) {
@@ -85,14 +72,7 @@ func compileFile(path string) (*journal.Journal, error) {
 
 func compile(src []byte) (*journal.Journal, error) {
 	var o []journal.Option
-	d, err := startDate()
-	if err != nil {
-		return nil, err
-	}
-	if d.IsValid() {
-		o = append(o, journal.Starting(d))
-	}
-	d, err = endDate()
+	d, err := endDate()
 	if err != nil {
 		return nil, err
 	}
