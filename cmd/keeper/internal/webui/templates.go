@@ -12,36 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package webui
 
 import (
-	"fmt"
-	"os"
+	"html/template"
+
+	"go.felesatra.moe/keeper/journal"
 )
 
-func main() {
-	args := os.Args[1:]
-	if len(args) < 1 {
-		fmt.Fprintf(os.Stderr, "keeper: no command specified\n")
-		os.Exit(2)
-	}
-	n := args[0]
-	for _, c := range commands {
-		if n == c.name {
-			c.run(c, args[1:])
-			return
-		}
-	}
-	fmt.Fprintf(os.Stderr, "keeper: unknown command %s\n", n)
-	os.Exit(2)
+//go:generate binpack -name baseText base.html
+
+var baseTemplate = template.Must(template.New("base").Parse(baseText))
+
+type baseData struct {
+	Title string
+	Body  template.HTML
 }
 
-var commands = []*command{
-	checkCmd,
-	serveCmd,
-}
+//go:generate binpack -name indexText index.html
 
-type command struct {
-	name string
-	run  func(*command, []string)
+var indexTemplate = template.Must(baseTemplate.Parse(indexText))
+
+type indexData struct {
+	BalanceErrors []journal.BalanceAssert
 }

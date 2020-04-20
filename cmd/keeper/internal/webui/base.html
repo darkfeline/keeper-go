@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      nav.sitenav > ul {
+          display: flex;
+      }
+      nav.sitenav > ul > li {
+          padding-left: 10px;
+          padding-right: 10px;
+          list-style-type: none;
+      }
+    </style>
+    <title>Keeper Web UI{{if .Title}} - {{.Title}}{{end}}</title>
+  </head>
+  <body>
+    <header>
+      <nav class="sitenav">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/trial">Trial Balance</a></li>
+          <li><a href="/income">Income</a></li>
+          <li><a href="/capital">Capital</a></li>
+          <li><a href="/balance">Balance Sheet</a></li>
+          <li><a href="/cash">Cash Flow</a></li>
+        </ul>
+      </nav>
+    </header>
+    {{- block "body" .}}
+    {{.Body}}
+    {{- end}}
+  </body>
+</html>

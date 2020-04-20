@@ -15,33 +15,31 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
+
+	"go.felesatra.moe/keeper/cmd/keeper/internal/webui"
+	"go.felesatra.moe/keeper/journal"
 )
 
-func main() {
-	args := os.Args[1:]
-	if len(args) < 1 {
-		fmt.Fprintf(os.Stderr, "keeper: no command specified\n")
-		os.Exit(2)
-	}
-	n := args[0]
-	for _, c := range commands {
-		if n == c.name {
-			c.run(c, args[1:])
-			return
+var serveCmd = &command{
+	name: "serve",
+	run: func(cmd *command, args []string) {
+		fs := flag.NewFlagSet(cmd.name, flag.ExitOnError)
+		port := fs.String("port", "8888", "Port to listen on")
+		if err := fs.Parse(args); err != nil {
+			panic(err)
 		}
-	}
-	fmt.Fprintf(os.Stderr, "keeper: unknown command %s\n", n)
-	os.Exit(2)
-}
+		var o []journal.Option
+		for _, f := range fs.Args() {
+			o = append(o, journal.File(f))
+		}
 
-var commands = []*command{
-	checkCmd,
-	serveCmd,
-}
-
-type command struct {
-	name string
-	run  func(*command, []string)
+		fmt.Fprintf(os.Stderr, "Listening on port %s\n", *port)
+		h := webui.NewHandler(o)
+		log.Fatal(http.ListenAndServe(":"+*port, h))
+	},
 }

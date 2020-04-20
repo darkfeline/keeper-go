@@ -1,0 +1,36 @@
+{{define "body" -}}
+{{if .BalanceErrors -}}
+<p>Balance errors!</p>
+<table>
+  <thead>
+    <tr>
+      <th>Loc</th>
+      <th>Date</th>
+      <th>Account</th>
+      <th>Declared</th>
+      <th>Actual</th>
+      <th>Diff</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{- range .BalanceErrors}}
+    <tr>
+      <td>{{.Pos}}</td>
+      <td>{{.Date}}</td>
+      <td><a href="/reconcile?account={{.Account}}">{{.Account}}</a></td>
+      <td>{{.Declared}}</td>
+      <td>{{.Actual}}</td>
+      <td>{{.Diff}}</td>
+      <tr>
+    {{- end}}
+  </tbody>
+</table>
+{{end -}}
+<ul>
+  <li><a href="/trial">Trial Balance</a></li>
+  <li><a href="/income">Income</a></li>
+  <li><a href="/capital">Capital</a></li>
+  <li><a href="/balance">Balance Sheet</a></li>
+  <li><a href="/cash">Cash Flow</a></li>
+</ul>
+{{- end}}
