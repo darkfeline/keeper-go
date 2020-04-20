@@ -256,10 +256,15 @@ func (b *builder) addUnit(n ast.UnitDecl) {
 		b.errorf(n.Unit.Pos(), "bad unit %s", unit)
 		return
 	}
-	b.units[unit] = Unit{
+	u := Unit{
 		Symbol: unit,
 		Scale:  scale,
 	}
+	if prev, ok := b.units[unit]; ok && prev != u {
+		b.errorf(n.Unit.Pos(), "unit %s redeclared with different scale", unit)
+		return
+	}
+	b.units[unit] = u
 }
 
 func validateUnit(lit string) (ok bool) {
