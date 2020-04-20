@@ -56,7 +56,7 @@ type Transaction struct {
 	Splits      []Split
 	// Balances contains the balance for all accounts mentioned in
 	// the transaction immediately after the transaction.
-	Balances TBalance
+	Balances Balances
 }
 
 func (t Transaction) Position() token.Position {

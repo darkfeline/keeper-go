@@ -29,7 +29,7 @@ type Journal struct {
 	// AccountEntries are the entries that affect each account.
 	AccountEntries map[Account][]Entry
 	// Balances is the final balance for all accounts.
-	Balances TBalance
+	Balances Balances
 }
 
 // BalanceErr returns non-nil if the book has balance assertion errors.
@@ -99,7 +99,7 @@ func (optionSetter) option() {}
 func compile(e []Entry) *Journal {
 	b := &Journal{
 		AccountEntries: make(map[Account][]Entry),
-		Balances:       make(TBalance),
+		Balances:       make(Balances),
 	}
 	for _, e := range e {
 		b.compileEntry(e)
@@ -110,7 +110,7 @@ func compile(e []Entry) *Journal {
 func (b *Journal) compileEntry(e Entry) {
 	switch e := e.(type) {
 	case Transaction:
-		e.Balances = make(TBalance)
+		e.Balances = make(Balances)
 		for _, s := range e.Splits {
 			b.Balances.Add(s.Account, s.Amount)
 			e.Balances[s.Account] = b.Balances[s.Account].Copy()

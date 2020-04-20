@@ -61,7 +61,7 @@ func TestCompile(t *testing.T) {
 						Amount:  Amount{Number: 123, Unit: u},
 					},
 				},
-				Balances: TBalance{
+				Balances: Balances{
 					"Assets:Cash":   Balance{u: -123},
 					"Expenses:Food": Balance{u: 123},
 				},
@@ -79,7 +79,7 @@ func TestCompile(t *testing.T) {
 		}
 	})
 	t.Run("balance", func(t *testing.T) {
-		want := TBalance{
+		want := Balances{
 			"Assets:Cash":   Balance{u: -123},
 			"Expenses:Food": Balance{u: 123},
 		}
@@ -146,7 +146,7 @@ func TestCompile_balances(t *testing.T) {
 						Amount:  Amount{Number: 123, Unit: u},
 					},
 				},
-				Balances: TBalance{
+				Balances: Balances{
 					"Assets:Cash":   Balance{u: -123},
 					"Expenses:Food": Balance{u: 123},
 				},
@@ -171,7 +171,7 @@ func TestCompile_balances(t *testing.T) {
 						Amount:  Amount{Number: 123, Unit: u},
 					},
 				},
-				Balances: TBalance{
+				Balances: Balances{
 					"Assets:Cash":   Balance{u: -246},
 					"Expenses:Food": Balance{u: 246},
 				},
@@ -189,7 +189,7 @@ func TestCompile_balances(t *testing.T) {
 		}
 	})
 	t.Run("balance", func(t *testing.T) {
-		want := TBalance{
+		want := Balances{
 			"Assets:Cash":   Balance{u: -246},
 			"Expenses:Food": Balance{u: 246},
 		}
@@ -212,7 +212,7 @@ func TestBalanceDiff(t *testing.T) {
 	})
 }
 
-func compareBalances(t *testing.T, want, got TBalance) {
+func compareBalances(t *testing.T, want, got Balances) {
 	t.Helper()
 	wantKeys := make(map[Account]struct{})
 	for k := range want {

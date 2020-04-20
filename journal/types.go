@@ -160,13 +160,13 @@ func (b Balance) String() string {
 	return strings.Join(s, ", ")
 }
 
-// TBalance is a "trial balance" or "total balance", containing the
+// Balances is a "trial balance" or "total balance", containing the
 // balances of multiple accounts.
-type TBalance map[Account]Balance
+type Balances map[Account]Balance
 
 // Add adds an amount to an account, even if the account is not yet in
 // the map.
-func (b TBalance) Add(a Account, am Amount) {
+func (b Balances) Add(a Account, am Amount) {
 	bal, ok := b[a]
 	if !ok {
 		bal = make(Balance)

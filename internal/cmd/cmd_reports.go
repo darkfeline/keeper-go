@@ -98,7 +98,7 @@ var equityCmd = &cobra.Command{
 	},
 }
 
-type tbalFormatter func(w io.Writer, m journal.TBalance, root journal.Account) error
+type tbalFormatter func(w io.Writer, m journal.Balances, root journal.Account) error
 
 func getTbalFormatter() (tbalFormatter, error) {
 	switch format {
@@ -111,7 +111,7 @@ func getTbalFormatter() (tbalFormatter, error) {
 	}
 }
 
-func formatTbalTab(w io.Writer, m journal.TBalance, root journal.Account) error {
+func formatTbalTab(w io.Writer, m journal.Balances, root journal.Account) error {
 	type item struct {
 		account string
 		balance string
@@ -144,7 +144,7 @@ func formatTbalTab(w io.Writer, m journal.TBalance, root journal.Account) error 
 // its balance is printed comma separated, aligned after the units for
 // single unit accounts.
 // These are assumed to be trading accounts and less important.
-func formatTbalPretty(w io.Writer, m journal.TBalance, root journal.Account) error {
+func formatTbalPretty(w io.Writer, m journal.Balances, root journal.Account) error {
 	items := makeBalanceItems(m, root)
 	return colfmt.Format(w, items)
 }
@@ -178,7 +178,7 @@ func (i *balanceItem) addAmounts(a ...journal.Amount) {
 	i.addBalance(b)
 }
 
-func makeBalanceItems(m journal.TBalance, root journal.Account) []balanceItem {
+func makeBalanceItems(m journal.Balances, root journal.Account) []balanceItem {
 	var items []balanceItem
 	total := make(journal.Balance)
 	rlen := root.Level()
@@ -227,7 +227,7 @@ func makeBalanceItems(m journal.TBalance, root journal.Account) []balanceItem {
 	return items
 }
 
-func accountsUnder(m journal.TBalance, root journal.Account) []journal.Account {
+func accountsUnder(m journal.Balances, root journal.Account) []journal.Account {
 	var as []journal.Account
 	for a := range m {
 		if a.Under(root) {
