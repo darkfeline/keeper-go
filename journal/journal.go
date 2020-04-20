@@ -18,6 +18,7 @@ package journal
 import (
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 
 	"go.felesatra.moe/keeper/kpr/scanner"
 )
@@ -79,7 +80,7 @@ func openInputFiles(inputs []input) ([]inputBytes, error) {
 				return nil, err
 			}
 			ib = append(ib, inputBytes{
-				filename: i.filename,
+				filename: filepath.Base(i.filename),
 				src:      src,
 			})
 		default:
