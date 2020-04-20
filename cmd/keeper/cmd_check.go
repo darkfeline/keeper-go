@@ -12,28 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package main
 
 import (
-	"errors"
+	"flag"
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
+	"go.felesatra.moe/keeper/journal"
 )
 
-func init() {
-	rootCmd.AddCommand(checkCmd)
-}
-
-var checkCmd = &cobra.Command{
-	Use:   "check [file]",
-	Short: "check file for errors",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		j, err := compileFile(args[0])
+var checkCmd = &command{
+	name: "check",
+	run: func(cmd *command, args []string) {
+		fs := flag.NewFlagSet(cmd.name, flag.ExitOnError)
+		if err := fs.Parse(args); err != nil {
+			panic(err)
+		}
+		var o []journal.Option
+		for _, f := range fs.Args() {
+			o = append(o, journal.File(f))
+		}
+		j, err := journal.Compile(o...)
 		if err != nil {
-			return err
+			fmt.Fprintf(os.Stderr, "keeper: %s\n", err)
+			os.Exit(1)
 		}
 		if len(j.BalanceErrors) > 0 {
 			for _, e := range j.BalanceErrors {
@@ -41,8 +44,8 @@ var checkCmd = &cobra.Command{
 					e.EntryPos, e.EntryDate, e.Account,
 					e.Declared, e.Actual, e.Diff)
 			}
-			return errors.New("journal has balance errors")
+			fmt.Fprintf(os.Stderr, "keeper: balance errors\n")
+			os.Exit(1)
 		}
-		return nil
 	},
 }
