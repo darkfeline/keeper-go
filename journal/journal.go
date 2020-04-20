@@ -22,21 +22,18 @@ import (
 	"go.felesatra.moe/keeper/kpr/scanner"
 )
 
-// A Book represents accounting information compiled from keeper file source.
-type Book struct {
+// A Journal represents accounting information compiled from keeper file source.
+type Journal struct {
 	// Entries are all of the entries, sorted chronologically.
 	Entries []Entry
 	// AccountEntries are the entries that affect each account.
 	AccountEntries map[Account][]Entry
-	// Balance is the final balance for all accounts.
-	Balance TBalance
-	// DiffBalance is the balance in the given time period for all accounts.
-	// This is useful for income and expense accounts.
-	DiffBalance TBalance
+	// Balances is the final balance for all accounts.
+	Balances TBalance
 }
 
 // BalanceErr returns non-nil if the book has balance assertion errors.
-func (b *Book) BalanceErr() error {
+func (b *Journal) BalanceErr() error {
 	var err scanner.ErrorList
 	for _, e := range b.Entries {
 		switch e := e.(type) {
@@ -56,38 +53,33 @@ type Option interface {
 	option()
 }
 
-// Compile compiles keeper file source into a Book.
+// Compile compiles keeper file source into a Journal.
 // Balance assertion errors are not returned here, to enable the
 // caller to inspect the transactions to identify the error.
-func Compile(src []byte, o ...Option) (*Book, error) {
+func Compile(src []byte, o ...Option) (*Journal, error) {
 	e, err := buildEntries(src)
 	if err != nil {
 		return nil, err
 	}
 	sortEntries(e)
-	op := buildOptions(o)
-	initial := make(TBalance)
-	if d := op.starting; d.IsValid() {
-		b := compile(entriesEnding(e, d.AddDays(-1)), initial)
-		initial = b.Balance
-		e = entriesStarting(e, d)
-	}
+	op := makeOptions(o)
 	if d := op.ending; d.IsValid() {
 		e = entriesEnding(e, d)
 	}
-	b := compile(e, initial)
-	b.Balance.Clean()
-	b.DiffBalance.Clean()
+	b := compile(e)
 	return b, nil
 }
 
-// Starting returns an option that limits a compiled book to entries
-// starting from the given date.  Entries preceding the given date
-// will still be processed to determine account balances.
-func Starting(d civil.Date) Option {
-	return optionSetter(func(o *options) {
-		o.starting = d
-	})
+type options struct {
+	ending civil.Date
+}
+
+func makeOptions(o []Option) options {
+	var op options
+	for _, o := range o {
+		o.(optionSetter)(&op)
+	}
+	return op
 }
 
 // Ending returns an option that limits a compiled book to entries
@@ -98,30 +90,16 @@ func Ending(d civil.Date) Option {
 	})
 }
 
-func buildOptions(o []Option) options {
-	var op options
-	for _, o := range o {
-		o.(optionSetter)(&op)
-	}
-	return op
-}
-
 type optionSetter func(*options)
 
 func (optionSetter) option() {}
 
-type options struct {
-	starting civil.Date
-	ending   civil.Date
-}
-
-// compile compiles a Book from entries.
+// compile compiles a Journal from entries.
 // Entries should be sorted.
-func compile(e []Entry, initial TBalance) *Book {
-	b := &Book{
+func compile(e []Entry) *Journal {
+	b := &Journal{
 		AccountEntries: make(map[Account][]Entry),
-		Balance:        initial,
-		DiffBalance:    make(TBalance),
+		Balances:       make(TBalance),
 	}
 	for _, e := range e {
 		b.compileEntry(e)
@@ -129,22 +107,24 @@ func compile(e []Entry, initial TBalance) *Book {
 	return b
 }
 
-func (b *Book) compileEntry(e Entry) {
+func (b *Journal) compileEntry(e Entry) {
 	switch e := e.(type) {
 	case Transaction:
-		tbal := make(TBalance)
+		e.Balances = make(TBalance)
 		for _, s := range e.Splits {
-			k := s.Account
-			b.DiffBalance[k] = b.DiffBalance[k].Add(s.Amount)
-			bal := b.Balance[k].Add(s.Amount)
-			b.Balance[k] = bal
-			tbal[k] = bal
+			b.Balances.Add(s.Account, s.Amount)
+			e.Balances[s.Account] = b.Balances[s.Account].Copy()
 		}
-		tbal.Clean()
-		e.Balances = tbal
 		b.addEntry(e)
 	case BalanceAssert:
-		e.Actual = b.Balance[e.Account].CleanCopy()
+		bal, ok := b.Balances[e.Account]
+		switch ok {
+		case true:
+			bal = bal.Copy()
+		case false:
+			bal = make(Balance)
+		}
+		e.Actual = bal
 		e.Diff = balanceDiff(e.Actual, e.Declared)
 		b.addEntry(e)
 	default:
@@ -152,7 +132,7 @@ func (b *Book) compileEntry(e Entry) {
 	}
 }
 
-func (b *Book) addEntry(e Entry) {
+func (b *Journal) addEntry(e Entry) {
 	b.Entries = append(b.Entries, e)
 	switch e := e.(type) {
 	case Transaction:
@@ -171,15 +151,15 @@ func (b *Book) addEntry(e Entry) {
 	}
 }
 
-func (b *Book) addAccountEntry(a Account, e Entry) {
+func (b *Journal) addAccountEntry(a Account, e Entry) {
 	m, k := b.AccountEntries, a
 	m[k] = append(m[k], e)
 }
 
 func balanceDiff(x, y Balance) Balance {
-	diff := x.CleanCopy()
-	for _, a := range y {
-		diff = diff.Sub(a)
+	diff := x.Copy()
+	for _, a := range y.Amounts() {
+		diff.Sub(a)
 	}
-	return diff.CleanCopy()
+	return diff
 }

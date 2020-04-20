@@ -42,7 +42,7 @@ end
 			EntryDate: civil.Date{2001, 2, 3},
 			EntryPos:  token.Position{Offset: 13, Line: 2, Column: 1},
 			Account:   "Some:account",
-			Declared:  Balance{{Number: -120, Unit: u}},
+			Declared:  Balance{u: -120},
 		},
 		Transaction{
 			EntryDate:   civil.Date{2001, 2, 3},
@@ -76,6 +76,28 @@ end
 	_, err := buildEntries([]byte(input))
 	if err == nil {
 		t.Errorf("Expected errors")
+	}
+}
+
+func TestBuildEntries_same_duplicate_unit(t *testing.T) {
+	t.Parallel()
+	const input = `unit USD 100
+unit USD 100
+`
+	_, err := buildEntries([]byte(input))
+	if err != nil {
+		t.Errorf("Got unexpected error: %s", err)
+	}
+}
+
+func TestBuildEntries_diff_duplicate_unit(t *testing.T) {
+	t.Parallel()
+	const input = `unit USD 100
+unit USD 10
+`
+	_, err := buildEntries([]byte(input))
+	if err == nil {
+		t.Errorf("Expected error")
 	}
 }
 

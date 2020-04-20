@@ -30,14 +30,12 @@ var rootCmd = &cobra.Command{
 }
 
 var (
-	format       string
-	startDateStr string
-	endDateStr   string
+	format     string
+	endDateStr string
 )
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&format, "format", prettyFmt, "output format")
-	rootCmd.PersistentFlags().StringVar(&startDateStr, "start", "", "start date")
 	rootCmd.PersistentFlags().StringVar(&endDateStr, "end", "", "end date")
 }
 
@@ -53,17 +51,6 @@ func Execute() {
 	}
 }
 
-func startDate() (civil.Date, error) {
-	if startDateStr == "" {
-		return civil.Date{}, nil
-	}
-	d, err := civil.ParseDate(startDateStr)
-	if err != nil {
-		return civil.Date{}, err
-	}
-	return d, nil
-}
-
 func endDate() (civil.Date, error) {
 	if endDateStr == "" {
 		return civil.Date{}, nil
@@ -75,7 +62,7 @@ func endDate() (civil.Date, error) {
 	return d, nil
 }
 
-func compileFile(path string) (*journal.Book, error) {
+func compileFile(path string) (*journal.Journal, error) {
 	src, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -83,16 +70,9 @@ func compileFile(path string) (*journal.Book, error) {
 	return compile(src)
 }
 
-func compile(src []byte) (*journal.Book, error) {
+func compile(src []byte) (*journal.Journal, error) {
 	var o []journal.Option
-	d, err := startDate()
-	if err != nil {
-		return nil, err
-	}
-	if d.IsValid() {
-		o = append(o, journal.Starting(d))
-	}
-	d, err = endDate()
+	d, err := endDate()
 	if err != nil {
 		return nil, err
 	}

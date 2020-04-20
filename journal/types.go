@@ -15,7 +15,6 @@
 package journal
 
 import (
-	"sort"
 	"strings"
 )
 
@@ -97,63 +96,57 @@ func (a Account) Under(parent Account) bool {
 }
 
 // Balance represents a balance of amounts of various units.
-// The order of different units does not matter.
-// There should not be more than one Amount for a unit.
-type Balance []Amount
+type Balance map[Unit]int64
 
 // Add adds an amount to the balance.
-func (b Balance) Add(a Amount) Balance {
-	if a.Number == 0 {
-		return b
-	}
-	for i := range b {
-		if b[i].Unit == a.Unit {
-			b[i].Number += a.Number
-			return b
-		}
-	}
-	b = append(b, a)
-	return b
+func (b Balance) Add(a Amount) {
+	b[a.Unit] += a.Number
 }
 
 // Sub subtracts an amount from the balance.
-func (b Balance) Sub(a Amount) Balance {
-	return b.Add(a.Neg())
+func (b Balance) Sub(a Amount) {
+	b.Add(a.Neg())
 }
 
 // Empty returns true if the balance is empty/zero.
 func (b Balance) Empty() bool {
-	for _, a := range b {
-		if a.Number != 0 {
+	for _, n := range b {
+		if n != 0 {
 			return false
 		}
 	}
 	return true
 }
 
+// Amounts returns the amounts in the balance.
+func (b Balance) Amounts() []Amount {
+	var a []Amount
+	for u, n := range b {
+		if n != 0 {
+			a = append(a, Amount{Unit: u, Number: n})
+		}
+	}
+	return a
+}
+
 // Equal returns true if the two balances are equal.
 func (b Balance) Equal(b2 Balance) bool {
-	b = b.CleanCopy()
-	for _, a := range b2 {
-		b = b.Sub(a)
+	b = b.Copy()
+	for _, a := range b2.Amounts() {
+		b.Sub(a)
 	}
 	return b.Empty()
 }
 
-// CleanCopy returns a copy of the balance without units that have
-// zero amounts.
-func (b Balance) CleanCopy() Balance {
-	var new Balance
-	for _, a := range b {
-		if a.Number != 0 {
-			new = append(new, a)
+// Copy returns a copy of the balance.
+func (b Balance) Copy() Balance {
+	new := make(Balance)
+	for u, n := range b {
+		if n != 0 {
+			new[u] = n
 		}
 	}
 	return new
-}
-
-func (b Balance) sort() {
-	sort.Slice(b, func(i, j int) bool { return b[i].Unit.Symbol < b[j].Unit.Symbol })
 }
 
 func (b Balance) String() string {
@@ -161,7 +154,7 @@ func (b Balance) String() string {
 		return "0"
 	}
 	s := make([]string, len(b))
-	for i, a := range b {
+	for i, a := range b.Amounts() {
 		s[i] = a.String()
 	}
 	return strings.Join(s, ", ")
@@ -171,15 +164,13 @@ func (b Balance) String() string {
 // balances of multiple accounts.
 type TBalance map[Account]Balance
 
-// Clean cleans all balances and deletes accounts with empty
-// balances.
-func (b TBalance) Clean() {
-	for k, v := range b {
-		bal := v.CleanCopy()
-		if len(bal) == 0 {
-			delete(b, k)
-		} else {
-			b[k] = bal
-		}
+// Add adds an amount to an account, even if the account is not yet in
+// the map.
+func (b TBalance) Add(a Account, am Amount) {
+	bal, ok := b[a]
+	if !ok {
+		bal = make(Balance)
+		b[a] = bal
 	}
+	bal.Add(am)
 }

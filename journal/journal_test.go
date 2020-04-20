@@ -42,10 +42,10 @@ func TestCompile(t *testing.T) {
 		BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Cash",
-			Declared:  Balance{{Number: -232, Unit: u}},
+			Declared:  Balance{u: -232},
 		},
 	}
-	got := compile(e, make(TBalance))
+	got := compile(e)
 	t.Run("entries", func(t *testing.T) {
 		want := []Entry{
 			Transaction{
@@ -62,16 +62,16 @@ func TestCompile(t *testing.T) {
 					},
 				},
 				Balances: TBalance{
-					"Assets:Cash":   Balance{{Number: -123, Unit: u}},
-					"Expenses:Food": Balance{{Number: 123, Unit: u}},
+					"Assets:Cash":   Balance{u: -123},
+					"Expenses:Food": Balance{u: 123},
 				},
 			},
 			BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 2},
 				Account:   "Assets:Cash",
-				Declared:  Balance{{Number: -232, Unit: u}},
-				Actual:    Balance{{Number: -123, Unit: u}},
-				Diff:      Balance{{Number: 109, Unit: u}},
+				Declared:  Balance{u: -232},
+				Actual:    Balance{u: -123},
+				Diff:      Balance{u: 109},
 			},
 		}
 		if diff := cmp.Diff(want, got.Entries); diff != "" {
@@ -80,10 +80,10 @@ func TestCompile(t *testing.T) {
 	})
 	t.Run("balance", func(t *testing.T) {
 		want := TBalance{
-			"Assets:Cash":   Balance{{Number: -123, Unit: u}},
-			"Expenses:Food": Balance{{Number: 123, Unit: u}},
+			"Assets:Cash":   Balance{u: -123},
+			"Expenses:Food": Balance{u: 123},
 		}
-		compareBalances(t, want, got.Balance)
+		compareBalances(t, want, got.Balances)
 	})
 }
 
@@ -108,7 +108,7 @@ func TestCompile_balances(t *testing.T) {
 		BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Cash",
-			Declared:  Balance{{Number: -232, Unit: u}},
+			Declared:  Balance{u: -232},
 		},
 		Transaction{
 			EntryDate:   civil.Date{2000, 1, 3},
@@ -127,10 +127,10 @@ func TestCompile_balances(t *testing.T) {
 		BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 3},
 			Account:   "Assets:Cash",
-			Declared:  Balance{{Number: -232, Unit: u}},
+			Declared:  Balance{u: -232},
 		},
 	}
-	got := compile(e, make(TBalance))
+	got := compile(e)
 	t.Run("entries", func(t *testing.T) {
 		want := []Entry{
 			Transaction{
@@ -147,16 +147,16 @@ func TestCompile_balances(t *testing.T) {
 					},
 				},
 				Balances: TBalance{
-					"Assets:Cash":   Balance{{Number: -123, Unit: u}},
-					"Expenses:Food": Balance{{Number: 123, Unit: u}},
+					"Assets:Cash":   Balance{u: -123},
+					"Expenses:Food": Balance{u: 123},
 				},
 			},
 			BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 2},
 				Account:   "Assets:Cash",
-				Declared:  Balance{{Number: -232, Unit: u}},
-				Actual:    Balance{{Number: -123, Unit: u}},
-				Diff:      Balance{{Number: 109, Unit: u}},
+				Declared:  Balance{u: -232},
+				Actual:    Balance{u: -123},
+				Diff:      Balance{u: 109},
 			},
 			Transaction{
 				EntryDate:   civil.Date{2000, 1, 3},
@@ -172,28 +172,28 @@ func TestCompile_balances(t *testing.T) {
 					},
 				},
 				Balances: TBalance{
-					"Assets:Cash":   Balance{{Number: -246, Unit: u}},
-					"Expenses:Food": Balance{{Number: 246, Unit: u}},
+					"Assets:Cash":   Balance{u: -246},
+					"Expenses:Food": Balance{u: 246},
 				},
 			},
 			BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 3},
 				Account:   "Assets:Cash",
-				Declared:  Balance{{Number: -232, Unit: u}},
-				Actual:    Balance{{Number: -246, Unit: u}},
-				Diff:      Balance{{Number: -14, Unit: u}},
+				Declared:  Balance{u: -232},
+				Actual:    Balance{u: -246},
+				Diff:      Balance{u: -14},
 			},
 		}
 		if diff := cmp.Diff(want, got.Entries); diff != "" {
-			t.Errorf("entry mismatch (-want +got):\n%s", diff)
+			t.Errorf("entries mismatch (-want +got):\n%s", diff)
 		}
 	})
 	t.Run("balance", func(t *testing.T) {
 		want := TBalance{
-			"Assets:Cash":   Balance{{Number: -246, Unit: u}},
-			"Expenses:Food": Balance{{Number: 246, Unit: u}},
+			"Assets:Cash":   Balance{u: -246},
+			"Expenses:Food": Balance{u: 246},
 		}
-		compareBalances(t, want, got.Balance)
+		compareBalances(t, want, got.Balances)
 	})
 }
 
@@ -201,14 +201,11 @@ func TestBalanceDiff(t *testing.T) {
 	t.Parallel()
 	t.Run("bug", func(t *testing.T) {
 		t.Parallel()
+		u := Unit{Symbol: "USD", Scale: 100}
 		actual := Balance{}
-		declared := Balance{
-			{Number: -200, Unit: Unit{Symbol: "USD", Scale: 100}},
-		}
+		declared := Balance{u: -200}
 		got := balanceDiff(actual, declared)
-		want := Balance{
-			{Number: 200, Unit: Unit{Symbol: "USD", Scale: 100}},
-		}
+		want := Balance{u: 200}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("balance mismatch (-want +got):\n%s", diff)
 		}

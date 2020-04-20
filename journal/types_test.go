@@ -16,7 +16,6 @@ package journal
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -63,8 +62,8 @@ func ExampleAccount_Under() {
 }
 
 func ExampleBalance_Add() {
-	var b Balance
-	b = b.Add(Amount{
+	b := make(Balance)
+	b.Add(Amount{
 		Number: 500,
 		Unit:   Unit{Symbol: "USD", Scale: 100},
 	})
@@ -76,9 +75,9 @@ func ExampleBalance_Add() {
 func TestBalance_Add_empty_balance(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
-	var b Balance
-	b = b.Add(Amount{Number: 12345, Unit: u})
-	want := Balance{{Number: 12345, Unit: u}}
+	b := make(Balance)
+	b.Add(Amount{Number: 12345, Unit: u})
+	want := Balance{u: 12345}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
 	}
@@ -87,9 +86,9 @@ func TestBalance_Add_empty_balance(t *testing.T) {
 func TestBalance_Add_existing_balance(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
-	b := Balance{{Number: 10000, Unit: u}}
-	b = b.Add(Amount{Number: 12345, Unit: u})
-	want := Balance{{Number: 22345, Unit: u}}
+	b := Balance{u: 10000}
+	b.Add(Amount{Number: 12345, Unit: u})
+	want := Balance{u: 22345}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
 	}
@@ -100,13 +99,11 @@ func TestBalance_Add_zeroed_accounts(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	b := Balance{
-		{Number: 3200, Unit: u2},
-		{Number: 123, Unit: u},
+		u2: 3200,
+		u:  123,
 	}
-	b = b.Add(Amount{Number: -123, Unit: u})
-	want := Balance{
-		{Number: 3200, Unit: u2},
-	}
+	b.Add(Amount{Number: -123, Unit: u})
+	want := Balance{u2: 3200}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
 	}
@@ -117,12 +114,12 @@ func TestBalance_Equal_ignores_order(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	a := Balance{
-		{Number: 123, Unit: u},
-		{Number: 3200, Unit: u2},
+		u:  123,
+		u2: 3200,
 	}
 	b := Balance{
-		{Number: 3200, Unit: u2},
-		{Number: 123, Unit: u},
+		u:  123,
+		u2: 3200,
 	}
 	if !a.Equal(b) {
 		t.Errorf("a.Equal(b) returned false")
@@ -134,11 +131,11 @@ func TestBalance_Equal_different_length(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	a := Balance{
-		{Number: 3200, Unit: u2},
+		u2: 3200,
 	}
 	b := Balance{
-		{Number: 123, Unit: u},
-		{Number: 3200, Unit: u2},
+		u:  123,
+		u2: 3200,
 	}
 	if a.Equal(b) {
 		t.Errorf("a.Equal(b) returned true")
@@ -153,12 +150,12 @@ func TestBalance_Equal_different_amount(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	a := Balance{
-		{Number: 3200, Unit: u2},
-		{Number: 123, Unit: u},
+		u2: 3200,
+		u:  123,
 	}
 	b := Balance{
-		{Number: 123, Unit: u},
-		{Number: 200, Unit: u2},
+		u:  123,
+		u2: 200,
 	}
 	if a.Equal(b) {
 		t.Errorf("a.Equal(b) returned true")
@@ -170,31 +167,16 @@ func TestBalance_Equal_ignore_zero(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	a := Balance{
-		{Number: 3200, Unit: u2},
-		{Number: 0, Unit: u},
+		u2: 3200,
+		u:  0,
 	}
 	b := Balance{
-		{Number: 3200, Unit: u2},
+		u2: 3200,
 	}
 	if !a.Equal(b) {
 		t.Errorf("a.Equal(b) returned false")
 	}
 	if !b.Equal(a) {
 		t.Errorf("b.Equal(a) returned false")
-	}
-}
-
-func TestBalance_CleanCopy(t *testing.T) {
-	t.Parallel()
-	b := Balance{
-		Amount{Number: 0, Unit: Unit{Symbol: "VTRA", Scale: 1000}},
-		Amount{Number: 3456, Unit: Unit{Symbol: "VTRB", Scale: 1000}},
-	}
-	got := b.CleanCopy()
-	want := Balance{
-		Amount{Number: 3456, Unit: Unit{Symbol: "VTRB", Scale: 1000}},
-	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("b.CleanCopy() = %#v; want %#v", got, want)
 	}
 }

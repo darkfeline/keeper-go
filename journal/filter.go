@@ -20,15 +20,6 @@ import (
 	"cloud.google.com/go/civil"
 )
 
-// entriesStarting returns the entries with dates on or after the given date.
-// The returned slice is sliced from the argument slice.
-func entriesStarting(e []Entry, d civil.Date) []Entry {
-	i := sort.Search(len(e), func(i int) bool {
-		return !e[i].Date().Before(d)
-	})
-	return e[i:]
-}
-
 // entriesEnding returns the entries with dates before or on the given date.
 // The returned slice is sliced from the argument slice.
 func entriesEnding(e []Entry, d civil.Date) []Entry {

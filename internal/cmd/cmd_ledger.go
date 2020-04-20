@@ -60,15 +60,15 @@ type ledgerItem struct {
 }
 
 func (l *ledgerItem) setBalance(b journal.Balance) {
-	switch len(b) {
+	switch a := b.Amounts(); len(a) {
 	default:
 		l.balancex = "(more)"
 		fallthrough
 	case 2:
-		l.balance2 = b[1].String()
+		l.balance2 = a[1].String()
 		fallthrough
 	case 1:
-		l.balance = b[0].String()
+		l.balance = a[0].String()
 	case 0:
 	}
 }

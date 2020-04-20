@@ -44,9 +44,9 @@ var balanceCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		f(os.Stdout, b.Balance, "Assets")
+		f(os.Stdout, b.Balances, "Assets")
 		fmt.Println()
-		f(os.Stdout, b.Balance, "Liabilities")
+		f(os.Stdout, b.Balances, "Liabilities")
 		return nil
 	},
 }
@@ -68,9 +68,9 @@ var incomeCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		f(os.Stdout, b.DiffBalance, "Income")
+		f(os.Stdout, b.Balances, "Income")
 		fmt.Println()
-		f(os.Stdout, b.DiffBalance, "Expenses")
+		f(os.Stdout, b.Balances, "Expenses")
 		return nil
 	},
 }
@@ -92,7 +92,7 @@ var equityCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		f(os.Stdout, b.Balance, "Equity")
+		f(os.Stdout, b.Balances, "Equity")
 		fmt.Println()
 		return nil
 	},
@@ -117,14 +117,14 @@ func formatTbalTab(w io.Writer, m journal.TBalance, root journal.Account) error 
 		balance string
 	}
 	var is []item
-	var total journal.Balance
+	total := make(journal.Balance)
 	for _, a := range accountsUnder(m, root) {
 		is = append(is, item{
 			account: string(a),
 			balance: m[a].String(),
 		})
-		for _, a := range m[a] {
-			total = total.Add(a)
+		for _, a := range m[a].Amounts() {
+			total.Add(a)
 		}
 	}
 	is = append(is, item{
@@ -158,20 +158,29 @@ type balanceItem struct {
 }
 
 func (i *balanceItem) addBalance(b journal.Balance) {
-	switch len(b) {
+	switch a := b.Amounts(); len(a) {
 	case 0:
 	case 1:
-		a := b[0]
+		a := a[0]
 		i.amount = a.Scalar()
 		i.unit = a.Unit.Symbol
 	default:
 		i.extraBalance = b.String()
 	}
+	i.addAmounts(b.Amounts()...)
+}
+
+func (i *balanceItem) addAmounts(a ...journal.Amount) {
+	b := make(journal.Balance)
+	for _, a := range a {
+		b.Add(a)
+	}
+	i.addBalance(b)
 }
 
 func makeBalanceItems(m journal.TBalance, root journal.Account) []balanceItem {
 	var items []balanceItem
-	var total journal.Balance
+	total := make(journal.Balance)
 	rlen := root.Level()
 	_ = walkAccountTree(accountsUnder(m, root), func(n accountNode) error {
 		a := n.Account
@@ -187,13 +196,12 @@ func makeBalanceItems(m journal.TBalance, root journal.Account) []balanceItem {
 		}
 		i.addBalance(b)
 		items = append(items, i)
-		for _, a := range b {
-			total = total.Add(a)
+		for _, a := range b.Amounts() {
+			total.Add(a)
 		}
 		return nil
 	})
-	total = total.CleanCopy()
-	switch len(total) {
+	switch a := total.Amounts(); len(a) {
 	case 0:
 		items = append(items, balanceItem{
 			prefix: "Total",
@@ -208,11 +216,11 @@ func makeBalanceItems(m journal.TBalance, root journal.Account) []balanceItem {
 		i := balanceItem{
 			prefix: "Total",
 		}
-		i.addBalance(journal.Balance{total[0]})
+		i.addAmounts(a[0])
 		items = append(items, i)
-		for _, a := range total[1:] {
+		for _, a := range a[1:] {
 			var i balanceItem
-			i.addBalance(journal.Balance{a})
+			i.addAmounts(a)
 			items = append(items, i)
 		}
 	}

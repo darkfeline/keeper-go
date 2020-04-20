@@ -104,7 +104,7 @@ func (b *builder) buildSingleBalance(n ast.SingleBalance) (BalanceAssert, error)
 	if err != nil {
 		return a, err
 	}
-	a.Declared = a.Declared.Add(amount)
+	a.Declared.Add(amount)
 	return a, nil
 }
 
@@ -119,7 +119,7 @@ func (b *builder) buildMultiBalance(n ast.MultiBalance) (BalanceAssert, error) {
 		if err != nil {
 			return e, err
 		}
-		e.Declared = e.Declared.Add(amount)
+		e.Declared.Add(amount)
 	}
 	return e, nil
 }
@@ -128,7 +128,11 @@ func (b *builder) buildBalanceHeader(n ast.BalanceHeader) (BalanceAssert, error)
 	assertKind(n.Date, token.DATE)
 	assertKind(n.Account, token.ACCOUNT)
 
-	var a BalanceAssert
+	a := BalanceAssert{
+		Declared: make(Balance),
+		// Actual and Diff get set later, so we don't have to
+		// initialize them now.
+	}
 	var err error
 	a.EntryDate, err = civil.ParseDate(n.Date.Value)
 	if err != nil {
@@ -156,7 +160,7 @@ func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
 	t.Description = parseString(n.Description.Value)
 
 	var empty *Split
-	var bal Balance
+	bal := make(Balance)
 	t.Splits = make([]Split, len(n.Splits))
 	for i, n := range n.Splits {
 		n := n.(ast.SplitLine)
@@ -176,21 +180,22 @@ func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
 			return t, err
 		}
 		s.Amount = a
-		bal = bal.Add(a)
+		bal.Add(a)
 	}
-	bal = bal.CleanCopy()
-	if empty != nil {
-		if len(bal) != 1 {
+	switch empty {
+	case nil:
+		if !bal.Empty() {
+			b.errorf(n.Pos(), "transaction doesn't balance (off by %s)", bal)
+			return t, fmt.Errorf("transaction doesn't balance (off by %s)", bal)
+		}
+	default:
+		amounts := bal.Amounts()
+		if len(amounts) != 1 {
 			b.errorf(n.Pos(), "cannot infer missing split amount with balance %s", bal)
 			return t, fmt.Errorf("cannot infer missing split amount with balance %s", bal)
 		}
-		a := bal[0].Neg()
+		a := amounts[0].Neg()
 		empty.Amount = a
-		bal = bal.Add(a).CleanCopy()
-	}
-	if len(bal) != 0 {
-		b.errorf(n.Pos(), "transaction doesn't balance (off by %s)", bal)
-		return t, fmt.Errorf("transaction doesn't balance (off by %s)", bal)
 	}
 	return t, nil
 }
@@ -251,10 +256,15 @@ func (b *builder) addUnit(n ast.UnitDecl) {
 		b.errorf(n.Unit.Pos(), "bad unit %s", unit)
 		return
 	}
-	b.units[unit] = Unit{
+	u := Unit{
 		Symbol: unit,
 		Scale:  scale,
 	}
+	if prev, ok := b.units[unit]; ok && prev != u {
+		b.errorf(n.Unit.Pos(), "unit %s redeclared with different scale", unit)
+		return
+	}
+	b.units[unit] = u
 }
 
 func validateUnit(lit string) (ok bool) {
