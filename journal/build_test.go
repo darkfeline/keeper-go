@@ -42,7 +42,7 @@ end
 			EntryDate: civil.Date{2001, 2, 3},
 			EntryPos:  token.Position{Offset: 13, Line: 2, Column: 1},
 			Account:   "Some:account",
-			Declared:  Balance{{Number: -120, Unit: u}},
+			Declared:  Balance{u: -120},
 		},
 		Transaction{
 			EntryDate:   civil.Date{2001, 2, 3},
