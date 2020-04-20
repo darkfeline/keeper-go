@@ -75,7 +75,7 @@ func endDate() (civil.Date, error) {
 	return d, nil
 }
 
-func compileFile(path string) (*journal.Book, error) {
+func compileFile(path string) (*journal.Journal, error) {
 	src, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func compileFile(path string) (*journal.Book, error) {
 	return compile(src)
 }
 
-func compile(src []byte) (*journal.Book, error) {
+func compile(src []byte) (*journal.Journal, error) {
 	var o []journal.Option
 	d, err := startDate()
 	if err != nil {

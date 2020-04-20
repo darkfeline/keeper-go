@@ -22,8 +22,8 @@ import (
 	"go.felesatra.moe/keeper/kpr/scanner"
 )
 
-// A Book represents accounting information compiled from keeper file source.
-type Book struct {
+// A Journal represents accounting information compiled from keeper file source.
+type Journal struct {
 	// Entries are all of the entries, sorted chronologically.
 	Entries []Entry
 	// AccountEntries are the entries that affect each account.
@@ -33,7 +33,7 @@ type Book struct {
 }
 
 // BalanceErr returns non-nil if the book has balance assertion errors.
-func (b *Book) BalanceErr() error {
+func (b *Journal) BalanceErr() error {
 	var err scanner.ErrorList
 	for _, e := range b.Entries {
 		switch e := e.(type) {
@@ -53,10 +53,10 @@ type Option interface {
 	option()
 }
 
-// Compile compiles keeper file source into a Book.
+// Compile compiles keeper file source into a Journal.
 // Balance assertion errors are not returned here, to enable the
 // caller to inspect the transactions to identify the error.
-func Compile(src []byte, o ...Option) (*Book, error) {
+func Compile(src []byte, o ...Option) (*Journal, error) {
 	e, err := buildEntries(src)
 	if err != nil {
 		return nil, err
@@ -94,10 +94,10 @@ type options struct {
 	ending civil.Date
 }
 
-// compile compiles a Book from entries.
+// compile compiles a Journal from entries.
 // Entries should be sorted.
-func compile(e []Entry) *Book {
-	b := &Book{
+func compile(e []Entry) *Journal {
+	b := &Journal{
 		AccountEntries: make(map[Account][]Entry),
 		Balances:       make(TBalance),
 	}
@@ -107,7 +107,7 @@ func compile(e []Entry) *Book {
 	return b
 }
 
-func (b *Book) compileEntry(e Entry) {
+func (b *Journal) compileEntry(e Entry) {
 	switch e := e.(type) {
 	case Transaction:
 		e.Balances = make(TBalance)
@@ -132,7 +132,7 @@ func (b *Book) compileEntry(e Entry) {
 	}
 }
 
-func (b *Book) addEntry(e Entry) {
+func (b *Journal) addEntry(e Entry) {
 	b.Entries = append(b.Entries, e)
 	switch e := e.(type) {
 	case Transaction:
@@ -151,7 +151,7 @@ func (b *Book) addEntry(e Entry) {
 	}
 }
 
-func (b *Book) addAccountEntry(a Account, e Entry) {
+func (b *Journal) addAccountEntry(a Account, e Entry) {
 	m, k := b.AccountEntries, a
 	m[k] = append(m[k], e)
 }
