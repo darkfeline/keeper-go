@@ -17,6 +17,7 @@ package journal
 
 import (
 	"fmt"
+	"io/ioutil"
 
 	"go.felesatra.moe/keeper/kpr/scanner"
 )
@@ -52,9 +53,10 @@ func (b *Journal) BalanceErr() error {
 // caller to inspect the transactions to identify the error.
 func Compile(o ...Option) (*Journal, error) {
 	opts := makeOptions(o)
-	e, err := buildEntries(opts.inputs...)
+	inputs, err := openInputFiles(opts.inputs)
+	e, err := buildEntries(inputs...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("keeper: %s", err)
 	}
 	sortEntries(e)
 	if d := opts.ending; d.IsValid() {
@@ -62,6 +64,29 @@ func Compile(o ...Option) (*Journal, error) {
 	}
 	b := compile(e)
 	return b, nil
+}
+
+// openInputFiles reads inputFiles and replaces them with their contents.
+func openInputFiles(inputs []input) ([]inputBytes, error) {
+	var ib []inputBytes
+	for _, i := range inputs {
+		switch i := i.(type) {
+		case inputBytes:
+			ib = append(ib, i)
+		case inputFile:
+			src, err := ioutil.ReadFile(i.filename)
+			if err != nil {
+				return nil, err
+			}
+			ib = append(ib, inputBytes{
+				filename: i.filename,
+				src:      src,
+			})
+		default:
+			panic(fmt.Sprintf("unknown type %t", i))
+		}
+	}
+	return ib, nil
 }
 
 // compile compiles a Journal from entries.

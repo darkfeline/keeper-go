@@ -55,6 +55,21 @@ func Bytes(filename string, src []byte) Option {
 	})
 }
 
+type inputFile struct {
+	filename string
+}
+
+func (inputFile) input() {}
+
+// File returns an option that specifies an input file.
+func File(filename string) Option {
+	return optionSetter(func(o *options) {
+		o.inputs = append(o.inputs, inputFile{
+			filename: filename,
+		})
+	})
+}
+
 // Ending returns an option that limits a compiled journal to entries
 // ending on or before the given date.
 func Ending(d civil.Date) Option {
