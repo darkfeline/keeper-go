@@ -18,7 +18,7 @@ import (
 	"strings"
 )
 
-// Amount is an amount of a certain unit, e.g., currency or commodity.
+// An Amount is an amount of a certain unit, e.g., currency or commodity.
 type Amount struct {
 	Number int64
 	Unit   Unit
@@ -95,7 +95,7 @@ func (a Account) Under(parent Account) bool {
 	return strings.HasPrefix(string(a), string(parent)+":")
 }
 
-// Balance represents a balance of amounts of various units.
+// A Balance represents a balance of amounts of various units.
 type Balance map[Unit]int64
 
 // Add adds an amount to the balance.
@@ -160,8 +160,7 @@ func (b Balance) String() string {
 	return strings.Join(s, ", ")
 }
 
-// Balances is a "trial balance" or "total balance", containing the
-// balances of multiple accounts.
+// A Balances maps multiple accounts to their balances.
 type Balances map[Account]Balance
 
 // Add adds an amount to an account, even if the account is not yet in
