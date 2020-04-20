@@ -62,12 +62,24 @@ func Compile(src []byte, o ...Option) (*Journal, error) {
 		return nil, err
 	}
 	sortEntries(e)
-	op := buildOptions(o)
+	op := makeOptions(o)
 	if d := op.ending; d.IsValid() {
 		e = entriesEnding(e, d)
 	}
 	b := compile(e)
 	return b, nil
+}
+
+type options struct {
+	ending civil.Date
+}
+
+func makeOptions(o []Option) options {
+	var op options
+	for _, o := range o {
+		o.(optionSetter)(&op)
+	}
+	return op
 }
 
 // Ending returns an option that limits a compiled book to entries
@@ -78,21 +90,9 @@ func Ending(d civil.Date) Option {
 	})
 }
 
-func buildOptions(o []Option) options {
-	var op options
-	for _, o := range o {
-		o.(optionSetter)(&op)
-	}
-	return op
-}
-
 type optionSetter func(*options)
 
 func (optionSetter) option() {}
-
-type options struct {
-	ending civil.Date
-}
 
 // compile compiles a Journal from entries.
 // Entries should be sorted.
