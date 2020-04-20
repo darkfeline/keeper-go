@@ -18,7 +18,6 @@ package journal
 import (
 	"fmt"
 
-	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/kpr/scanner"
 )
 
@@ -32,7 +31,7 @@ type Journal struct {
 	Balances Balances
 }
 
-// BalanceErr returns non-nil if the book has balance assertion errors.
+// BalanceErr returns non-nil if the journal has balance assertion errors.
 func (b *Journal) BalanceErr() error {
 	var err scanner.ErrorList
 	for _, e := range b.Entries {
@@ -48,51 +47,22 @@ func (b *Journal) BalanceErr() error {
 	return err.Err()
 }
 
-// An Option is passed to Compile to configure compilation.
-type Option interface {
-	option()
-}
-
 // Compile compiles keeper file source into a Journal.
 // Balance assertion errors are not returned here, to enable the
 // caller to inspect the transactions to identify the error.
-func Compile(src []byte, o ...Option) (*Journal, error) {
-	e, err := buildEntries(src)
+func Compile(o ...Option) (*Journal, error) {
+	opts := makeOptions(o)
+	e, err := buildEntries(opts.inputs...)
 	if err != nil {
 		return nil, err
 	}
 	sortEntries(e)
-	op := makeOptions(o)
-	if d := op.ending; d.IsValid() {
+	if d := opts.ending; d.IsValid() {
 		e = entriesEnding(e, d)
 	}
 	b := compile(e)
 	return b, nil
 }
-
-type options struct {
-	ending civil.Date
-}
-
-func makeOptions(o []Option) options {
-	var op options
-	for _, o := range o {
-		o.(optionSetter)(&op)
-	}
-	return op
-}
-
-// Ending returns an option that limits a compiled book to entries
-// ending on the given date.
-func Ending(d civil.Date) Option {
-	return optionSetter(func(o *options) {
-		o.ending = d
-	})
-}
-
-type optionSetter func(*options)
-
-func (optionSetter) option() {}
 
 // compile compiles a Journal from entries.
 // Entries should be sorted.

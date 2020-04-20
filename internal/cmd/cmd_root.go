@@ -20,6 +20,7 @@ import (
 
 	"cloud.google.com/go/civil"
 	"github.com/spf13/cobra"
+
 	"go.felesatra.moe/keeper/journal"
 )
 
@@ -71,7 +72,7 @@ func compileFile(path string) (*journal.Journal, error) {
 }
 
 func compile(src []byte) (*journal.Journal, error) {
-	var o []journal.Option
+	o := []journal.Option{journal.Bytes("", src)}
 	d, err := endDate()
 	if err != nil {
 		return nil, err
@@ -79,5 +80,5 @@ func compile(src []byte) (*journal.Journal, error) {
 	if d.IsValid() {
 		o = append(o, journal.Ending(d))
 	}
-	return journal.Compile(src, o...)
+	return journal.Compile(o...)
 }
