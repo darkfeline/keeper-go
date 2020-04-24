@@ -34,5 +34,6 @@ type baseData struct {
 var indexTemplate = template.Must(baseTemplate.Parse(indexText))
 
 type indexData struct {
+	Title         string // unused
 	BalanceErrors []journal.BalanceAssert
 }

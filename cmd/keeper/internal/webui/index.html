@@ -1,10 +1,30 @@
-{{define "body" -}}
+{{define "head" -}}
+<style>
+  table.balance-errors th {
+      padding-left: 5px;
+      padding-right: 5px;
+      text-align: left;
+  }
+  table.balance-errors td {
+      padding-left: 5px;
+      padding-right: 5px;
+  }
+</style>
+{{end}}
+{{- define "body" -}}
 {{if .BalanceErrors -}}
 <p>Balance errors!</p>
-<table>
+<table class="balance-errors">
+  <colgroup>
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+  </colgroup>
   <thead>
     <tr>
-      <th>Loc</th>
+      <th>Location</th>
       <th>Date</th>
       <th>Account</th>
       <th>Declared</th>
@@ -15,7 +35,7 @@
   <tbody>
     {{- range .BalanceErrors}}
     <tr>
-      <td>{{.Pos}}</td>
+      <td>{{.Position}}</td>
       <td>{{.Date}}</td>
       <td><a href="/reconcile?account={{.Account}}">{{.Account}}</a></td>
       <td>{{.Declared}}</td>
@@ -25,7 +45,7 @@
     {{- end}}
   </tbody>
 </table>
-{{end -}}
+{{else -}}
 <ul>
   <li><a href="/trial">Trial Balance</a></li>
   <li><a href="/income">Income</a></li>
@@ -33,4 +53,5 @@
   <li><a href="/balance">Balance Sheet</a></li>
   <li><a href="/cash">Cash Flow</a></li>
 </ul>
+{{end -}}
 {{- end}}

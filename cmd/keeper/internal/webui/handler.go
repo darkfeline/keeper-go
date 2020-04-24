@@ -41,7 +41,10 @@ func (h handler) handleIndex(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	var b bytes.Buffer
-	if err := indexTemplate.Execute(&b, j); err != nil {
+	d := indexData{
+		BalanceErrors: j.BalanceErrors,
+	}
+	if err := indexTemplate.Execute(&b, d); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
