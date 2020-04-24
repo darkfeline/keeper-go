@@ -36,7 +36,7 @@ var balanceCmd = &cobra.Command{
 	Short: "Print balance sheet",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		b, err := compileFile(args[0])
+		j, err := compileFile(args[0])
 		if err != nil {
 			return err
 		}
@@ -44,9 +44,9 @@ var balanceCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		f(os.Stdout, b.Balances, "Assets")
+		f(os.Stdout, j.Balances, "Assets")
 		fmt.Println()
-		f(os.Stdout, b.Balances, "Liabilities")
+		f(os.Stdout, j.Balances, "Liabilities")
 		return nil
 	},
 }
@@ -60,7 +60,7 @@ var incomeCmd = &cobra.Command{
 	Short: "Print income statement",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		b, err := compileFile(args[0])
+		j, err := compileFile(args[0])
 		if err != nil {
 			return err
 		}
@@ -68,9 +68,9 @@ var incomeCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		f(os.Stdout, b.Balances, "Income")
+		f(os.Stdout, j.Balances, "Income")
 		fmt.Println()
-		f(os.Stdout, b.Balances, "Expenses")
+		f(os.Stdout, j.Balances, "Expenses")
 		return nil
 	},
 }
@@ -84,7 +84,7 @@ var equityCmd = &cobra.Command{
 	Short: "Print equity",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		b, err := compileFile(args[0])
+		j, err := compileFile(args[0])
 		if err != nil {
 			return err
 		}
@@ -92,7 +92,7 @@ var equityCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		f(os.Stdout, b.Balances, "Equity")
+		f(os.Stdout, j.Balances, "Equity")
 		fmt.Println()
 		return nil
 	},

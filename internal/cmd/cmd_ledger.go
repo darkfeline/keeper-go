@@ -33,12 +33,12 @@ var ledgerCmd = &cobra.Command{
 	Short: "Print ledger for account",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		b, err := compileFile(args[0])
+		j, err := compileFile(args[0])
 		if err != nil {
 			return err
 		}
 		a := journal.Account(args[1])
-		items := makeLedgerItems(a, b.AccountEntries[a])
+		items := makeLedgerItems(a, j.AccountEntries[a])
 		f, err := getFormatter(format)
 		if err != nil {
 			return err

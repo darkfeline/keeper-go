@@ -31,12 +31,12 @@ var checkCmd = &cobra.Command{
 	Short: "check file for errors",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		b, err := compileFile(args[0])
+		j, err := compileFile(args[0])
 		if err != nil {
 			return err
 		}
-		if len(b.BalanceErrors) > 0 {
-			for _, e := range b.BalanceErrors {
+		if len(j.BalanceErrors) > 0 {
+			for _, e := range j.BalanceErrors {
 				fmt.Fprintf(os.Stderr, "%s %s %s declared %s, actual %s (diff %s)\n",
 					e.EntryPos, e.EntryDate, e.Account,
 					e.Declared, e.Actual, e.Diff)
