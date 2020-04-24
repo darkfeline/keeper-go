@@ -15,11 +15,11 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
-
-	"go.felesatra.moe/keeper/kpr/scanner"
 )
 
 func init() {
@@ -35,9 +35,13 @@ var checkCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if err := b.BalanceErr(); err != nil {
-			scanner.PrintError(os.Stderr, err)
-			return err
+		if len(b.BalanceErrors) > 0 {
+			for _, e := range b.BalanceErrors {
+				fmt.Fprintf(os.Stderr, "%s %s %s declared %s, actual %s (diff %s)\n",
+					e.EntryPos, e.EntryDate, e.Account,
+					e.Declared, e.Actual, e.Diff)
+			}
+			return errors.New("journal has balance errors")
 		}
 		return nil
 	},

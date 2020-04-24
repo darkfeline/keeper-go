@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-
-	"go.felesatra.moe/keeper/kpr/scanner"
 )
 
 // A Journal represents accounting information compiled from keeper file source.
@@ -31,22 +29,8 @@ type Journal struct {
 	AccountEntries map[Account][]Entry
 	// Balances is the final balance for all accounts.
 	Balances Balances
-}
-
-// BalanceErr returns non-nil if the journal has balance assertion errors.
-func (b *Journal) BalanceErr() error {
-	var err scanner.ErrorList
-	for _, e := range b.Entries {
-		switch e := e.(type) {
-		case BalanceAssert:
-			if !e.Diff.Empty() {
-				msg := fmt.Sprintf("balance for %s declared to be %s, but was %s (diff %s)",
-					e.Account, e.Declared, e.Actual, e.Diff)
-				err.Add(e.EntryPos, msg)
-			}
-		}
-	}
-	return err.Err()
+	// BalanceErrors contains the balance assertion entries that failed.
+	BalanceErrors []BalanceAssert
 }
 
 // Compile compiles keeper file source into a Journal.
@@ -142,6 +126,9 @@ func (b *Journal) addEntry(e Entry) {
 		}
 	case BalanceAssert:
 		b.addAccountEntry(e.Account, e)
+		if !e.Diff.Empty() {
+			b.BalanceErrors = append(b.BalanceErrors, e)
+		}
 	default:
 		panic(fmt.Sprintf("unknown Entry type %T", e))
 	}
