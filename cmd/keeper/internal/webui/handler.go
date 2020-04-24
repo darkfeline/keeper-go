@@ -56,6 +56,7 @@ func (h handler) handleReconcile(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
+	panic("Not implemented")
 	j, err := h.compile()
 	if err != nil {
 		http.Error(w, err.Error(), 500)

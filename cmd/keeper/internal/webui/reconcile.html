@@ -1,0 +1,28 @@
+{{define "head" -}}
+<style>
+</style>
+{{end}}
+{{- define "body" -}}
+<table>
+  <thead>
+    <tr>
+      <th>Location</th>
+      <th>Date</th>
+      <th>Description</th>
+      <th>Amount</th>
+      <th>Balance</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{- range .Entries}}
+    <tr>
+      <td>{{.Position}}</td>
+      <td>{{.Date}}</td>
+      <td>{{.Description}}</td>
+      <td>{{.Amount}}</td>
+      <td>{{.Balance}}</td>
+      <tr>
+    {{- end}}
+  </tbody>
+</table>
+{{end}}

@@ -1,27 +1,7 @@
-{{define "head" -}}
-<style>
-  table.balance-errors th {
-      padding-left: 5px;
-      padding-right: 5px;
-      text-align: left;
-  }
-  table.balance-errors td {
-      padding-left: 5px;
-      padding-right: 5px;
-  }
-</style>
-{{end}}
 {{- define "body" -}}
 {{if .BalanceErrors -}}
 <p>Balance errors!</p>
-<table class="balance-errors">
-  <colgroup>
-    <col>
-    <col>
-    <col>
-    <col>
-    <col>
-  </colgroup>
+<table>
   <thead>
     <tr>
       <th>Location</th>
