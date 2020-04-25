@@ -17,7 +17,7 @@
     <tr>
       <td>{{.Position}}</td>
       <td>{{.Date}}</td>
-      <td><a href="/reconcile?account={{.Account}}">{{.Account}}</a></td>
+      <td><a href="/ledger?account={{.Account}}">{{.Account}}</a></td>
       <td>{{.Declared}}</td>
       <td>{{.Actual}}</td>
       <td>{{.Diff}}</td>
@@ -27,6 +27,7 @@
 </table>
 {{else -}}
 <ul>
+  <li><a href="/accounts">Accounts</a></li>
   <li><a href="/trial">Trial Balance</a></li>
   <li><a href="/income">Income</a></li>
   <li><a href="/capital">Capital</a></li>

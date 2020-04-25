@@ -26,7 +26,7 @@ func NewHandler(o []journal.Option) http.Handler {
 	h := handler{o}
 	m := http.NewServeMux()
 	m.HandleFunc("/", h.handleIndex)
-	m.HandleFunc("/reconcile", h.handleReconcile)
+	m.HandleFunc("/ledger", h.handleLedger)
 	m.HandleFunc("/trial", h.handleTrial)
 	return m
 }
@@ -47,18 +47,18 @@ func (h handler) handleIndex(w http.ResponseWriter, req *http.Request) {
 	execute(w, indexTemplate, d)
 }
 
-func (h handler) handleReconcile(w http.ResponseWriter, req *http.Request) {
+func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 	account := getQueryAccount(req)
 	j, err := h.compile()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	d := reconcileData{Account: account}
+	d := ledgerData{Account: account}
 	for _, e := range j.AccountEntries[account] {
 		d.Entries = append(d.Entries, convertEntry(e, account)...)
 	}
-	execute(w, reconcileTemplate, d)
+	execute(w, ledgerTemplate, d)
 }
 
 func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {

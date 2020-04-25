@@ -39,11 +39,21 @@ type indexData struct {
 	BalanceErrors []journal.BalanceAssert
 }
 
-//go:generate binpack -name reconcileText reconcile.html
+//go:generate binpack -name ledgerText ledger.html
 
-var reconcileTemplate = template.Must(clone(baseTemplate).Parse(reconcileText))
+var ledgerTemplate = template.Must(clone(baseTemplate).Parse(ledgerText))
 
-type reconcileData struct {
+type ledgerData struct {
+	Title   string // unused
+	Account journal.Account
+	Entries []ledgerEntry
+}
+
+//go:generate binpack -name trialText trial.html
+
+var trialTemplate = template.Must(clone(baseTemplate).Parse(trialText))
+
+type trialData struct {
 	Title   string // unused
 	Account journal.Account
 	Entries []ledgerEntry
