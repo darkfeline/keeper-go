@@ -169,7 +169,6 @@ func convertTransaction(e journal.Transaction, a journal.Account) []ledgerRow {
 		return entries
 	}
 	amts := e.Balances[a].Amounts()
-	sort.Slice(amts, func(i, j int) bool { return amts[i].Unit.Symbol < amts[j].Unit.Symbol })
 	if len(amts) == 0 {
 		return entries
 	}

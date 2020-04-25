@@ -15,6 +15,7 @@
 package journal
 
 import (
+	"sort"
 	"strings"
 )
 
@@ -124,6 +125,7 @@ func (b Balance) Amount(u Unit) Amount {
 }
 
 // Amounts returns the amounts in the balance.
+// The amounts are sorted by unit.
 func (b Balance) Amounts() []Amount {
 	var a []Amount
 	for u, n := range b {
@@ -131,6 +133,7 @@ func (b Balance) Amounts() []Amount {
 			a = append(a, Amount{Unit: u, Number: n})
 		}
 	}
+	sort.Slice(a, func(i, j int) bool { return a[i].Unit.Symbol < a[j].Unit.Symbol })
 	return a
 }
 
