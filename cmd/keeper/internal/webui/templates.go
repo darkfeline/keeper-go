@@ -57,7 +57,7 @@ var trialTemplate = template.Must(clone(baseTemplate).Parse(trialText))
 
 type trialData struct {
 	Account journal.Account
-	Entries []ledgerEntry
+	Entries []ledgerRow
 }
 
 func (trialData) Title() string { return "Trial Balance" }
@@ -68,35 +68,35 @@ var ledgerTemplate = template.Must(clone(baseTemplate).Parse(ledgerText))
 
 type ledgerData struct {
 	Account journal.Account
-	Entries []ledgerEntry
+	Entries []ledgerRow
 }
 
 func (d ledgerData) Title() string {
 	return fmt.Sprintf("Ledger for %s", d.Account)
 }
 
-type ledgerEntry struct {
+type ledgerRow struct {
 	Entry       journal.Entry
 	Description string
 	Amount      journal.Amount
 	Balance     journal.Amount
 }
 
-func (e ledgerEntry) Position() string {
+func (e ledgerRow) Position() string {
 	if e.Entry == nil {
 		return ""
 	}
 	return e.Entry.Position().String()
 }
 
-func (e ledgerEntry) Date() string {
+func (e ledgerRow) Date() string {
 	if e.Entry == nil {
 		return ""
 	}
 	return e.Entry.Date().String()
 }
 
-func convertEntry(e journal.Entry, a journal.Account) []ledgerEntry {
+func convertEntry(e journal.Entry, a journal.Account) []ledgerRow {
 	switch e := e.(type) {
 	case journal.Transaction:
 		return convertTransaction(e, a)
@@ -107,11 +107,11 @@ func convertEntry(e journal.Entry, a journal.Account) []ledgerEntry {
 	}
 }
 
-func convertBalance(e journal.BalanceAssert) []ledgerEntry {
+func convertBalance(e journal.BalanceAssert) []ledgerRow {
 	units := balanceUnits(e)
-	var entries []ledgerEntry
+	var entries []ledgerRow
 	for _, u := range units {
-		le := ledgerEntry{
+		le := ledgerRow{
 			Entry:   e,
 			Balance: e.Actual.Amount(u),
 		}
@@ -148,14 +148,14 @@ func balanceUnits(e journal.BalanceAssert) []journal.Unit {
 	return units
 }
 
-func convertTransaction(e journal.Transaction, a journal.Account) []ledgerEntry {
-	var entries []ledgerEntry
+func convertTransaction(e journal.Transaction, a journal.Account) []ledgerRow {
+	var entries []ledgerRow
 	first := true
 	for _, s := range e.Splits {
 		if s.Account != a {
 			continue
 		}
-		le := ledgerEntry{
+		le := ledgerRow{
 			Amount: s.Amount,
 		}
 		if first {
@@ -175,7 +175,7 @@ func convertTransaction(e journal.Transaction, a journal.Account) []ledgerEntry 
 	}
 	entries[len(entries)-1].Balance = amts[0]
 	for _, a := range amts[1:] {
-		le := ledgerEntry{
+		le := ledgerRow{
 			Balance: a,
 		}
 		entries = append(entries, le)
