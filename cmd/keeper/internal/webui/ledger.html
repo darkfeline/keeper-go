@@ -10,9 +10,9 @@
 <table>
   <thead>
     <tr>
-      <th>Ref</th>
       <th>Date</th>
       <th>Description</th>
+      <th>Ref</th>
       <th>Debit</th>
       <th>Credit</th>
       <th>Balance</th>
@@ -21,9 +21,9 @@
   <tbody>
     {{- range .Entries}}
     <tr>
-      <td>{{.Position}}</td>
       <td>{{.Date}}</td>
       <td>{{.Description}}</td>
+      <td>{{.Position}}</td>
       {{- if eq .Amount.Number 0}}
       <td></td>
       <td></td>
