@@ -124,6 +124,11 @@ func (b Balance) Empty() bool {
 	return true
 }
 
+// Amount returns the amount of the given unit in the balance.
+func (b Balance) Amount(u Unit) Amount {
+	return Amount{Number: b[u], Unit: u}
+}
+
 // Amounts returns the amounts in the balance.
 func (b Balance) Amounts() []Amount {
 	var a []Amount
