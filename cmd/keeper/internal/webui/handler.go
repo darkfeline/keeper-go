@@ -74,24 +74,8 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	d := trialData{}
-	dr, cr := make(journal.Balance), make(journal.Balance)
-	for _, a := range journalAccounts(j) {
-		for i, amt := range j.Balances[a].Amounts() {
-			e := balanceRow{}
-			if amt.Number > 0 {
-				e.DebitBal = amt
-				dr.Add(amt)
-			} else {
-				e.CreditBal = amt
-				cr.Add(amt)
-			}
-			if i == 0 {
-				e.Account = a
-			}
-			d.Entries = append(d.Entries, e)
-		}
-	}
+	r, dr, cr := makeBalanceRows(journalAccounts(j), j.Balances)
+	d := trialData{Entries: r}
 	for i, u := range balanceUnits(dr, cr) {
 		e := balanceRow{
 			DebitBal:  dr.Amount(u),

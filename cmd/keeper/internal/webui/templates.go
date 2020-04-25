@@ -68,6 +68,27 @@ type balanceRow struct {
 	CreditBal journal.Amount
 }
 
+func makeBalanceRows(a []journal.Account, b journal.Balances) (r []balanceRow, dr, cr journal.Balance) {
+	dr, cr = make(journal.Balance), make(journal.Balance)
+	for _, a := range a {
+		for i, amt := range b[a].Amounts() {
+			e := balanceRow{}
+			if amt.Number > 0 {
+				e.DebitBal = amt
+				dr.Add(amt)
+			} else {
+				e.CreditBal = amt
+				cr.Add(amt)
+			}
+			if i == 0 {
+				e.Account = a
+			}
+			r = append(r, e)
+		}
+	}
+	return r, dr, cr
+}
+
 //go:generate binpack -name ledgerText ledger.html
 
 var ledgerTemplate = template.Must(clone(baseTemplate).Parse(ledgerText))
