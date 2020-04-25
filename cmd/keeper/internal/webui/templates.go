@@ -35,18 +35,43 @@ type baseData struct {
 var indexTemplate = template.Must(clone(baseTemplate).Parse(indexText))
 
 type indexData struct {
-	Title         string // unused
 	BalanceErrors []journal.BalanceAssert
 }
+
+func (indexData) Title() string { return "" }
+
+//go:generate binpack -name accountsText accounts.html
+
+var accountsTemplate = template.Must(clone(baseTemplate).Parse(accountsText))
+
+type accountsData struct {
+	AccountTree *accountTree
+}
+
+func (accountsData) Title() string { return "Accounts" }
+
+//go:generate binpack -name trialText trial.html
+
+var trialTemplate = template.Must(clone(baseTemplate).Parse(trialText))
+
+type trialData struct {
+	Account journal.Account
+	Entries []ledgerEntry
+}
+
+func (trialData) Title() string { return "Trial Balance" }
 
 //go:generate binpack -name ledgerText ledger.html
 
 var ledgerTemplate = template.Must(clone(baseTemplate).Parse(ledgerText))
 
 type ledgerData struct {
-	Title   string // unused
 	Account journal.Account
 	Entries []ledgerEntry
+}
+
+func (d ledgerData) Title() string {
+	return fmt.Sprintf("Ledger for %s", d.Account)
 }
 
 type ledgerEntry struct {
@@ -95,16 +120,6 @@ func convertTransaction(e journal.Transaction, a journal.Account) []ledgerEntry 
 	}
 	entries[len(entries)-1].Balance = e.Balances[a]
 	return entries
-}
-
-//go:generate binpack -name trialText trial.html
-
-var trialTemplate = template.Must(clone(baseTemplate).Parse(trialText))
-
-type trialData struct {
-	Title   string // unused
-	Account journal.Account
-	Entries []ledgerEntry
 }
 
 func clone(t *template.Template) *template.Template {

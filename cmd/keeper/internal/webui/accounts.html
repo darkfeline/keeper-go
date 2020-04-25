@@ -1,0 +1,19 @@
+{{define "account tree" -}}
+{{if .Virtual -}}
+{{.Account}}
+{{else -}}
+<a href="/ledger?account={{.Account}}">{{.Account}}</a>
+{{end}}
+{{- if .Children}}
+<ul>
+  {{- range .Children}}
+  <li>{{template "account tree" .}}</li>
+  {{- end}}
+</ul>
+{{- end}}
+{{end}}
+
+{{- define "body" -}}
+<h1>Accounts</h1>
+{{template "account tree" .AccountTree}}
+{{- end}}

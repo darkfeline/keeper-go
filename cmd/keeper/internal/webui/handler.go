@@ -26,8 +26,9 @@ func NewHandler(o []journal.Option) http.Handler {
 	h := handler{o}
 	m := http.NewServeMux()
 	m.HandleFunc("/", h.handleIndex)
-	m.HandleFunc("/ledger", h.handleLedger)
+	m.HandleFunc("/accounts", h.handleAccounts)
 	m.HandleFunc("/trial", h.handleTrial)
+	m.HandleFunc("/ledger", h.handleLedger)
 	return m
 }
 
@@ -47,6 +48,22 @@ func (h handler) handleIndex(w http.ResponseWriter, req *http.Request) {
 	execute(w, indexTemplate, d)
 }
 
+func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
+	j, err := h.compile()
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	d := accountsData{
+		AccountTree: journalAccountTree(j),
+	}
+	execute(w, accountsTemplate, d)
+}
+
+func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
+	panic("Not implemented")
+}
+
 func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 	account := getQueryAccount(req)
 	j, err := h.compile()
@@ -59,10 +76,6 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 		d.Entries = append(d.Entries, convertEntry(e, account)...)
 	}
 	execute(w, ledgerTemplate, d)
-}
-
-func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
-	panic("Not implemented")
 }
 
 func (h handler) compile() (*journal.Journal, error) {
