@@ -56,7 +56,9 @@ func ExampleAccount_Leaf() {
 func ExampleAccount_Under() {
 	fmt.Println(Account("Assets:Cash").Under("Assets"))
 	fmt.Println(Account("Assets:Cash:Wallet").Under("Assets"))
+	fmt.Println(Account("Assets:Cash").Under(""))
 	// Output:
+	// true
 	// true
 	// true
 }

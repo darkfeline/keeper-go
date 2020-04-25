@@ -92,6 +92,9 @@ func (a Account) Leaf() string {
 
 // Under returns true if the Account is a child account of the argument.
 func (a Account) Under(parent Account) bool {
+	if parent == "" {
+		return true
+	}
 	return strings.HasPrefix(string(a), string(parent)+":")
 }
 
