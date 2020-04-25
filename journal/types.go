@@ -86,6 +86,9 @@ func (a Account) Parent() Account {
 
 // Leaf returns the leaf part of the Account (after the last colon).
 func (a Account) Leaf() string {
+	if a == "" {
+		return ""
+	}
 	p := a.Parts()
 	return p[len(p)-1]
 }
