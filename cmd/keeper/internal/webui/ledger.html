@@ -29,14 +29,14 @@
       <td></td>
       <td></td>
       {{else if gt .Amount.Number 0}}
-      <td>{{.Amount}}</td>
+      <td class="amount">{{.Amount}}</td>
       <td></td>
       {{else}}
       <td></td>
-      <td>{{.Amount}}</td>
+      <td class="amount">{{.Amount}}</td>
       {{- end}}
       {{- if .Balance.Unit.Symbol}}
-      <td>{{.Balance}}</td>
+      <td class="amount">{{.Balance}}</td>
       {{else}}
       <td></td>
       {{- end}}
