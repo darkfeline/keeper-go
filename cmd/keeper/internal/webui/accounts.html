@@ -1,8 +1,8 @@
 {{define "account tree" -}}
 {{if .Virtual -}}
-{{.Account}}
+{{.Account.Leaf}}
 {{else -}}
-<a href="/ledger?account={{.Account}}">{{.Account}}</a>
+<a href="/ledger?account={{.Account}}">{{.Account.Leaf}}</a>
 {{end}}
 {{- if .Children}}
 <ul>

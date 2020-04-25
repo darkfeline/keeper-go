@@ -2,4 +2,4 @@
 
 package webui
 
-const accountsText = "{{define \"account tree\" -}}\n{{if .Virtual -}}\n{{.Account}}\n{{else -}}\n<a href=\"/ledger?account={{.Account}}\">{{.Account}}</a>\n{{end}}\n{{- if .Children}}\n<ul>\n  {{- range .Children}}\n  <li>{{template \"account tree\" .}}</li>\n  {{- end}}\n</ul>\n{{- end}}\n{{end}}\n\n{{- define \"body\" -}}\n<h1>Accounts</h1>\n{{template \"account tree\" .AccountTree}}\n{{- end}}\n"
+const accountsText = "{{define \"account tree\" -}}\n{{if .Virtual -}}\n{{.Account.Leaf}}\n{{else -}}\n<a href=\"/ledger?account={{.Account}}\">{{.Account.Leaf}}</a>\n{{end}}\n{{- if .Children}}\n<ul>\n  {{- range .Children}}\n  <li>{{template \"account tree\" .}}</li>\n  {{- end}}\n</ul>\n{{- end}}\n{{end}}\n\n{{- define \"body\" -}}\n<h1>Accounts</h1>\n{{template \"account tree\" .AccountTree}}\n{{- end}}\n"
