@@ -63,30 +63,54 @@ type trialData struct {
 func (trialData) Title() string { return "Trial Balance" }
 
 type balanceRow struct {
-	Account   journal.Account
+	Account   string
 	DebitBal  journal.Amount
 	CreditBal journal.Amount
 }
 
-func makeBalanceRows(a []journal.Account, b journal.Balances) (r []balanceRow, dr, cr journal.Balance) {
-	dr, cr = make(journal.Balance), make(journal.Balance)
+type totalBalance struct {
+	Debit  journal.Balance
+	Credit journal.Balance
+}
+
+func (t totalBalance) Rows(name string) []balanceRow {
+	var r []balanceRow
+	for i, u := range balanceUnits(t.Debit, t.Credit) {
+		e := balanceRow{
+			DebitBal:  t.Debit.Amount(u),
+			CreditBal: t.Credit.Amount(u),
+		}
+		if i == 0 {
+			e.Account = name
+		}
+		r = append(r, e)
+	}
+	return r
+}
+
+func makeBalanceRows(a []journal.Account, b journal.Balances) ([]balanceRow, totalBalance) {
+	t := totalBalance{
+		Debit:  make(journal.Balance),
+		Credit: make(journal.Balance),
+	}
+	var r []balanceRow
 	for _, a := range a {
 		for i, amt := range b[a].Amounts() {
 			e := balanceRow{}
 			if amt.Number > 0 {
 				e.DebitBal = amt
-				dr.Add(amt)
+				t.Debit.Add(amt)
 			} else {
 				e.CreditBal = amt
-				cr.Add(amt)
+				t.Credit.Add(amt)
 			}
 			if i == 0 {
-				e.Account = a
+				e.Account = string(a)
 			}
 			r = append(r, e)
 		}
 	}
-	return r, dr, cr
+	return r, t
 }
 
 //go:generate binpack -name ledgerText ledger.html
