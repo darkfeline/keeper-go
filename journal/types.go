@@ -69,12 +69,6 @@ func (a Account) Parts() []string {
 	return strings.Split(string(a), ":")
 }
 
-// Level returns the nesting level of the account, which is equivalent
-// to the number of parts.
-func (a Account) Level() int {
-	return len(a.Parts())
-}
-
 // Parent returns the parent account.
 func (a Account) Parent() Account {
 	p := a.Parts()
