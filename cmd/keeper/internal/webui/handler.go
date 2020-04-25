@@ -18,6 +18,8 @@ import (
 	"bytes"
 	"html/template"
 	"net/http"
+	"strings"
+	"time"
 
 	"go.felesatra.moe/keeper/journal"
 )
@@ -26,6 +28,7 @@ func NewHandler(o []journal.Option) http.Handler {
 	h := handler{o}
 	m := http.NewServeMux()
 	m.HandleFunc("/", h.handleIndex)
+	m.HandleFunc("/style.css", h.handleStyle)
 	m.HandleFunc("/accounts", h.handleAccounts)
 	m.HandleFunc("/trial", h.handleTrial)
 	m.HandleFunc("/ledger", h.handleLedger)
@@ -58,6 +61,10 @@ func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
 		AccountTree: journalAccountTree(j),
 	}
 	execute(w, accountsTemplate, d)
+}
+
+func (h handler) handleStyle(w http.ResponseWriter, req *http.Request) {
+	http.ServeContent(w, req, "style.css", time.Time{}, strings.NewReader(styleText))
 }
 
 func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {

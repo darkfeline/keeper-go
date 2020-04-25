@@ -23,6 +23,7 @@ import (
 )
 
 //go:generate binpack -name baseText base.html
+//go:generate binpack -name styleText style.css
 
 var baseTemplate = template.Must(template.New("base").Parse(baseText))
 

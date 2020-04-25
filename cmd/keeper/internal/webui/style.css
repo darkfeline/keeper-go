@@ -1,0 +1,40 @@
+nav.sitenav {
+    display: flex;
+    align-items: center;
+}
+nav.sitenav a {
+    text-decoration: none;
+    color: inherit;
+}
+nav.sitenav h1 {
+    margin: 0;
+}
+nav.sitenav ul {
+    display: flex;
+    padding-left: 10px;
+    margin: 0;
+}
+nav.sitenav ul > li {
+    padding-left: 10px;
+    padding-right: 10px;
+    list-style-type: none;
+}
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+th, td {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+th {
+    text-align: left;
+}
+
+tr.section {
+    border-top: 2px solid black;
+}
+td.amount {
+    text-align: right;
+}

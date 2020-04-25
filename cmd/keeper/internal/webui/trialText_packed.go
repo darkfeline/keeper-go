@@ -2,4 +2,4 @@
 
 package webui
 
-const trialText = "{{define \"head\" -}}\n<style>\n</style>\n{{end}}\n\n{{- define \"body\" -}}\n<h1>Trial Balance</h1>\n<table>\n  <thead>\n    <tr>\n      <th>Account</th>\n      <th>Debit Bal</th>\n      <th>Credit Bal</th>\n    </tr>\n  </thead>\n  <tbody>\n    {{- range .Entries}}\n    <tr{{if .Account}} class=\"section\"{{end}}>\n      <td>{{.Account}}</td>\n\n      <td class=\"amount\">{{if .DebitBal.Unit.Symbol}}{{.DebitBal}}{{end}}</td>\n      <td class=\"amount\">{{if .CreditBal.Unit.Symbol}}{{.CreditBal}}{{end}}</td>\n      <tr>\n    {{- end}}\n  </tbody>\n</table>\n{{- end}}\n"
+const trialText = "{{- define \"body\" -}}\n<h1>Trial Balance</h1>\n<table>\n  <thead>\n    <tr>\n      <th>Account</th>\n      <th>Debit Bal</th>\n      <th>Credit Bal</th>\n    </tr>\n  </thead>\n  <tbody>\n    {{- range .Entries}}\n    <tr{{if .Account}} class=\"section\"{{end}}>\n      <td>{{.Account}}</td>\n\n      <td class=\"amount\">{{if .DebitBal.Unit.Symbol}}{{.DebitBal}}{{end}}</td>\n      <td class=\"amount\">{{if .CreditBal.Unit.Symbol}}{{.CreditBal}}{{end}}</td>\n      <tr>\n    {{- end}}\n  </tbody>\n</table>\n{{- end}}\n"
