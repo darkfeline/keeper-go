@@ -16,6 +16,7 @@ package webui
 
 import (
 	"bytes"
+	"html/template"
 	"net/http"
 
 	"go.felesatra.moe/keeper/journal"
@@ -40,38 +41,47 @@ func (h handler) handleIndex(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	var b bytes.Buffer
 	d := indexData{
 		BalanceErrors: j.BalanceErrors,
 	}
-	if err := indexTemplate.Execute(&b, d); err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-	w.Write(b.Bytes())
+	execute(w, indexTemplate, d)
 }
 
 func (h handler) handleReconcile(w http.ResponseWriter, req *http.Request) {
-	panic("Not implemented")
-}
-
-func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
-	panic("Not implemented")
+	account := getQueryAccount(req)
 	j, err := h.compile()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	_ = j
-	// XXXXXXXXXXXXXXXXXXXXX
-	var b bytes.Buffer
-	if err := indexTemplate.Execute(&b, nil); err != nil {
-		http.Error(w, err.Error(), 500)
-		return
+	d := reconcileData{Account: account}
+	for _, e := range j.AccountEntries[account] {
+		d.Entries = append(d.Entries, convertEntry(e, account)...)
 	}
-	w.Write(b.Bytes())
+	execute(w, reconcileTemplate, d)
+}
+
+func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
+	panic("Not implemented")
 }
 
 func (h handler) compile() (*journal.Journal, error) {
 	return journal.Compile(h.o...)
+}
+
+func getQueryAccount(req *http.Request) journal.Account {
+	v := req.URL.Query()["account"]
+	if len(v) == 0 {
+		return ""
+	}
+	return journal.Account(v[0])
+}
+
+func execute(w http.ResponseWriter, t *template.Template, data interface{}) {
+	var b bytes.Buffer
+	if err := t.Execute(&b, data); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.Write(b.Bytes())
 }

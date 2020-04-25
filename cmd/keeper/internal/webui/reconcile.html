@@ -3,13 +3,18 @@
 </style>
 {{end}}
 {{- define "body" -}}
+<h1>Reconcile {{.Account}}</h1>
+{{if not .Account -}}
+<p>Missing account query!</p>
+{{else -}}
 <table>
   <thead>
     <tr>
-      <th>Location</th>
+      <th>Ref</th>
       <th>Date</th>
       <th>Description</th>
-      <th>Amount</th>
+      <th>Debit</th>
+      <th>Credit</th>
       <th>Balance</th>
     </tr>
   </thead>
@@ -19,10 +24,20 @@
       <td>{{.Position}}</td>
       <td>{{.Date}}</td>
       <td>{{.Description}}</td>
+      {{- if eq .Amount.Number 0}}
+      <td></td>
+      <td></td>
+      {{else if gt .Amount.Number 0}}
       <td>{{.Amount}}</td>
+      <td></td>
+      {{else}}
+      <td></td>
+      <td>{{.Amount}}</td>
+      {{- end}}
       <td>{{.Balance}}</td>
       <tr>
     {{- end}}
   </tbody>
 </table>
 {{end}}
+{{- end}}

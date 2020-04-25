@@ -15,6 +15,7 @@
 package webui
 
 import (
+	"fmt"
 	"html/template"
 
 	"go.felesatra.moe/keeper/journal"
@@ -44,11 +45,56 @@ var reconcileTemplate = template.Must(clone(baseTemplate).Parse(reconcileText))
 
 type reconcileData struct {
 	Title   string // unused
+	Account journal.Account
 	Entries []ledgerEntry
 }
 
 type ledgerEntry struct {
 	journal.Entry
+	Description string
+	Amount      journal.Amount
+	Balance     journal.Balance
+}
+
+func convertEntry(e journal.Entry, a journal.Account) []ledgerEntry {
+	switch e := e.(type) {
+	case journal.Transaction:
+		return convertTransaction(e, a)
+	case journal.BalanceAssert:
+		le := ledgerEntry{
+			Entry:   e,
+			Balance: e.Actual,
+		}
+		if e.Diff.Empty() {
+			le.Description = "(balance)"
+		} else {
+			le.Description = fmt.Sprintf("(balance error, declared %s, diff %s)",
+				e.Declared, e.Actual)
+		}
+		return []ledgerEntry{le}
+	default:
+		panic(fmt.Sprintf("unknown entry %t", e))
+	}
+}
+
+func convertTransaction(e journal.Transaction, a journal.Account) []ledgerEntry {
+	var entries []ledgerEntry
+	for _, s := range e.Splits {
+		if s.Account != a {
+			continue
+		}
+		le := ledgerEntry{
+			Entry:       e,
+			Description: e.Description,
+			Amount:      s.Amount,
+		}
+		entries = append(entries, le)
+	}
+	if len(entries) == 0 {
+		return entries
+	}
+	entries[len(entries)-1].Balance = e.Balances[a]
+	return entries
 }
 
 func clone(t *template.Template) *template.Template {
