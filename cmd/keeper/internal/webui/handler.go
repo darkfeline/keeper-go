@@ -31,6 +31,7 @@ func NewHandler(o []journal.Option) http.Handler {
 	m.HandleFunc("/style.css", h.handleStyle)
 	m.HandleFunc("/accounts", h.handleAccounts)
 	m.HandleFunc("/trial", h.handleTrial)
+	m.HandleFunc("/income", h.handleIncome)
 	m.HandleFunc("/ledger", h.handleLedger)
 	return m
 }
@@ -102,6 +103,10 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 		d.Entries = append(d.Entries, e)
 	}
 	execute(w, trialTemplate, d)
+}
+
+func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
+	panic("Not implemented")
 }
 
 func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
