@@ -56,11 +56,16 @@ func (accountsData) Title() string { return "Accounts" }
 var trialTemplate = template.Must(clone(baseTemplate).Parse(trialText))
 
 type trialData struct {
-	Account journal.Account
-	Entries []ledgerRow
+	Entries []balanceRow
 }
 
 func (trialData) Title() string { return "Trial Balance" }
+
+type balanceRow struct {
+	Account   journal.Account
+	DebitBal  journal.Amount
+	CreditBal journal.Amount
+}
 
 //go:generate binpack -name ledgerText ledger.html
 

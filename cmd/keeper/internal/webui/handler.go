@@ -61,7 +61,40 @@ func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
-	panic("Not implemented")
+	j, err := h.compile()
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	d := trialData{}
+	dr, cr := make(journal.Balance), make(journal.Balance)
+	for _, a := range journalAccounts(j) {
+		for i, amt := range j.Balances[a].Amounts() {
+			e := balanceRow{}
+			if amt.Number > 0 {
+				e.DebitBal = amt
+				dr.Add(amt)
+			} else {
+				e.CreditBal = amt
+				cr.Add(amt)
+			}
+			if i == 0 {
+				e.Account = a
+			}
+			d.Entries = append(d.Entries, e)
+		}
+	}
+	for i, u := range balanceUnits(dr, cr) {
+		e := balanceRow{
+			DebitBal:  dr.Amount(u),
+			CreditBal: cr.Amount(u),
+		}
+		if i == 0 {
+			e.Account = "Total"
+		}
+		d.Entries = append(d.Entries, e)
+	}
+	execute(w, trialTemplate, d)
 }
 
 func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {

@@ -4,41 +4,24 @@
 {{end}}
 
 {{- define "body" -}}
-<h1>Reconcile {{.Account}}</h1>
-{{if not .Account -}}
-<p>Missing account query!</p>
-{{else -}}
+<h1>Trial Balance</h1>
 <table>
   <thead>
     <tr>
-      <th>Ref</th>
-      <th>Date</th>
-      <th>Description</th>
-      <th>Debit</th>
-      <th>Credit</th>
-      <th>Balance</th>
+      <th>Account</th>
+      <th>Debit Bal</th>
+      <th>Credit Bal</th>
     </tr>
   </thead>
   <tbody>
     {{- range .Entries}}
-    <tr>
-      <td>{{.Position}}</td>
-      <td>{{.Date}}</td>
-      <td>{{.Description}}</td>
-      {{- if eq .Amount.Number 0}}
-      <td></td>
-      <td></td>
-      {{else if gt .Amount.Number 0}}
-      <td>{{.Amount}}</td>
-      <td></td>
-      {{else}}
-      <td></td>
-      <td>{{.Amount}}</td>
-      {{- end}}
-      <td>{{.Balance}}</td>
+    <tr{{if .Account}} class="section"{{end}}>
+      <td>{{.Account}}</td>
+
+      <td class="amount">{{if .DebitBal.Unit.Symbol}}{{.DebitBal}}{{end}}</td>
+      <td class="amount">{{if .CreditBal.Unit.Symbol}}{{.CreditBal}}{{end}}</td>
       <tr>
     {{- end}}
   </tbody>
 </table>
-{{end}}
 {{- end}}
