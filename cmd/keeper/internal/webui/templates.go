@@ -49,16 +49,6 @@ type ledgerData struct {
 	Entries []ledgerEntry
 }
 
-//go:generate binpack -name trialText trial.html
-
-var trialTemplate = template.Must(clone(baseTemplate).Parse(trialText))
-
-type trialData struct {
-	Title   string // unused
-	Account journal.Account
-	Entries []ledgerEntry
-}
-
 type ledgerEntry struct {
 	journal.Entry
 	Description string
@@ -105,6 +95,16 @@ func convertTransaction(e journal.Transaction, a journal.Account) []ledgerEntry 
 	}
 	entries[len(entries)-1].Balance = e.Balances[a]
 	return entries
+}
+
+//go:generate binpack -name trialText trial.html
+
+var trialTemplate = template.Must(clone(baseTemplate).Parse(trialText))
+
+type trialData struct {
+	Title   string // unused
+	Account journal.Account
+	Entries []ledgerEntry
 }
 
 func clone(t *template.Template) *template.Template {
