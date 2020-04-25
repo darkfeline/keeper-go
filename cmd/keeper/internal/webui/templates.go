@@ -17,6 +17,7 @@ package webui
 import (
 	"fmt"
 	"html/template"
+	"sort"
 
 	"go.felesatra.moe/keeper/journal"
 )
@@ -75,10 +76,24 @@ func (d ledgerData) Title() string {
 }
 
 type ledgerEntry struct {
-	journal.Entry
+	Entry       journal.Entry
 	Description string
 	Amount      journal.Amount
-	Balance     journal.Balance
+	Balance     journal.Amount
+}
+
+func (e ledgerEntry) Position() string {
+	if e.Entry == nil {
+		return ""
+	}
+	return e.Entry.Position().String()
+}
+
+func (e ledgerEntry) Date() string {
+	if e.Entry == nil {
+		return ""
+	}
+	return e.Entry.Date().String()
 }
 
 func convertEntry(e journal.Entry, a journal.Account) []ledgerEntry {
@@ -86,39 +101,85 @@ func convertEntry(e journal.Entry, a journal.Account) []ledgerEntry {
 	case journal.Transaction:
 		return convertTransaction(e, a)
 	case journal.BalanceAssert:
-		le := ledgerEntry{
-			Entry:   e,
-			Balance: e.Actual,
-		}
-		if e.Diff.Empty() {
-			le.Description = "(balance)"
-		} else {
-			le.Description = fmt.Sprintf("(balance error, declared %s, diff %s)",
-				e.Declared, e.Actual)
-		}
-		return []ledgerEntry{le}
+		return convertBalance(e)
 	default:
 		panic(fmt.Sprintf("unknown entry %t", e))
 	}
 }
 
+func convertBalance(e journal.BalanceAssert) []ledgerEntry {
+	units := balanceUnits(e)
+	var entries []ledgerEntry
+	for _, u := range units {
+		le := ledgerEntry{
+			Entry:   e,
+			Balance: e.Actual.Amount(u),
+		}
+		if e.Diff[u] == 0 {
+			le.Description = "(balance)"
+		} else {
+			le.Description = fmt.Sprintf("(balance error, declared %s, diff %s)",
+				e.Declared.Amount(u), e.Diff.Amount(u))
+		}
+		entries = append(entries, le)
+	}
+	return entries
+}
+
+// balanceUnits returns all of the units involved in the balance assert.
+func balanceUnits(e journal.BalanceAssert) []journal.Unit {
+	seen := make(map[journal.Unit]bool)
+	for u := range e.Actual {
+		seen[u] = true
+	}
+	for u := range e.Declared {
+		seen[u] = true
+	}
+	for u := range e.Diff {
+		seen[u] = true
+	}
+	var units []journal.Unit
+	for u, v := range seen {
+		if v {
+			units = append(units, u)
+		}
+	}
+	sort.Slice(units, func(i, j int) bool { return units[i].Symbol < units[j].Symbol })
+	return units
+}
+
 func convertTransaction(e journal.Transaction, a journal.Account) []ledgerEntry {
 	var entries []ledgerEntry
+	first := true
 	for _, s := range e.Splits {
 		if s.Account != a {
 			continue
 		}
 		le := ledgerEntry{
-			Entry:       e,
-			Description: e.Description,
-			Amount:      s.Amount,
+			Amount: s.Amount,
+		}
+		if first {
+			le.Entry = e
+			le.Description = e.Description
+			first = false
 		}
 		entries = append(entries, le)
 	}
 	if len(entries) == 0 {
 		return entries
 	}
-	entries[len(entries)-1].Balance = e.Balances[a]
+	amts := e.Balances[a].Amounts()
+	sort.Slice(amts, func(i, j int) bool { return amts[i].Unit.Symbol < amts[j].Unit.Symbol })
+	if len(amts) == 0 {
+		return entries
+	}
+	entries[len(entries)-1].Balance = amts[0]
+	for _, a := range amts[1:] {
+		le := ledgerEntry{
+			Balance: a,
+		}
+		entries = append(entries, le)
+	}
 	return entries
 }
 

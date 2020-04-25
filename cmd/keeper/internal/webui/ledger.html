@@ -21,7 +21,7 @@
   </thead>
   <tbody>
     {{- range .Entries}}
-    <tr>
+    <tr{{if .Date }} class="section"{{end}}>
       <td>{{.Date}}</td>
       <td>{{.Description}}</td>
       <td>{{.Position}}</td>
@@ -35,7 +35,11 @@
       <td></td>
       <td>{{.Amount}}</td>
       {{- end}}
+      {{- if .Balance.Unit.Symbol}}
       <td>{{.Balance}}</td>
+      {{else}}
+      <td></td>
+      {{- end}}
       <tr>
     {{- end}}
   </tbody>

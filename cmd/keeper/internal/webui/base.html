@@ -26,14 +26,20 @@
           list-style-type: none;
       }
 
-      table th {
+      table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+      }
+      th, td {
           padding-left: 5px;
           padding-right: 5px;
+      }
+      th {
           text-align: left;
       }
-      table td {
-          padding-left: 5px;
-          padding-right: 5px;
+
+      tr.section {
+          border-top: 3px solid black;
       }
     </style>
     {{block "head" .}}{{end -}}
