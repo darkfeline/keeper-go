@@ -108,7 +108,7 @@ func convertEntry(e journal.Entry, a journal.Account) []ledgerRow {
 }
 
 func convertBalance(e journal.BalanceAssert) []ledgerRow {
-	units := balanceUnits(e)
+	units := balanceUnits(e.Actual, e.Declared, e.Diff)
 	var entries []ledgerRow
 	for _, u := range units {
 		le := ledgerRow{
@@ -126,17 +126,13 @@ func convertBalance(e journal.BalanceAssert) []ledgerRow {
 	return entries
 }
 
-// balanceUnits returns all of the units involved in the balance assert.
-func balanceUnits(e journal.BalanceAssert) []journal.Unit {
+// balanceUnits returns all of the units in the balances.
+func balanceUnits(b ...journal.Balance) []journal.Unit {
 	seen := make(map[journal.Unit]bool)
-	for u := range e.Actual {
-		seen[u] = true
-	}
-	for u := range e.Declared {
-		seen[u] = true
-	}
-	for u := range e.Diff {
-		seen[u] = true
+	for _, b := range b {
+		for u := range b {
+			seen[u] = true
+		}
 	}
 	var units []journal.Unit
 	for u, v := range seen {
