@@ -1,0 +1,19 @@
+{{- define "body" -}}
+<h1>{{.Title}}</h1>
+<table>
+  <tbody>
+    {{- range .Rows}}
+    {{- if .Section}}
+    <tr class="section">
+      <td colspan="2"><strong>{{.Description}}</strong></td>
+    <tr>
+    {{else}}
+    <tr{{if .Description}} class="section"{{end}}>
+      <td>{{.Description}}</td>
+      <td class="amount">{{if .Amount.Unit.Symbol}}{{.Amount}}{{end}}</td>
+    <tr>
+    {{end}}
+    {{- end}}
+  </tbody>
+</table>
+{{- end}}

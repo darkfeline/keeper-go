@@ -73,7 +73,7 @@ type totalBalance struct {
 	Credit journal.Balance
 }
 
-func (t totalBalance) Rows(name string) []trialRow {
+func (t totalBalance) Rows(desc string) []trialRow {
 	var r []trialRow
 	for i, u := range balanceUnits(t.Debit, t.Credit) {
 		e := trialRow{
@@ -81,7 +81,7 @@ func (t totalBalance) Rows(name string) []trialRow {
 			CreditBal: t.Credit.Amount(u),
 		}
 		if i == 0 {
-			e.Account = name
+			e.Account = desc
 		}
 		r = append(r, e)
 	}
@@ -111,6 +111,49 @@ func makeTrialRows(a []journal.Account, b journal.Balances) ([]trialRow, totalBa
 		}
 	}
 	return r, t
+}
+
+//go:generate binpack -name stmtText stmt.html
+
+var stmtTemplate = template.Must(clone(baseTemplate).Parse(stmtText))
+
+type stmtData struct {
+	Title string
+	Rows  []stmtRow
+}
+
+type stmtRow struct {
+	Description string
+	Section     bool
+	Amount      journal.Amount
+}
+
+func makeStmtRows(a []journal.Account, b journal.Balances) ([]stmtRow, journal.Balance) {
+	t := make(journal.Balance)
+	var r []stmtRow
+	for _, a := range a {
+		for i, amt := range b[a].Amounts() {
+			e := stmtRow{Amount: amt}
+			if i == 0 {
+				e.Description = string(a)
+			}
+			r = append(r, e)
+			t.Add(amt)
+		}
+	}
+	return r, t
+}
+
+func makeStmtBalance(desc string, b journal.Balance) []stmtRow {
+	var r []stmtRow
+	for i, u := range balanceUnits(b) {
+		e := stmtRow{Amount: b.Amount(u)}
+		if i == 0 {
+			e.Description = desc
+		}
+		r = append(r, e)
+	}
+	return r
 }
 
 //go:generate binpack -name ledgerText ledger.html

@@ -81,7 +81,33 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
-	panic("Not implemented")
+	j, err := h.compile()
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	a := journalAccounts(j)
+	b := j.Balances
+
+	d := stmtData{Title: "Income Statement"}
+	d.Rows = append(d.Rows, stmtRow{Description: "Revenues", Section: true})
+	// Revenues are credit balance.
+	b.Neg()
+	r, rt := makeStmtRows(revenueAccounts(a), b)
+	r = append(r, makeStmtBalance("Total Revenues", rt)...)
+	r = append(r, stmtRow{Description: "Expenses", Section: true})
+	d.Rows = append(d.Rows, r...)
+	// Expenses are debit balance.
+	b.Neg()
+	r, et := makeStmtRows(expenseAccounts(a), b)
+	r = append(r, makeStmtBalance("Total Expenses", et)...)
+	r = append(r, stmtRow{Description: "Net Income", Section: true})
+	for _, a := range et.Amounts() {
+		rt.Sub(a)
+	}
+	r = append(r, makeStmtBalance("Total Net Income", rt)...)
+	d.Rows = append(d.Rows, r...)
+	execute(w, stmtTemplate, d)
 }
 
 func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
