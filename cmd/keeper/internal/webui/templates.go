@@ -57,7 +57,7 @@ func (accountsData) Title() string { return "Accounts" }
 var trialTemplate = template.Must(clone(baseTemplate).Parse(trialText))
 
 type trialData struct {
-	Entries []trialRow
+	Rows []trialRow
 }
 
 func (trialData) Title() string { return "Trial Balance" }
@@ -119,7 +119,7 @@ var ledgerTemplate = template.Must(clone(baseTemplate).Parse(ledgerText))
 
 type ledgerData struct {
 	Account journal.Account
-	Entries []ledgerRow
+	Rows    []ledgerRow
 }
 
 func (d ledgerData) Title() string {

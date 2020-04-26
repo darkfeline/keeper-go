@@ -76,7 +76,7 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 	}
 	r, t := makeTrialRows(journalAccounts(j), j.Balances)
 	r = append(r, t.Rows("Total")...)
-	d := trialData{Entries: r}
+	d := trialData{Rows: r}
 	execute(w, trialTemplate, d)
 }
 
@@ -93,7 +93,7 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 	}
 	d := ledgerData{Account: account}
 	for _, e := range j.AccountEntries[account] {
-		d.Entries = append(d.Entries, makeLedgerRows(e, account)...)
+		d.Rows = append(d.Rows, makeLedgerRows(e, account)...)
 	}
 	execute(w, ledgerTemplate, d)
 }
