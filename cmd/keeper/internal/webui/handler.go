@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/journal"
 )
 
@@ -82,14 +83,18 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
-	j, err := h.compile()
+	end := getQueryDate(req)
+	j, err := h.compile(journal.Ending(end))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 	a := journalAccounts(j)
 	b := j.Balances
-	d := stmtData{Title: "Income Statement"}
+	d := stmtData{
+		Title: "Income Statement",
+		Date:  end,
+	}
 	add := func(r ...stmtRow) {
 		d.Rows = append(d.Rows, r...)
 	}
@@ -114,14 +119,18 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
-	j, err := h.compile()
+	end := getQueryDate(req)
+	j, err := h.compile(journal.Ending(end))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 	a := journalAccounts(j)
 	b := j.Balances
-	d := stmtData{Title: "Balance Sheet"}
+	d := stmtData{
+		Title: "Balance Sheet",
+		Date:  end,
+	}
 	add := func(r ...stmtRow) {
 		d.Rows = append(d.Rows, r...)
 	}
@@ -154,6 +163,18 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 	execute(w, stmtTemplate, d)
 }
 
+func getQueryDate(req *http.Request) civil.Date {
+	v := req.URL.Query()["date"]
+	if len(v) == 0 {
+		return civil.DateOf(time.Now())
+	}
+	d, err := civil.ParseDate(v[0])
+	if err != nil {
+		return civil.DateOf(time.Now())
+	}
+	return d
+}
+
 func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 	account := getQueryAccount(req)
 	j, err := h.compile()
@@ -168,8 +189,11 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 	execute(w, ledgerTemplate, d)
 }
 
-func (h handler) compile() (*journal.Journal, error) {
-	return journal.Compile(h.o...)
+func (h handler) compile(o ...journal.Option) (*journal.Journal, error) {
+	var o2 []journal.Option
+	o2 = append(o2, h.o...)
+	o2 = append(o2, o...)
+	return journal.Compile(o2...)
 }
 
 func getQueryAccount(req *http.Request) journal.Account {

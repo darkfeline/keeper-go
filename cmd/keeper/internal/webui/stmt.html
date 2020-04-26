@@ -1,6 +1,17 @@
 {{- define "body" -}}
 <h1>{{.Title}}</h1>
 <table>
+  <thead>
+    <tr>
+      <td colspan="2">
+        <form method="GET">
+          As of
+          <input type="date" name="date" value="{{.Date}}">
+          <input type="submit">
+        </form>
+      </td>
+    </tr>
+  </thead>
   <tbody>
     {{- range .Rows}}
     {{- if .Section}}
