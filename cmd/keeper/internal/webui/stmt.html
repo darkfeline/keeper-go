@@ -7,6 +7,10 @@
     <tr class="section">
       <td colspan="2"><strong>{{.Description}}</strong></td>
     <tr>
+    {{else if and (not .Description) (not .Amount.Unit.Symbol) }}
+    <tr>
+      <td colspan="2">&nbsp;</td>
+    <tr>
     {{else}}
     <tr{{if .Description}} class="section"{{end}}>
       <td>{{.Description}}</td>

@@ -48,3 +48,33 @@ func expenseAccounts(a []journal.Account) []journal.Account {
 	}
 	return a2
 }
+
+func assetAccounts(a []journal.Account) []journal.Account {
+	var a2 []journal.Account
+	for _, a := range a {
+		if a.Under("Assets") {
+			a2 = append(a2, a)
+		}
+	}
+	return a2
+}
+
+func liabilityAccounts(a []journal.Account) []journal.Account {
+	var a2 []journal.Account
+	for _, a := range a {
+		if a.Under("Liabilities") {
+			a2 = append(a2, a)
+		}
+	}
+	return a2
+}
+
+func equityAccounts(a []journal.Account) []journal.Account {
+	var a2 []journal.Account
+	for _, a := range a {
+		if a.Under("Equity") {
+			a2 = append(a2, a)
+		}
+	}
+	return a2
+}

@@ -2,4 +2,4 @@
 
 package webui
 
-const stmtText = "{{- define \"body\" -}}\n<h1>{{.Title}}</h1>\n<table>\n  <tbody>\n    {{- range .Rows}}\n    {{- if .Section}}\n    <tr class=\"section\">\n      <td colspan=\"2\"><strong>{{.Description}}</strong></td>\n    <tr>\n    {{else}}\n    <tr{{if .Description}} class=\"section\"{{end}}>\n      <td>{{.Description}}</td>\n      <td class=\"amount\">{{if .Amount.Unit.Symbol}}{{.Amount}}{{end}}</td>\n    <tr>\n    {{end}}\n    {{- end}}\n  </tbody>\n</table>\n{{- end}}\n"
+const stmtText = "{{- define \"body\" -}}\n<h1>{{.Title}}</h1>\n<table>\n  <tbody>\n    {{- range .Rows}}\n    {{- if .Section}}\n    <tr class=\"section\">\n      <td colspan=\"2\"><strong>{{.Description}}</strong></td>\n    <tr>\n    {{else if and (not .Description) (not .Amount.Unit.Symbol) }}\n    <tr>\n      <td colspan=\"2\">&nbsp;</td>\n    <tr>\n    {{else}}\n    <tr{{if .Description}} class=\"section\"{{end}}>\n      <td>{{.Description}}</td>\n      <td class=\"amount\">{{if .Amount.Unit.Symbol}}{{.Amount}}{{end}}</td>\n    <tr>\n    {{end}}\n    {{- end}}\n  </tbody>\n</table>\n{{- end}}\n"

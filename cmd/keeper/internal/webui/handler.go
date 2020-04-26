@@ -32,6 +32,7 @@ func NewHandler(o []journal.Option) http.Handler {
 	m.HandleFunc("/accounts", h.handleAccounts)
 	m.HandleFunc("/trial", h.handleTrial)
 	m.HandleFunc("/income", h.handleIncome)
+	m.HandleFunc("/balance", h.handleBalance)
 	m.HandleFunc("/ledger", h.handleLedger)
 	return m
 }
@@ -109,6 +110,47 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 
 	add(stmtRow{Description: "Net Income", Section: true})
 	add(makeStmtBalance("Total Net Income", rt)...)
+	execute(w, stmtTemplate, d)
+}
+
+func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
+	j, err := h.compile()
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	a := journalAccounts(j)
+	b := j.Balances
+	d := stmtData{Title: "Balance Sheet"}
+	add := func(r ...stmtRow) {
+		d.Rows = append(d.Rows, r...)
+	}
+
+	add(stmtRow{Description: "Assets", Section: true})
+	// Assets are debit balance.
+	r, t := makeStmtRows(assetAccounts(a), b)
+	add(r...)
+	add(makeStmtBalance("Total Assets", t)...)
+
+	add(stmtRow{Description: "Liabilities", Section: true})
+	// Liabilities are credit balance.
+	b.Neg()
+	r, lt := makeStmtRows(liabilityAccounts(a), b)
+	add(r...)
+	add(makeStmtBalance("Total Liabilities", lt)...)
+
+	add(stmtRow{Description: "Equity", Section: true})
+	// Equity is credit balance.
+	r, et := makeStmtRows(equityAccounts(a), b)
+	add(r...)
+	add(makeStmtBalance("Total Equity", et)...)
+
+	for _, a := range et.Amounts() {
+		lt.Add(a)
+	}
+	add(stmtRow{})
+	add(makeStmtBalance("Total Liabilities & Equity", lt)...)
+
 	execute(w, stmtTemplate, d)
 }
 
