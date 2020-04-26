@@ -188,3 +188,10 @@ func (b Balances) Add(a Account, am Amount) {
 	}
 	bal.Add(am)
 }
+
+// Neg negates the signs of the balances.
+func (b Balances) Neg() {
+	for _, b := range b {
+		b.Neg()
+	}
+}
