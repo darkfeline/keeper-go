@@ -88,25 +88,27 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	}
 	a := journalAccounts(j)
 	b := j.Balances
-
 	d := stmtData{Title: "Income Statement"}
-	d.Rows = append(d.Rows, stmtRow{Description: "Revenues", Section: true})
+	add := func(r ...stmtRow) {
+		d.Rows = append(d.Rows, r...)
+	}
+
+	add(stmtRow{Description: "Revenues", Section: true})
 	// Revenues are credit balance.
 	b.Neg()
 	r, rt := makeStmtRows(revenueAccounts(a), b)
-	r = append(r, makeStmtBalance("Total Revenues", rt)...)
-	r = append(r, stmtRow{Description: "Expenses", Section: true})
-	d.Rows = append(d.Rows, r...)
+	add(r...)
+	add(makeStmtBalance("Total Revenues", rt)...)
+
+	add(stmtRow{Description: "Expenses", Section: true})
 	// Expenses are debit balance.
 	b.Neg()
 	r, et := makeStmtRows(expenseAccounts(a), b)
-	r = append(r, makeStmtBalance("Total Expenses", et)...)
-	r = append(r, stmtRow{Description: "Net Income", Section: true})
-	for _, a := range et.Amounts() {
-		rt.Sub(a)
-	}
-	r = append(r, makeStmtBalance("Total Net Income", rt)...)
-	d.Rows = append(d.Rows, r...)
+	add(r...)
+	add(makeStmtBalance("Total Expenses", et)...)
+
+	add(stmtRow{Description: "Net Income", Section: true})
+	add(makeStmtBalance("Total Net Income", rt)...)
 	execute(w, stmtTemplate, d)
 }
 
