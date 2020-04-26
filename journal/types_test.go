@@ -29,14 +29,6 @@ func ExampleAccount_Parts() {
 	// []string{"Assets"}
 }
 
-func ExampleAccount_Level() {
-	fmt.Println(Account("Assets:Cash").Level())
-	fmt.Println(Account("Assets").Level())
-	// Output:
-	// 2
-	// 1
-}
-
 func ExampleAccount_Parent() {
 	fmt.Printf("%#v\n", Account("Assets:Cash").Parent())
 	fmt.Printf("%#v\n", Account("Assets").Parent())

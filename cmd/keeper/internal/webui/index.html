@@ -1,0 +1,38 @@
+{{- define "body" -}}
+{{if .BalanceErrors -}}
+<p>Balance errors!</p>
+<table>
+  <thead>
+    <tr>
+      <th>Ref</th>
+      <th>Date</th>
+      <th>Account</th>
+      <th>Declared</th>
+      <th>Actual</th>
+      <th>Diff</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{- range .BalanceErrors}}
+    <tr>
+      <td>{{.Position}}</td>
+      <td>{{.Date}}</td>
+      <td><a href="/ledger?account={{.Account}}">{{.Account}}</a></td>
+      <td class="amount">{{.Declared}}</td>
+      <td class="amount">{{.Actual}}</td>
+      <td class="amount">{{.Diff}}</td>
+      <tr>
+    {{- end}}
+  </tbody>
+</table>
+{{else -}}
+<ul>
+  <li><a href="/accounts">Accounts</a></li>
+  <li><a href="/trial">Trial Balance</a></li>
+  <li><a href="/income">Income</a></li>
+  <li><a href="/capital">Capital</a></li>
+  <li><a href="/balance">Balance Sheet</a></li>
+  <li><a href="/cash">Cash Flow</a></li>
+</ul>
+{{end -}}
+{{- end}}

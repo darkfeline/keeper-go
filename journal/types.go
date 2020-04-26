@@ -15,6 +15,7 @@
 package journal
 
 import (
+	"sort"
 	"strings"
 )
 
@@ -67,12 +68,6 @@ func (a Account) Parts() []string {
 		return nil
 	}
 	return strings.Split(string(a), ":")
-}
-
-// Level returns the nesting level of the account, which is equivalent
-// to the number of parts.
-func (a Account) Level() int {
-	return len(a.Parts())
 }
 
 // Parent returns the parent account.
@@ -137,6 +132,7 @@ func (b Balance) Amount(u Unit) Amount {
 }
 
 // Amounts returns the amounts in the balance.
+// The amounts are sorted by unit.
 func (b Balance) Amounts() []Amount {
 	var a []Amount
 	for u, n := range b {
@@ -144,6 +140,7 @@ func (b Balance) Amounts() []Amount {
 			a = append(a, Amount{Unit: u, Number: n})
 		}
 	}
+	sort.Slice(a, func(i, j int) bool { return a[i].Unit.Symbol < a[j].Unit.Symbol })
 	return a
 }
 

@@ -1,0 +1,22 @@
+{{- define "body" -}}
+<h1>Trial Balance</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Account</th>
+      <th>Debit Bal</th>
+      <th>Credit Bal</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{- range .Rows}}
+    <tr{{if .Account}} class="section"{{end}}>
+      <td>{{.Account}}</td>
+
+      <td class="amount">{{if .DebitBal.Unit.Symbol}}{{.DebitBal}}{{end}}</td>
+      <td class="amount">{{if .CreditBal.Unit.Symbol}}{{.CreditBal}}{{end}}</td>
+      <tr>
+    {{- end}}
+  </tbody>
+</table>
+{{- end}}

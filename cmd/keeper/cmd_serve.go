@@ -12,19 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package main
 
 import (
-	"sort"
-	"strings"
+	"flag"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
 
+	"go.felesatra.moe/keeper/cmd/keeper/internal/webui"
 	"go.felesatra.moe/keeper/journal"
 )
 
-func acctConcat(parts []string) journal.Account {
-	return journal.Account(strings.Join(parts, ":"))
-}
+var serveCmd = &command{
+	name: "serve",
+	run: func(cmd *command, args []string) {
+		fs := flag.NewFlagSet(cmd.name, flag.ExitOnError)
+		port := fs.String("port", "8888", "Port to listen on")
+		if err := fs.Parse(args); err != nil {
+			panic(err)
+		}
+		var o []journal.Option
+		for _, f := range fs.Args() {
+			o = append(o, journal.File(f))
+		}
 
-func sortAccounts(as []journal.Account) {
-	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
+		fmt.Fprintf(os.Stderr, "Listening on port %s\n", *port)
+		h := webui.NewHandler(o)
+		log.Fatal(http.ListenAndServe(":"+*port, h))
+	},
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package webui
 
 import (
 	"reflect"
@@ -22,22 +22,25 @@ import (
 	"go.felesatra.moe/keeper/journal"
 )
 
-func TestWalkAccountTree(t *testing.T) {
+func TestMakeAccountTree(t *testing.T) {
 	t.Parallel()
+	type c = []*accountTree
 	cases := []struct {
 		desc string
 		a    []journal.Account
-		want []accountNode
+		want *accountTree
 	}{
 		{
 			desc: "simple",
 			a:    []journal.Account{"IJN:Ayanami", "USS:Laffey"},
-			want: []accountNode{
-				{Account: "IJN", Virtual: true},
-				{Account: "IJN:Ayanami", Leaf: true},
-				{Account: "USS", Virtual: true},
-				{Account: "USS:Laffey", Leaf: true},
-			},
+			want: &accountTree{Virtual: true, Children: c{
+				{Account: "IJN", Virtual: true, Children: c{
+					{Account: "IJN:Ayanami"},
+				}},
+				{Account: "USS", Virtual: true, Children: c{
+					{Account: "USS:Laffey"},
+				}},
+			}},
 		},
 		{
 			desc: "deep",
@@ -45,15 +48,20 @@ func TestWalkAccountTree(t *testing.T) {
 				"Expenses:Foo:Bar:Baz",
 				"Expenses:Spam:Eggs:Ham",
 			},
-			want: []accountNode{
-				{Account: "Expenses", Virtual: true},
-				{Account: "Expenses:Foo", Virtual: true},
-				{Account: "Expenses:Foo:Bar", Virtual: true},
-				{Account: "Expenses:Foo:Bar:Baz", Leaf: true},
-				{Account: "Expenses:Spam", Virtual: true},
-				{Account: "Expenses:Spam:Eggs", Virtual: true},
-				{Account: "Expenses:Spam:Eggs:Ham", Leaf: true},
-			},
+			want: &accountTree{Virtual: true, Children: c{
+				{Account: "Expenses", Virtual: true, Children: c{
+					{Account: "Expenses:Foo", Virtual: true, Children: c{
+						{Account: "Expenses:Foo:Bar", Virtual: true, Children: c{
+							{Account: "Expenses:Foo:Bar:Baz"},
+						}},
+					}},
+					{Account: "Expenses:Spam", Virtual: true, Children: c{
+						{Account: "Expenses:Spam:Eggs", Virtual: true, Children: c{
+							{Account: "Expenses:Spam:Eggs:Ham"},
+						}},
+					}},
+				}},
+			}},
 		},
 		{
 			desc: "with parent",
@@ -61,40 +69,38 @@ func TestWalkAccountTree(t *testing.T) {
 				"Expenses:Foo",
 				"Expenses:Foo:Bar:Baz",
 			},
-			want: []accountNode{
-				{Account: "Expenses", Virtual: true},
-				{Account: "Expenses:Foo"},
-				{Account: "Expenses:Foo:Bar", Virtual: true},
-				{Account: "Expenses:Foo:Bar:Baz", Leaf: true},
-			},
+			want: &accountTree{Virtual: true, Children: c{
+				{Account: "Expenses", Virtual: true, Children: c{
+					{Account: "Expenses:Foo", Children: c{
+						{Account: "Expenses:Foo:Bar", Virtual: true, Children: c{
+							{Account: "Expenses:Foo:Bar:Baz"}}},
+					}},
+				}},
+			}},
 		},
 		{
-			desc: "bug 1",
+			desc: "cousins",
 			a: []journal.Account{
 				"Assets:2019:Foo",
 				"Assets:2020:Foo",
 			},
-			want: []accountNode{
-				{Account: "Assets", Virtual: true},
-				{Account: "Assets:2019", Virtual: true},
-				{Account: "Assets:2019:Foo", Leaf: true},
-				{Account: "Assets:2020", Virtual: true},
-				{Account: "Assets:2020:Foo", Leaf: true},
-			},
+			want: &accountTree{Virtual: true, Children: c{
+				{Account: "Assets", Virtual: true, Children: c{
+					{Account: "Assets:2019", Virtual: true, Children: c{
+						{Account: "Assets:2019:Foo"},
+					}},
+					{Account: "Assets:2020", Virtual: true, Children: c{
+						{Account: "Assets:2020:Foo"},
+					}},
+				}},
+			}},
 		},
 	}
 	for _, c := range cases {
 		c := c
 		t.Run(c.desc, func(t *testing.T) {
 			t.Parallel()
-			var got []accountNode
-			f := func(n accountNode) error {
-				got = append(got, n)
-				return nil
-			}
-			if err := walkAccountTree(c.a, f); err != nil {
-				t.Fatal(err)
-			}
+			got := makeAccountTree(c.a)
 			if diff := cmp.Diff(c.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
