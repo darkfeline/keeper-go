@@ -109,6 +109,13 @@ func (b Balance) Sub(a Amount) {
 	b.Add(a.Neg())
 }
 
+// Neg negates the sign of the balance.
+func (b Balance) Neg() {
+	for u, n := range b {
+		b[u] = -n
+	}
+}
+
 // Empty returns true if the balance is empty/zero.
 func (b Balance) Empty() bool {
 	for _, n := range b {
