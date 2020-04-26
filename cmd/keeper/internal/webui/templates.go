@@ -57,12 +57,12 @@ func (accountsData) Title() string { return "Accounts" }
 var trialTemplate = template.Must(clone(baseTemplate).Parse(trialText))
 
 type trialData struct {
-	Entries []balanceRow
+	Entries []trialRow
 }
 
 func (trialData) Title() string { return "Trial Balance" }
 
-type balanceRow struct {
+type trialRow struct {
 	Account   string
 	DebitBal  journal.Amount
 	CreditBal journal.Amount
@@ -73,10 +73,10 @@ type totalBalance struct {
 	Credit journal.Balance
 }
 
-func (t totalBalance) Rows(name string) []balanceRow {
-	var r []balanceRow
+func (t totalBalance) Rows(name string) []trialRow {
+	var r []trialRow
 	for i, u := range balanceUnits(t.Debit, t.Credit) {
-		e := balanceRow{
+		e := trialRow{
 			DebitBal:  t.Debit.Amount(u),
 			CreditBal: t.Credit.Amount(u),
 		}
@@ -88,15 +88,15 @@ func (t totalBalance) Rows(name string) []balanceRow {
 	return r
 }
 
-func makeBalanceRows(a []journal.Account, b journal.Balances) ([]balanceRow, totalBalance) {
+func makeTrialRows(a []journal.Account, b journal.Balances) ([]trialRow, totalBalance) {
 	t := totalBalance{
 		Debit:  make(journal.Balance),
 		Credit: make(journal.Balance),
 	}
-	var r []balanceRow
+	var r []trialRow
 	for _, a := range a {
 		for i, amt := range b[a].Amounts() {
-			e := balanceRow{}
+			e := trialRow{}
 			if amt.Number > 0 {
 				e.DebitBal = amt
 				t.Debit.Add(amt)

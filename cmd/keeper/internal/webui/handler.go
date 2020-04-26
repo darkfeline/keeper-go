@@ -74,7 +74,7 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	r, t := makeBalanceRows(journalAccounts(j), j.Balances)
+	r, t := makeTrialRows(journalAccounts(j), j.Balances)
 	r = append(r, t.Rows("Total")...)
 	d := trialData{Entries: r}
 	execute(w, trialTemplate, d)
