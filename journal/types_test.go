@@ -111,6 +111,19 @@ func TestBalance_Add_zeroed_accounts(t *testing.T) {
 	}
 }
 
+func TestBalance_Neg(t *testing.T) {
+	t.Parallel()
+	u := Unit{Symbol: "USD", Scale: 100}
+	b := Balance{
+		u: 12345,
+	}
+	b.Neg()
+	want := Balance{u: -12345}
+	if diff := cmp.Diff(want, b); diff != "" {
+		t.Errorf("balance mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestBalance_Equal_ignores_order(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
