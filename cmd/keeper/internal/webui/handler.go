@@ -33,7 +33,9 @@ func NewHandler(o []journal.Option) http.Handler {
 	m.HandleFunc("/accounts", h.handleAccounts)
 	m.HandleFunc("/trial", h.handleTrial)
 	m.HandleFunc("/income", h.handleIncome)
+	m.HandleFunc("/capital", h.handleCapital)
 	m.HandleFunc("/balance", h.handleBalance)
+	m.HandleFunc("/cash", h.handleCash)
 	m.HandleFunc("/ledger", h.handleLedger)
 	return m
 }
@@ -118,6 +120,10 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	execute(w, stmtTemplate, d)
 }
 
+func (h handler) handleCapital(w http.ResponseWriter, req *http.Request) {
+	panic("Not implemented")
+}
+
 func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 	end := getQueryDate(req)
 	j, err := h.compile(journal.Ending(end))
@@ -161,6 +167,10 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 	add(makeStmtBalance("Total Liabilities & Equity", lt)...)
 
 	execute(w, stmtTemplate, d)
+}
+
+func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
+	panic("Not implemented")
 }
 
 func getQueryDate(req *http.Request) civil.Date {
