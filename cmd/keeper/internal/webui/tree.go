@@ -15,20 +15,10 @@
 package webui
 
 import (
-	"sort"
 	"strings"
 
 	"go.felesatra.moe/keeper/journal"
 )
-
-func journalAccounts(j *journal.Journal) []journal.Account {
-	var accounts []journal.Account
-	for a := range j.AccountEntries {
-		accounts = append(accounts, a)
-	}
-	sort.Slice(accounts, func(i, j int) bool { return accounts[i] < accounts[j] })
-	return accounts
-}
 
 func journalAccountTree(j *journal.Journal) *accountTree {
 	a := journalAccounts(j)
