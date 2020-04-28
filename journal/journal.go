@@ -150,6 +150,7 @@ func (j *Journal) addEntry(e Entry) error {
 			}
 			seen[s.Account] = true
 		}
+		return nil
 	case BalanceAssert:
 		if err := j.addAccountEntry(e.Account, e); err != nil {
 			return err
@@ -157,6 +158,7 @@ func (j *Journal) addEntry(e Entry) error {
 		if !e.Diff.Empty() {
 			j.BalanceErrors = append(j.BalanceErrors, e)
 		}
+		return nil
 	case CloseAccount:
 		// We have to add the account entry first.  After the
 		// account is added to Closed, adding more account
@@ -165,10 +167,10 @@ func (j *Journal) addEntry(e Entry) error {
 			return err
 		}
 		j.Closed[e.Account] = e
+		return nil
 	default:
 		panic(fmt.Sprintf("unknown Entry type %T", e))
 	}
-	return nil
 }
 
 func (j *Journal) addAccountEntry(a Account, e Entry) error {
