@@ -199,7 +199,7 @@ func makeLedgerRows(e journal.Entry, a journal.Account) []ledgerRow {
 	case journal.BalanceAssert:
 		return convertBalance(e)
 	default:
-		panic(fmt.Sprintf("unknown entry %t", e))
+		panic(fmt.Sprintf("unknown entry %T", e))
 	}
 }
 

@@ -68,7 +68,7 @@ func openInputFiles(inputs []input) ([]inputBytes, error) {
 				src:      src,
 			})
 		default:
-			panic(fmt.Sprintf("unknown type %t", i))
+			panic(fmt.Sprintf("unknown type %T", i))
 		}
 	}
 	return ib, nil
