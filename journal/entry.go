@@ -15,7 +15,6 @@
 package journal
 
 import (
-	"fmt"
 	"sort"
 	"time"
 
@@ -28,6 +27,7 @@ import (
 type Entry interface {
 	Date() civil.Date
 	Position() token.Position
+	sortKey() int64
 	entry()
 }
 
@@ -49,6 +49,10 @@ func (b BalanceAssert) Position() token.Position {
 
 func (b BalanceAssert) Date() civil.Date {
 	return b.EntryDate
+}
+
+func (b BalanceAssert) sortKey() int64 {
+	return dateKey(b.EntryDate)
 }
 
 func (BalanceAssert) entry() {}
@@ -73,6 +77,10 @@ func (t Transaction) Date() civil.Date {
 	return t.EntryDate
 }
 
+func (t Transaction) sortKey() int64 {
+	return dateKey(t.EntryDate) + 1
+}
+
 func (Transaction) entry() {}
 
 // Split is one split in a transaction.
@@ -89,24 +97,13 @@ func sortEntries(e []Entry) {
 	}
 	ks := make([]pair, len(e))
 	for i, e := range e {
-		ks[i] = pair{entryKey(e), e}
+		ks[i] = pair{e.sortKey(), e}
 	}
 	sort.Slice(ks, func(i, j int) bool {
 		return ks[i].k < ks[j].k
 	})
 	for i, k := range ks {
 		e[i] = k.v
-	}
-}
-
-func entryKey(e Entry) int64 {
-	switch e := e.(type) {
-	case Transaction:
-		return dateKey(e.Date())
-	case BalanceAssert:
-		return dateKey(e.Date()) + 1
-	default:
-		panic(fmt.Sprintf("unknown Entry type %T", e))
 	}
 }
 
