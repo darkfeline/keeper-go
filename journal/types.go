@@ -195,3 +195,32 @@ func (b Balances) Neg() {
 		b.Neg()
 	}
 }
+
+// A Summary tracks the total balance including sub-accounts for all accounts.
+type Summary map[Account]Balance
+
+// Add adds an amount to an account.
+func (s Summary) Add(a Account, am Amount) {
+	for a != "" {
+		s.add1(a, am)
+		a = a.Parent()
+	}
+}
+
+// Adds an amount to an account, even if the account is not yet in
+// the map.
+func (s Summary) add1(a Account, am Amount) {
+	bal, ok := s[a]
+	if !ok {
+		bal = make(Balance)
+		s[a] = bal
+	}
+	bal.Add(am)
+}
+
+// Neg negates the signs of the balances.
+func (s Summary) Neg() {
+	for _, s := range s {
+		s.Neg()
+	}
+}
