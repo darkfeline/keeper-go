@@ -91,7 +91,6 @@ func compile(e []Entry) (*Journal, error) {
 		Summary:        make(Summary),
 	}
 	for _, e := range e {
-		e = j.compileEntry(e)
 		if err := j.addEntry(e); err != nil {
 			return nil, err
 		}
@@ -99,7 +98,7 @@ func compile(e []Entry) (*Journal, error) {
 	return j, nil
 }
 
-func (j *Journal) compileEntry(e Entry) Entry {
+func (j *Journal) addEntry(e Entry) error {
 	switch e := e.(type) {
 	case Transaction:
 		e.Balances = make(Balances)
@@ -108,7 +107,19 @@ func (j *Journal) compileEntry(e Entry) Entry {
 			j.Summary.Add(s.Account, s.Amount)
 			e.Balances[s.Account] = j.Balances[s.Account].Copy()
 		}
-		return e
+
+		j.Entries = append(j.Entries, e)
+		seen := make(map[Account]bool)
+		for _, s := range e.Splits {
+			if seen[s.Account] {
+				continue
+			}
+			if err := j.addAccountEntry(s.Account, e); err != nil {
+				return err
+			}
+			seen[s.Account] = true
+		}
+		return nil
 	case BalanceAssert:
 		var m map[Account]Balance
 		if e.Tree {
@@ -125,30 +136,7 @@ func (j *Journal) compileEntry(e Entry) Entry {
 		}
 		e.Actual = bal
 		e.Diff = balanceDiff(e.Actual, e.Declared)
-		return e
-	case CloseAccount:
-		return e
-	default:
-		panic(fmt.Sprintf("unknown Entry type %T", e))
-	}
-}
 
-func (j *Journal) addEntry(e Entry) error {
-	switch e := e.(type) {
-	case Transaction:
-		j.Entries = append(j.Entries, e)
-		seen := make(map[Account]bool)
-		for _, s := range e.Splits {
-			if seen[s.Account] {
-				continue
-			}
-			if err := j.addAccountEntry(s.Account, e); err != nil {
-				return err
-			}
-			seen[s.Account] = true
-		}
-		return nil
-	case BalanceAssert:
 		j.Entries = append(j.Entries, e)
 		if err := j.addAccountEntry(e.Account, e); err != nil {
 			return err
