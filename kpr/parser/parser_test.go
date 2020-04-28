@@ -360,6 +360,26 @@ func TestParseBytes_unterminated_multi_tbal(t *testing.T) {
 	}
 }
 
+func TestParseBytes_close(t *testing.T) {
+	t.Parallel()
+	const input = `close 2001-02-03 Some:account
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []ast.Entry{
+		ast.CloseAccount{
+			TokPos:  1,
+			Date:    val(7, token.DATE, "2001-02-03"),
+			Account: val(18, token.ACCOUNT, "Some:account"),
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func val(pos token.Pos, tok token.Token, lit string) ast.BasicValue {
 	return ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 }
