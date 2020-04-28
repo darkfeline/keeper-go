@@ -52,7 +52,7 @@ func (b BalanceAssert) Date() civil.Date {
 }
 
 func (b BalanceAssert) sortKey() int64 {
-	return dateKey(b.EntryDate)
+	return dateKey(b.EntryDate) + 1
 }
 
 func (BalanceAssert) entry() {}
@@ -91,7 +91,7 @@ func (t Transaction) accounts() []Account {
 }
 
 func (t Transaction) sortKey() int64 {
-	return dateKey(t.EntryDate) + 1
+	return dateKey(t.EntryDate)
 }
 
 func (Transaction) entry() {}
