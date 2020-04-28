@@ -29,6 +29,8 @@ type Journal struct {
 	AccountEntries map[Account][]Entry
 	// Balances is the final balance for all accounts.
 	Balances Balances
+	// Summary is the total balance including sub-accounts for all accounts.
+	Summary Summary
 	// BalanceErrors contains the balance assertion entries that failed.
 	BalanceErrors []BalanceAssert
 }
@@ -80,6 +82,7 @@ func compile(e []Entry) *Journal {
 	b := &Journal{
 		AccountEntries: make(map[Account][]Entry),
 		Balances:       make(Balances),
+		Summary:        make(Summary),
 	}
 	for _, e := range e {
 		b.compileEntry(e)
@@ -93,11 +96,18 @@ func (b *Journal) compileEntry(e Entry) {
 		e.Balances = make(Balances)
 		for _, s := range e.Splits {
 			b.Balances.Add(s.Account, s.Amount)
+			b.Summary.Add(s.Account, s.Amount)
 			e.Balances[s.Account] = b.Balances[s.Account].Copy()
 		}
 		b.addEntry(e)
 	case BalanceAssert:
-		bal, ok := b.Balances[e.Account]
+		var m map[Account]Balance
+		if e.Tree {
+			m = b.Summary
+		} else {
+			m = b.Balances
+		}
+		bal, ok := m[e.Account]
 		switch ok {
 		case true:
 			bal = bal.Copy()

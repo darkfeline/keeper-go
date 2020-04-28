@@ -97,13 +97,19 @@ func TestCompile_balances(t *testing.T) {
 			Description: "buy stuff",
 			Splits: []Split{
 				split("Assets:Cash", -123, u),
-				split("Expenses:Food", 123, u),
+				split("Expenses:Drink", 123, u),
 			},
 		},
 		BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 3},
 			Account:   "Assets:Cash",
 			Declared:  Balance{u: -232},
+		},
+		BalanceAssert{
+			EntryDate: civil.Date{2000, 1, 3},
+			Tree:      true,
+			Account:   "Expenses",
+			Declared:  Balance{u: 321},
 		},
 	}
 	got := compile(e)
@@ -133,11 +139,11 @@ func TestCompile_balances(t *testing.T) {
 				Description: "buy stuff",
 				Splits: []Split{
 					split("Assets:Cash", -123, u),
-					split("Expenses:Food", 123, u),
+					split("Expenses:Drink", 123, u),
 				},
 				Balances: Balances{
-					"Assets:Cash":   Balance{u: -246},
-					"Expenses:Food": Balance{u: 246},
+					"Assets:Cash":    Balance{u: -246},
+					"Expenses:Drink": Balance{u: 123},
 				},
 			},
 			BalanceAssert{
@@ -147,6 +153,14 @@ func TestCompile_balances(t *testing.T) {
 				Actual:    Balance{u: -246},
 				Diff:      Balance{u: -14},
 			},
+			BalanceAssert{
+				EntryDate: civil.Date{2000, 1, 3},
+				Account:   "Expenses",
+				Tree:      true,
+				Declared:  Balance{u: 321},
+				Actual:    Balance{u: 246},
+				Diff:      Balance{u: -75},
+			},
 		}
 		if diff := cmp.Diff(want, got.Entries); diff != "" {
 			t.Errorf("entries mismatch (-want +got):\n%s", diff)
@@ -154,10 +168,21 @@ func TestCompile_balances(t *testing.T) {
 	})
 	t.Run("balance", func(t *testing.T) {
 		want := Balances{
-			"Assets:Cash":   Balance{u: -246},
-			"Expenses:Food": Balance{u: 246},
+			"Assets:Cash":    Balance{u: -246},
+			"Expenses:Food":  Balance{u: 123},
+			"Expenses:Drink": Balance{u: 123},
 		}
 		compareBalances(t, want, got.Balances)
+	})
+	t.Run("summary", func(t *testing.T) {
+		want := Summary{
+			"Assets":         Balance{u: -246},
+			"Assets:Cash":    Balance{u: -246},
+			"Expenses":       Balance{u: 246},
+			"Expenses:Food":  Balance{u: 123},
+			"Expenses:Drink": Balance{u: 123},
+		}
+		compareBalances(t, want, got.Summary)
 	})
 }
 
@@ -176,7 +201,7 @@ func TestBalanceDiff(t *testing.T) {
 	})
 }
 
-func compareBalances(t *testing.T, want, got Balances) {
+func compareBalances(t *testing.T, want, got map[Account]Balance) {
 	t.Helper()
 	wantKeys := make(map[Account]struct{})
 	for k := range want {
