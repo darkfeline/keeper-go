@@ -44,6 +44,7 @@ end
 		ast.SingleBalance{
 			BalanceHeader: ast.BalanceHeader{
 				TokPos:  1,
+				Tok:     token.BALANCE,
 				Date:    val(9, token.DATE, "2001-02-03"),
 				Account: val(20, token.ACCOUNT, "Some:account"),
 			},
@@ -55,22 +56,19 @@ end
 		ast.MultiBalance{
 			BalanceHeader: ast.BalanceHeader{
 				TokPos:  44,
+				Tok:     token.BALANCE,
 				Date:    val(52, token.DATE, "2001-02-05"),
 				Account: val(63, token.ACCOUNT, "Some:account"),
 			},
 			Amounts: []ast.LineNode{
-				ast.AmountLine{
-					Amount: ast.Amount{
-						Decimal: val(76, token.DECIMAL, "123.45"),
-						Unit:    val(83, token.USYMBOL, "USD"),
-					},
-				},
-				ast.AmountLine{
-					Amount: ast.Amount{
-						Decimal: val(87, token.DECIMAL, "56700"),
-						Unit:    val(93, token.USYMBOL, "JPY"),
-					},
-				},
+				ast.AmountLine{Amount: ast.Amount{
+					Decimal: val(76, token.DECIMAL, "123.45"),
+					Unit:    val(83, token.USYMBOL, "USD"),
+				}},
+				ast.AmountLine{Amount: ast.Amount{
+					Decimal: val(87, token.DECIMAL, "56700"),
+					Unit:    val(93, token.USYMBOL, "JPY"),
+				}},
 			},
 			EndTok: ast.End{TokPos: 97},
 		},
@@ -101,6 +99,87 @@ end
 			},
 			EndTok: ast.End{TokPos: 185},
 		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestParseBytes_single_tbal(t *testing.T) {
+	t.Parallel()
+	const input = `tbal 2001-02-03 Some:account 123.45 USD
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []ast.Entry{
+		ast.SingleBalance{
+			BalanceHeader: ast.BalanceHeader{
+				TokPos:  1,
+				Tok:     token.TBAL,
+				Date:    val(6, token.DATE, "2001-02-03"),
+				Account: val(17, token.ACCOUNT, "Some:account"),
+			},
+			Amount: ast.Amount{
+				Decimal: val(30, token.DECIMAL, "123.45"),
+				Unit:    val(37, token.USYMBOL, "USD"),
+			},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestParseBytes_multi_tbal(t *testing.T) {
+	t.Parallel()
+	const input = `tbal 2001-02-03 Some:account
+123.45 USD
+1234 JPY
+end
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []ast.Entry{
+		ast.MultiBalance{
+			BalanceHeader: ast.BalanceHeader{
+				TokPos:  1,
+				Tok:     token.TBAL,
+				Date:    val(6, token.DATE, "2001-02-03"),
+				Account: val(17, token.ACCOUNT, "Some:account"),
+			},
+			Amounts: []ast.LineNode{
+				ast.AmountLine{Amount: ast.Amount{
+					Decimal: val(30, token.DECIMAL, "123.45"),
+					Unit:    val(37, token.USYMBOL, "USD"),
+				}},
+				ast.AmountLine{Amount: ast.Amount{
+					Decimal: val(41, token.DECIMAL, "1234"),
+					Unit:    val(46, token.USYMBOL, "JPY"),
+				}},
+			},
+			EndTok: ast.End{TokPos: 50},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestParseBytes_unterminated_multi_tbal(t *testing.T) {
+	t.Parallel()
+	const input = `tbal 2001-02-03 Some:account
+123.45 USD
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err == nil {
+		t.Errorf("Expected error")
+	}
+	want := []ast.Entry{
+		ast.BadEntry{From: 1, To: 41},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
@@ -167,22 +246,19 @@ end
 		ast.MultiBalance{
 			BalanceHeader: ast.BalanceHeader{
 				TokPos:  2,
+				Tok:     token.BALANCE,
 				Date:    val(10, token.DATE, "2001-02-05"),
 				Account: val(21, token.ACCOUNT, "Some:account"),
 			},
 			Amounts: []ast.LineNode{
-				ast.AmountLine{
-					Amount: ast.Amount{
-						Decimal: val(34, token.DECIMAL, "123.45"),
-						Unit:    val(41, token.USYMBOL, "USD"),
-					},
-				},
-				ast.AmountLine{
-					Amount: ast.Amount{
-						Decimal: val(60, token.DECIMAL, "56700"),
-						Unit:    val(66, token.USYMBOL, "JPY"),
-					},
-				},
+				ast.AmountLine{Amount: ast.Amount{
+					Decimal: val(34, token.DECIMAL, "123.45"),
+					Unit:    val(41, token.USYMBOL, "USD"),
+				}},
+				ast.AmountLine{Amount: ast.Amount{
+					Decimal: val(60, token.DECIMAL, "56700"),
+					Unit:    val(66, token.USYMBOL, "JPY"),
+				}},
 			},
 			EndTok: ast.End{TokPos: 70},
 		},
