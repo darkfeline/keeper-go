@@ -101,12 +101,12 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 		d.Rows = append(d.Rows, r...)
 	}
 
-	add(stmtRow{Description: "Revenues", Section: true})
-	// Revenues are credit balance.
+	add(stmtRow{Description: "Income", Section: true})
+	// Income is credit balance.
 	b.Neg()
 	r, rt := makeStmtRows(revenueAccounts(a), b)
 	add(r...)
-	add(makeStmtBalance("Total Revenues", rt)...)
+	add(makeStmtBalance("Total Income", rt)...)
 
 	add(stmtRow{Description: "Expenses", Section: true})
 	// Expenses are debit balance.
@@ -115,8 +115,8 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	add(r...)
 	add(makeStmtBalance("Total Expenses", et)...)
 
-	add(stmtRow{Description: "Net Income", Section: true})
-	add(makeStmtBalance("Total Net Income", rt)...)
+	add(stmtRow{Description: "Net Profit", Section: true})
+	add(makeStmtBalance("Total Net Profit", rt)...)
 	execute(w, stmtTemplate, d)
 }
 

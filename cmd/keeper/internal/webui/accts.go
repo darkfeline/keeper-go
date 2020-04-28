@@ -32,7 +32,7 @@ func journalAccounts(j *journal.Journal) []journal.Account {
 func revenueAccounts(a []journal.Account) []journal.Account {
 	var a2 []journal.Account
 	for _, a := range a {
-		if a.Under("Revenues") {
+		if a.Under("Income") {
 			a2 = append(a2, a)
 		}
 	}
