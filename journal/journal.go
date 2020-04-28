@@ -134,9 +134,9 @@ func (j *Journal) compileEntry(e Entry) Entry {
 }
 
 func (j *Journal) addEntry(e Entry) error {
-	j.Entries = append(j.Entries, e)
 	switch e := e.(type) {
 	case Transaction:
+		j.Entries = append(j.Entries, e)
 		seen := make(map[Account]bool)
 		for _, s := range e.Splits {
 			if seen[s.Account] {
@@ -149,6 +149,7 @@ func (j *Journal) addEntry(e Entry) error {
 		}
 		return nil
 	case BalanceAssert:
+		j.Entries = append(j.Entries, e)
 		if err := j.addAccountEntry(e.Account, e); err != nil {
 			return err
 		}
@@ -157,6 +158,7 @@ func (j *Journal) addEntry(e Entry) error {
 		}
 		return nil
 	case CloseAccount:
+		j.Entries = append(j.Entries, e)
 		// We have to add the account entry first.  After the
 		// account is added to Closed, adding more account
 		// entries is an error.
