@@ -22,22 +22,28 @@ import (
 )
 
 func accountEntries(e []journal.Entry, a journal.Account) []journal.Entry {
+	return filterEntries(e, func(a2 journal.Account) bool {
+		return a == a2
+	})
+}
+
+func filterEntries(e []journal.Entry, f func(journal.Account) bool) []journal.Entry {
 	var e2 []journal.Entry
 	for _, e := range e {
 		switch e := e.(type) {
 		case journal.Transaction:
 			for _, s := range e.Splits {
-				if s.Account == a {
+				if f(s.Account) {
 					e2 = append(e2, e)
 					break
 				}
 			}
 		case journal.BalanceAssert:
-			if e.Account == a {
+			if f(e.Account) {
 				e2 = append(e2, e)
 			}
 		case journal.CloseAccount:
-			if e.Account == a {
+			if f(e.Account) {
 				e2 = append(e2, e)
 			}
 		default:
