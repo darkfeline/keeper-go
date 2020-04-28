@@ -39,7 +39,9 @@ const (
 
 	// Keywords
 	TX
+	END
 	BALANCE
 	UNIT
-	END
+	TBAL
+	CLOSE
 )
