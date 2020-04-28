@@ -65,23 +65,23 @@ func (b *builder) build(t []ast.Entry) ([]Entry, error) {
 	for _, n := range t {
 		switch n := n.(type) {
 		case ast.SingleBalance:
-			b, err := b.buildSingleBalance(n)
+			e, err := b.buildSingleBalance(n)
 			if err != nil {
 				continue
 			}
-			entries = append(entries, b)
+			entries = append(entries, e)
 		case ast.MultiBalance:
-			b, err := b.buildMultiBalance(n)
+			e, err := b.buildMultiBalance(n)
 			if err != nil {
 				continue
 			}
-			entries = append(entries, b)
+			entries = append(entries, e)
 		case ast.Transaction:
-			b, err := b.buildTransaction(n)
+			e, err := b.buildTransaction(n)
 			if err != nil {
 				continue
 			}
-			entries = append(entries, b)
+			entries = append(entries, e)
 		case ast.UnitDecl:
 			b.addUnit(n)
 		default:
