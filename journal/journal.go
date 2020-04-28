@@ -49,8 +49,8 @@ func Compile(o ...Option) (*Journal, error) {
 	if d := opts.ending; d.IsValid() {
 		e = entriesEnding(e, d)
 	}
-	b := compile(e)
-	return b, nil
+	j := compile(e)
+	return j, nil
 }
 
 // openInputFiles reads inputFiles and replaces them with their contents.
@@ -79,33 +79,33 @@ func openInputFiles(inputs []input) ([]inputBytes, error) {
 // compile compiles a Journal from entries.
 // Entries should be sorted.
 func compile(e []Entry) *Journal {
-	b := &Journal{
+	j := &Journal{
 		AccountEntries: make(map[Account][]Entry),
 		Balances:       make(Balances),
 		Summary:        make(Summary),
 	}
 	for _, e := range e {
-		b.compileEntry(e)
+		j.compileEntry(e)
 	}
-	return b
+	return j
 }
 
-func (b *Journal) compileEntry(e Entry) {
+func (j *Journal) compileEntry(e Entry) {
 	switch e := e.(type) {
 	case Transaction:
 		e.Balances = make(Balances)
 		for _, s := range e.Splits {
-			b.Balances.Add(s.Account, s.Amount)
-			b.Summary.Add(s.Account, s.Amount)
-			e.Balances[s.Account] = b.Balances[s.Account].Copy()
+			j.Balances.Add(s.Account, s.Amount)
+			j.Summary.Add(s.Account, s.Amount)
+			e.Balances[s.Account] = j.Balances[s.Account].Copy()
 		}
-		b.addEntry(e)
+		j.addEntry(e)
 	case BalanceAssert:
 		var m map[Account]Balance
 		if e.Tree {
-			m = b.Summary
+			m = j.Summary
 		} else {
-			m = b.Balances
+			m = j.Balances
 		}
 		bal, ok := m[e.Account]
 		switch ok {
@@ -116,14 +116,14 @@ func (b *Journal) compileEntry(e Entry) {
 		}
 		e.Actual = bal
 		e.Diff = balanceDiff(e.Actual, e.Declared)
-		b.addEntry(e)
+		j.addEntry(e)
 	default:
 		panic(fmt.Sprintf("unknown Entry type %T", e))
 	}
 }
 
-func (b *Journal) addEntry(e Entry) {
-	b.Entries = append(b.Entries, e)
+func (j *Journal) addEntry(e Entry) {
+	j.Entries = append(j.Entries, e)
 	switch e := e.(type) {
 	case Transaction:
 		seen := make(map[Account]bool)
@@ -131,21 +131,21 @@ func (b *Journal) addEntry(e Entry) {
 			if seen[s.Account] {
 				continue
 			}
-			b.addAccountEntry(s.Account, e)
+			j.addAccountEntry(s.Account, e)
 			seen[s.Account] = true
 		}
 	case BalanceAssert:
-		b.addAccountEntry(e.Account, e)
+		j.addAccountEntry(e.Account, e)
 		if !e.Diff.Empty() {
-			b.BalanceErrors = append(b.BalanceErrors, e)
+			j.BalanceErrors = append(j.BalanceErrors, e)
 		}
 	default:
 		panic(fmt.Sprintf("unknown Entry type %T", e))
 	}
 }
 
-func (b *Journal) addAccountEntry(a Account, e Entry) {
-	m, k := b.AccountEntries, a
+func (j *Journal) addAccountEntry(a Account, e Entry) {
+	m, k := j.AccountEntries, a
 	m[k] = append(m[k], e)
 }
 
