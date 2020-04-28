@@ -101,50 +101,9 @@ func compile(e []Entry) (*Journal, error) {
 func (j *Journal) addEntry(e Entry) error {
 	switch e := e.(type) {
 	case Transaction:
-		e.Balances = make(Balances)
-		for _, s := range e.Splits {
-			j.Balances.Add(s.Account, s.Amount)
-			j.Summary.Add(s.Account, s.Amount)
-			e.Balances[s.Account] = j.Balances[s.Account].Copy()
-		}
-
-		j.Entries = append(j.Entries, e)
-		seen := make(map[Account]bool)
-		for _, s := range e.Splits {
-			if seen[s.Account] {
-				continue
-			}
-			if err := j.addAccountEntry(s.Account, e); err != nil {
-				return err
-			}
-			seen[s.Account] = true
-		}
-		return nil
+		return j.addTransaction(e)
 	case BalanceAssert:
-		var m map[Account]Balance
-		if e.Tree {
-			m = j.Summary
-		} else {
-			m = j.Balances
-		}
-		bal, ok := m[e.Account]
-		switch ok {
-		case true:
-			bal = bal.Copy()
-		case false:
-			bal = make(Balance)
-		}
-		e.Actual = bal
-		e.Diff = balanceDiff(e.Actual, e.Declared)
-
-		j.Entries = append(j.Entries, e)
-		if err := j.addAccountEntry(e.Account, e); err != nil {
-			return err
-		}
-		if !e.Diff.Empty() {
-			j.BalanceErrors = append(j.BalanceErrors, e)
-		}
-		return nil
+		return j.addBalanceAssert(e)
 	case CloseAccount:
 		j.Entries = append(j.Entries, e)
 		// We have to add the account entry first.  After the
@@ -158,6 +117,50 @@ func (j *Journal) addEntry(e Entry) error {
 	default:
 		panic(fmt.Sprintf("unknown Entry type %T", e))
 	}
+}
+
+func (j *Journal) addTransaction(e Transaction) error {
+	e.Balances = make(Balances)
+	for _, s := range e.Splits {
+		j.Balances.Add(s.Account, s.Amount)
+		j.Summary.Add(s.Account, s.Amount)
+		e.Balances[s.Account] = j.Balances[s.Account].Copy()
+	}
+
+	j.Entries = append(j.Entries, e)
+	for _, a := range e.accounts() {
+		if err := j.addAccountEntry(a, e); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (j *Journal) addBalanceAssert(e BalanceAssert) error {
+	var m map[Account]Balance
+	if e.Tree {
+		m = j.Summary
+	} else {
+		m = j.Balances
+	}
+	bal, ok := m[e.Account]
+	switch ok {
+	case true:
+		bal = bal.Copy()
+	case false:
+		bal = make(Balance)
+	}
+	e.Actual = bal
+	e.Diff = balanceDiff(e.Actual, e.Declared)
+
+	j.Entries = append(j.Entries, e)
+	if err := j.addAccountEntry(e.Account, e); err != nil {
+		return err
+	}
+	if !e.Diff.Empty() {
+		j.BalanceErrors = append(j.BalanceErrors, e)
+	}
+	return nil
 }
 
 func (j *Journal) addAccountEntry(a Account, e Entry) error {
