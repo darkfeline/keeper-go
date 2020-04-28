@@ -77,19 +77,6 @@ func (t Transaction) Date() civil.Date {
 	return t.EntryDate
 }
 
-func (t Transaction) accounts() []Account {
-	var a []Account
-	seen := make(map[Account]bool)
-	for _, s := range t.Splits {
-		if seen[s.Account] {
-			continue
-		}
-		a = append(a, s.Account)
-		seen[s.Account] = true
-	}
-	return a
-}
-
 func (t Transaction) sortKey() int64 {
 	return dateKey(t.EntryDate)
 }

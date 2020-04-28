@@ -25,8 +25,6 @@ import (
 type Journal struct {
 	// Entries are all of the entries, sorted chronologically.
 	Entries []Entry
-	// AccountEntries are the entries that affect each account.
-	AccountEntries map[Account][]Entry
 	// Closed contains closed accounts.
 	Closed map[Account]CloseAccount
 	// Balances is the final balance for all accounts.
@@ -85,10 +83,9 @@ func openInputFiles(inputs []input) ([]inputBytes, error) {
 // Entries should be sorted.
 func compile(e []Entry) (*Journal, error) {
 	j := &Journal{
-		AccountEntries: make(map[Account][]Entry),
-		Closed:         make(map[Account]CloseAccount),
-		Balances:       make(Balances),
-		Summary:        make(Summary),
+		Closed:   make(map[Account]CloseAccount),
+		Balances: make(Balances),
+		Summary:  make(Summary),
 	}
 	for _, e := range e {
 		if err := j.addEntry(e); err != nil {
@@ -106,11 +103,8 @@ func (j *Journal) addEntry(e Entry) error {
 		return j.addBalanceAssert(e)
 	case CloseAccount:
 		j.Entries = append(j.Entries, e)
-		// We have to add the account entry first.  After the
-		// account is added to Closed, adding more account
-		// entries is an error.
-		if err := j.addAccountEntry(e.Account, e); err != nil {
-			return err
+		if err := j.checkAccountClosed(e.Account); err != nil {
+			return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 		}
 		j.Closed[e.Account] = e
 		return nil
@@ -122,21 +116,21 @@ func (j *Journal) addEntry(e Entry) error {
 func (j *Journal) addTransaction(e Transaction) error {
 	e.Balances = make(Balances)
 	for _, s := range e.Splits {
+		if err := j.checkAccountClosed(s.Account); err != nil {
+			return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
+		}
 		j.Balances.Add(s.Account, s.Amount)
 		j.Summary.Add(s.Account, s.Amount)
 		e.Balances[s.Account] = j.Balances[s.Account].Copy()
 	}
-
 	j.Entries = append(j.Entries, e)
-	for _, a := range e.accounts() {
-		if err := j.addAccountEntry(a, e); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
 func (j *Journal) addBalanceAssert(e BalanceAssert) error {
+	if err := j.checkAccountClosed(e.Account); err != nil {
+		return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
+	}
 	var m map[Account]Balance
 	if e.Tree {
 		m = j.Summary
@@ -154,22 +148,16 @@ func (j *Journal) addBalanceAssert(e BalanceAssert) error {
 	e.Diff = balanceDiff(e.Actual, e.Declared)
 
 	j.Entries = append(j.Entries, e)
-	if err := j.addAccountEntry(e.Account, e); err != nil {
-		return err
-	}
 	if !e.Diff.Empty() {
 		j.BalanceErrors = append(j.BalanceErrors, e)
 	}
 	return nil
 }
 
-func (j *Journal) addAccountEntry(a Account, e Entry) error {
+func (j *Journal) checkAccountClosed(a Account) error {
 	if _, ok := j.Closed[a]; ok {
-		return fmt.Errorf("add entry %T at %s: account %s is closed",
-			e, e.Position(), a)
+		return fmt.Errorf("account %s is closed", a)
 	}
-	m, k := j.AccountEntries, a
-	m[k] = append(m[k], e)
 	return nil
 }
 

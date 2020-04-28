@@ -78,7 +78,7 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	r, t := makeTrialRows(journalAccounts(j), j.Balances)
+	r, t := makeTrialRows(entryAccounts(j.Entries...), j.Balances)
 	r = append(r, t.Rows("Total")...)
 	d := trialData{Rows: r}
 	execute(w, trialTemplate, d)
@@ -91,7 +91,7 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	a := journalAccounts(j)
+	a := entryAccounts(j.Entries...)
 	b := j.Balances
 	d := stmtData{
 		Title: "Income Statement",
@@ -131,7 +131,7 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	a := journalAccounts(j)
+	a := entryAccounts(j.Entries...)
 	b := j.Balances
 	d := stmtData{
 		Title: "Balance Sheet",
@@ -193,7 +193,7 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	d := ledgerData{Account: account}
-	for _, e := range j.AccountEntries[account] {
+	for _, e := range accountEntries(j.Entries, account) {
 		d.Rows = append(d.Rows, makeLedgerRows(e, account)...)
 	}
 	execute(w, ledgerTemplate, d)

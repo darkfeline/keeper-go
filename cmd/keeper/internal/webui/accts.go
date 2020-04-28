@@ -15,18 +15,60 @@
 package webui
 
 import (
+	"fmt"
 	"sort"
 
 	"go.felesatra.moe/keeper/journal"
 )
 
-func journalAccounts(j *journal.Journal) []journal.Account {
-	var accounts []journal.Account
-	for a := range j.AccountEntries {
-		accounts = append(accounts, a)
+func accountEntries(e []journal.Entry, a journal.Account) []journal.Entry {
+	var e2 []journal.Entry
+	for _, e := range e {
+		switch e := e.(type) {
+		case journal.Transaction:
+			for _, s := range e.Splits {
+				if s.Account == a {
+					e2 = append(e2, e)
+					break
+				}
+			}
+		case journal.BalanceAssert:
+			if e.Account == a {
+				e2 = append(e2, e)
+			}
+		case journal.CloseAccount:
+			if e.Account == a {
+				e2 = append(e2, e)
+			}
+		default:
+			panic(fmt.Sprintf("unknown entry %T", e))
+		}
 	}
-	sort.Slice(accounts, func(i, j int) bool { return accounts[i] < accounts[j] })
-	return accounts
+	return e2
+}
+
+func entryAccounts(e ...journal.Entry) []journal.Account {
+	seen := make(map[journal.Account]bool)
+	for _, e := range e {
+		switch e := e.(type) {
+		case journal.Transaction:
+			for _, s := range e.Splits {
+				seen[s.Account] = true
+			}
+		case journal.BalanceAssert:
+			seen[e.Account] = true
+		case journal.CloseAccount:
+			seen[e.Account] = true
+		default:
+			panic(fmt.Sprintf("unknown entry %T", e))
+		}
+	}
+	var a []journal.Account
+	for acc := range seen {
+		a = append(a, acc)
+	}
+	sort.Slice(a, func(i, j int) bool { return a[i] < a[j] })
+	return a
 }
 
 func revenueAccounts(a []journal.Account) []journal.Account {

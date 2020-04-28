@@ -21,7 +21,7 @@ import (
 )
 
 func journalAccountTree(j *journal.Journal) *accountTree {
-	a := journalAccounts(j)
+	a := entryAccounts(j.Entries...)
 	return makeAccountTree(a)
 }
 
