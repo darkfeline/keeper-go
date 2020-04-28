@@ -91,10 +91,7 @@ func compile(e []Entry) (*Journal, error) {
 		Summary:        make(Summary),
 	}
 	for _, e := range e {
-		e, err := j.compileEntry(e)
-		if err != nil {
-			return nil, err
-		}
+		e = j.compileEntry(e)
 		if err := j.addEntry(e); err != nil {
 			return nil, err
 		}
@@ -102,7 +99,7 @@ func compile(e []Entry) (*Journal, error) {
 	return j, nil
 }
 
-func (j *Journal) compileEntry(e Entry) (Entry, error) {
+func (j *Journal) compileEntry(e Entry) Entry {
 	switch e := e.(type) {
 	case Transaction:
 		e.Balances = make(Balances)
@@ -111,7 +108,7 @@ func (j *Journal) compileEntry(e Entry) (Entry, error) {
 			j.Summary.Add(s.Account, s.Amount)
 			e.Balances[s.Account] = j.Balances[s.Account].Copy()
 		}
-		return e, nil
+		return e
 	case BalanceAssert:
 		var m map[Account]Balance
 		if e.Tree {
@@ -128,9 +125,9 @@ func (j *Journal) compileEntry(e Entry) (Entry, error) {
 		}
 		e.Actual = bal
 		e.Diff = balanceDiff(e.Actual, e.Declared)
-		return e, nil
+		return e
 	case CloseAccount:
-		return e, nil
+		return e
 	default:
 		panic(fmt.Sprintf("unknown Entry type %T", e))
 	}
