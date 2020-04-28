@@ -81,7 +81,7 @@ func (b BalanceHeader) End() token.Pos {
 	return b.Account.End()
 }
 
-// An UnitDecl node represents a unit declaration entry node.
+// A UnitDecl node represents a unit declaration entry node.
 type UnitDecl struct {
 	TokPos token.Pos
 	Unit   BasicValue // IDENT
