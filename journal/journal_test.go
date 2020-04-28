@@ -39,7 +39,10 @@ func TestCompile(t *testing.T) {
 			Declared:  Balance{u: -232},
 		},
 	}
-	got := compile(e)
+	got, err := compile(e)
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Run("entries", func(t *testing.T) {
 		want := []Entry{
 			Transaction{
@@ -112,7 +115,10 @@ func TestCompile_balances(t *testing.T) {
 			Declared:  Balance{u: 321},
 		},
 	}
-	got := compile(e)
+	got, err := compile(e)
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Run("entries", func(t *testing.T) {
 		want := []Entry{
 			Transaction{
@@ -184,6 +190,29 @@ func TestCompile_balances(t *testing.T) {
 		}
 		compareBalances(t, want, got.Summary)
 	})
+}
+
+func TestCompile_tx_after_close(t *testing.T) {
+	t.Parallel()
+	u := Unit{Symbol: "USD", Scale: 100}
+	e := []Entry{
+		CloseAccount{
+			EntryDate: civil.Date{2000, 1, 1},
+			Account:   "Assets:Cash",
+		},
+		Transaction{
+			EntryDate:   civil.Date{2000, 1, 2},
+			Description: "buy stuff",
+			Splits: []Split{
+				split("Assets:Cash", -123, u),
+				split("Expenses:Food", 123, u),
+			},
+		},
+	}
+	_, err := compile(e)
+	if err == nil {
+		t.Error("Expected error")
+	}
 }
 
 func TestBalanceDiff(t *testing.T) {

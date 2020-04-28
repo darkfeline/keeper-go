@@ -27,6 +27,8 @@ type Journal struct {
 	Entries []Entry
 	// AccountEntries are the entries that affect each account.
 	AccountEntries map[Account][]Entry
+	// Closed contains closed accounts.
+	Closed map[Account]CloseAccount
 	// Balances is the final balance for all accounts.
 	Balances Balances
 	// Summary is the total balance including sub-accounts for all accounts.
@@ -49,7 +51,10 @@ func Compile(o ...Option) (*Journal, error) {
 	if d := opts.ending; d.IsValid() {
 		e = entriesEnding(e, d)
 	}
-	j := compile(e)
+	j, err := compile(e)
+	if err != nil {
+		return nil, fmt.Errorf("keeper: %s", err)
+	}
 	return j, nil
 }
 
@@ -78,19 +83,22 @@ func openInputFiles(inputs []input) ([]inputBytes, error) {
 
 // compile compiles a Journal from entries.
 // Entries should be sorted.
-func compile(e []Entry) *Journal {
+func compile(e []Entry) (*Journal, error) {
 	j := &Journal{
 		AccountEntries: make(map[Account][]Entry),
+		Closed:         make(map[Account]CloseAccount),
 		Balances:       make(Balances),
 		Summary:        make(Summary),
 	}
 	for _, e := range e {
-		j.compileEntry(e)
+		if err := j.compileEntry(e); err != nil {
+			return nil, err
+		}
 	}
-	return j
+	return j, nil
 }
 
-func (j *Journal) compileEntry(e Entry) {
+func (j *Journal) compileEntry(e Entry) error {
 	switch e := e.(type) {
 	case Transaction:
 		e.Balances = make(Balances)
@@ -99,7 +107,9 @@ func (j *Journal) compileEntry(e Entry) {
 			j.Summary.Add(s.Account, s.Amount)
 			e.Balances[s.Account] = j.Balances[s.Account].Copy()
 		}
-		j.addEntry(e)
+		if err := j.addEntry(e); err != nil {
+			return err
+		}
 	case BalanceAssert:
 		var m map[Account]Balance
 		if e.Tree {
@@ -116,13 +126,20 @@ func (j *Journal) compileEntry(e Entry) {
 		}
 		e.Actual = bal
 		e.Diff = balanceDiff(e.Actual, e.Declared)
-		j.addEntry(e)
+		if err := j.addEntry(e); err != nil {
+			return err
+		}
+	case CloseAccount:
+		if err := j.addEntry(e); err != nil {
+			return err
+		}
 	default:
 		panic(fmt.Sprintf("unknown Entry type %T", e))
 	}
+	return nil
 }
 
-func (j *Journal) addEntry(e Entry) {
+func (j *Journal) addEntry(e Entry) error {
 	j.Entries = append(j.Entries, e)
 	switch e := e.(type) {
 	case Transaction:
@@ -131,22 +148,40 @@ func (j *Journal) addEntry(e Entry) {
 			if seen[s.Account] {
 				continue
 			}
-			j.addAccountEntry(s.Account, e)
+			if err := j.addAccountEntry(s.Account, e); err != nil {
+				return err
+			}
 			seen[s.Account] = true
 		}
 	case BalanceAssert:
-		j.addAccountEntry(e.Account, e)
+		if err := j.addAccountEntry(e.Account, e); err != nil {
+			return err
+		}
 		if !e.Diff.Empty() {
 			j.BalanceErrors = append(j.BalanceErrors, e)
 		}
+	case CloseAccount:
+		// We have to add the account entry first.  After the
+		// account is added to Closed, adding more account
+		// entries is an error.
+		if err := j.addAccountEntry(e.Account, e); err != nil {
+			return err
+		}
+		j.Closed[e.Account] = e
 	default:
 		panic(fmt.Sprintf("unknown Entry type %T", e))
 	}
+	return nil
 }
 
-func (j *Journal) addAccountEntry(a Account, e Entry) {
+func (j *Journal) addAccountEntry(a Account, e Entry) error {
+	if _, ok := j.Closed[a]; ok {
+		return fmt.Errorf("add entry %T at %s: account %s is closed",
+			e, e.Position(), a)
+	}
 	m, k := j.AccountEntries, a
 	m[k] = append(m[k], e)
+	return nil
 }
 
 func balanceDiff(x, y Balance) Balance {

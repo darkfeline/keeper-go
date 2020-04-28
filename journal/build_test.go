@@ -125,6 +125,26 @@ tbal 2001-02-03 Some:account -1.20 USD
 	}
 }
 
+func TestBuildEntries_close(t *testing.T) {
+	t.Parallel()
+	const input = `close 2001-02-03 Some:account
+`
+	got, err := buildEntries(inputBytes{"", []byte(input)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []Entry{
+		CloseAccount{
+			EntryDate: civil.Date{2001, 2, 3},
+			EntryPos:  token.Position{Offset: 0, Line: 1, Column: 1},
+			Account:   "Some:account",
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestCombineDecimalUnit(t *testing.T) {
 	t.Parallel()
 	cases := []struct {

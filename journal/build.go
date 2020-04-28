@@ -84,6 +84,12 @@ func (b *builder) build(t []ast.Entry) ([]Entry, error) {
 			entries = append(entries, e)
 		case ast.UnitDecl:
 			b.addUnit(n)
+		case ast.CloseAccount:
+			e, err := b.buildCloseAccount(n)
+			if err != nil {
+				continue
+			}
+			entries = append(entries, e)
 		default:
 			panic(fmt.Sprintf("unknown entry node %T", n))
 		}
@@ -234,6 +240,22 @@ func (b *builder) buildAmount(n ast.Amount) (Amount, error) {
 		return Amount{}, err
 	}
 	return a, nil
+}
+
+func (b *builder) buildCloseAccount(n ast.CloseAccount) (CloseAccount, error) {
+	assertKind(n.Date, token.DATE)
+	assertKind(n.Account, token.ACCOUNT)
+	e := CloseAccount{
+		EntryPos: b.nodePos(n),
+		Account:  Account(n.Account.Value),
+	}
+	var err error
+	e.EntryDate, err = civil.ParseDate(n.Date.Value)
+	if err != nil {
+		b.errorf(n.Date.Pos(), "%s", err)
+		return e, err
+	}
+	return e, nil
 }
 
 func (b *builder) addUnit(n ast.UnitDecl) {

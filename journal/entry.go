@@ -90,6 +90,27 @@ type Split struct {
 	Amount  Amount
 }
 
+// A CloseAccount entry represents an account closing.
+type CloseAccount struct {
+	EntryPos  token.Position
+	EntryDate civil.Date
+	Account   Account
+}
+
+func (c CloseAccount) Position() token.Position {
+	return c.EntryPos
+}
+
+func (c CloseAccount) Date() civil.Date {
+	return c.EntryDate
+}
+
+func (c CloseAccount) sortKey() int64 {
+	return dateKey(c.EntryDate) + 2
+}
+
+func (CloseAccount) entry() {}
+
 func sortEntries(e []Entry) {
 	type pair struct {
 		k int64
