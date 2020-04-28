@@ -133,6 +133,8 @@ func (b *builder) buildBalanceHeader(n ast.BalanceHeader) (BalanceAssert, error)
 	assertKind(n.Account, token.ACCOUNT)
 
 	a := BalanceAssert{
+		EntryPos: b.nodePos(n),
+		Account:  Account(n.Account.Value),
 		Tree:     n.Tok == token.TBAL,
 		Declared: make(Balance),
 		// Actual and Diff get set when the entries are added
@@ -145,9 +147,7 @@ func (b *builder) buildBalanceHeader(n ast.BalanceHeader) (BalanceAssert, error)
 		b.errorf(n.Date.Pos(), "%s", err)
 		return a, err
 	}
-	a.EntryPos = b.nodePos(n)
 
-	a.Account = Account(n.Account.Value)
 	return a, nil
 }
 
@@ -155,15 +155,16 @@ func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
 	assertKind(n.Date, token.DATE)
 	assertKind(n.Description, token.STRING)
 
-	var t Transaction
+	t := Transaction{
+		EntryPos:    b.nodePos(n),
+		Description: parseString(n.Description.Value),
+	}
 	var err error
 	t.EntryDate, err = civil.ParseDate(n.Date.Value)
 	if err != nil {
 		b.errorf(n.Date.Pos(), "%s", err)
 		return t, err
 	}
-	t.EntryPos = b.nodePos(n)
-	t.Description = parseString(n.Description.Value)
 
 	var empty *Split
 	bal := make(Balance)
