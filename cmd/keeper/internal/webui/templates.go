@@ -198,6 +198,11 @@ func makeLedgerRows(e journal.Entry, a journal.Account) []ledgerRow {
 		return convertTransaction(e, a)
 	case journal.BalanceAssert:
 		return convertBalance(e)
+	case journal.CloseAccount:
+		return []ledgerRow{{
+			Entry:       e,
+			Description: "(closed)",
+		}}
 	default:
 		panic(fmt.Sprintf("unknown entry %T", e))
 	}
