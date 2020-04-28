@@ -134,8 +134,9 @@ func (b *builder) buildBalanceHeader(n ast.BalanceHeader) (BalanceAssert, error)
 
 	a := BalanceAssert{
 		Declared: make(Balance),
-		// Actual and Diff get set later, so we don't have to
-		// initialize them now.
+		// Actual and Diff get set when the entries are added
+		// to the Journal, so we don't have to initialize them
+		// now.
 	}
 	var err error
 	a.EntryDate, err = civil.ParseDate(n.Date.Value)
