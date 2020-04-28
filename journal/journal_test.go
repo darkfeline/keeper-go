@@ -29,14 +29,8 @@ func TestCompile(t *testing.T) {
 			EntryDate:   civil.Date{2000, 1, 2},
 			Description: "buy stuff",
 			Splits: []Split{
-				{
-					Account: "Assets:Cash",
-					Amount:  Amount{Number: -123, Unit: u},
-				},
-				{
-					Account: "Expenses:Food",
-					Amount:  Amount{Number: 123, Unit: u},
-				},
+				split("Assets:Cash", -123, u),
+				split("Expenses:Food", 123, u),
 			},
 		},
 		BalanceAssert{
@@ -52,14 +46,8 @@ func TestCompile(t *testing.T) {
 				EntryDate:   civil.Date{2000, 1, 2},
 				Description: "buy stuff",
 				Splits: []Split{
-					{
-						Account: "Assets:Cash",
-						Amount:  Amount{Number: -123, Unit: u},
-					},
-					{
-						Account: "Expenses:Food",
-						Amount:  Amount{Number: 123, Unit: u},
-					},
+					split("Assets:Cash", -123, u),
+					split("Expenses:Food", 123, u),
 				},
 				Balances: Balances{
 					"Assets:Cash":   Balance{u: -123},
@@ -95,14 +83,8 @@ func TestCompile_balances(t *testing.T) {
 			EntryDate:   civil.Date{2000, 1, 2},
 			Description: "buy stuff",
 			Splits: []Split{
-				{
-					Account: "Assets:Cash",
-					Amount:  Amount{Number: -123, Unit: u},
-				},
-				{
-					Account: "Expenses:Food",
-					Amount:  Amount{Number: 123, Unit: u},
-				},
+				split("Assets:Cash", -123, u),
+				split("Expenses:Food", 123, u),
 			},
 		},
 		BalanceAssert{
@@ -114,14 +96,8 @@ func TestCompile_balances(t *testing.T) {
 			EntryDate:   civil.Date{2000, 1, 3},
 			Description: "buy stuff",
 			Splits: []Split{
-				{
-					Account: "Assets:Cash",
-					Amount:  Amount{Number: -123, Unit: u},
-				},
-				{
-					Account: "Expenses:Food",
-					Amount:  Amount{Number: 123, Unit: u},
-				},
+				split("Assets:Cash", -123, u),
+				split("Expenses:Food", 123, u),
 			},
 		},
 		BalanceAssert{
@@ -137,14 +113,8 @@ func TestCompile_balances(t *testing.T) {
 				EntryDate:   civil.Date{2000, 1, 2},
 				Description: "buy stuff",
 				Splits: []Split{
-					{
-						Account: "Assets:Cash",
-						Amount:  Amount{Number: -123, Unit: u},
-					},
-					{
-						Account: "Expenses:Food",
-						Amount:  Amount{Number: 123, Unit: u},
-					},
+					split("Assets:Cash", -123, u),
+					split("Expenses:Food", 123, u),
 				},
 				Balances: Balances{
 					"Assets:Cash":   Balance{u: -123},
@@ -162,14 +132,8 @@ func TestCompile_balances(t *testing.T) {
 				EntryDate:   civil.Date{2000, 1, 3},
 				Description: "buy stuff",
 				Splits: []Split{
-					{
-						Account: "Assets:Cash",
-						Amount:  Amount{Number: -123, Unit: u},
-					},
-					{
-						Account: "Expenses:Food",
-						Amount:  Amount{Number: 123, Unit: u},
-					},
+					split("Assets:Cash", -123, u),
+					split("Expenses:Food", 123, u),
 				},
 				Balances: Balances{
 					"Assets:Cash":   Balance{u: -246},
@@ -226,5 +190,12 @@ func compareBalances(t *testing.T, want, got Balances) {
 	}
 	for k := range wantKeys {
 		t.Errorf("For %s missing, want balance %s", k, want[k])
+	}
+}
+
+func split(a Account, n int64, u Unit) Split {
+	return Split{
+		Account: a,
+		Amount:  Amount{Number: n, Unit: u},
 	}
 }
