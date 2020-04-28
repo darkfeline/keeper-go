@@ -62,9 +62,6 @@ type Transaction struct {
 	EntryDate   civil.Date
 	Description string
 	Splits      []Split
-	// Balances contains the balance for all accounts mentioned in
-	// the transaction immediately after the transaction.
-	Balances Balances
 }
 
 func (t *Transaction) Position() token.Position {

@@ -52,10 +52,6 @@ func TestCompile(t *testing.T) {
 					split("Assets:Cash", -123, u),
 					split("Expenses:Food", 123, u),
 				},
-				Balances: Balances{
-					"Assets:Cash":   Balance{u: -123},
-					"Expenses:Food": Balance{u: 123},
-				},
 			},
 			&BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 2},
@@ -122,10 +118,6 @@ func TestCompile_balances(t *testing.T) {
 					split("Assets:Cash", -123, u),
 					split("Expenses:Food", 123, u),
 				},
-				Balances: Balances{
-					"Assets:Cash":   Balance{u: -123},
-					"Expenses:Food": Balance{u: 123},
-				},
 			},
 			&BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 2},
@@ -140,10 +132,6 @@ func TestCompile_balances(t *testing.T) {
 				Splits: []Split{
 					split("Assets:Cash", -123, u),
 					split("Expenses:Drink", 123, u),
-				},
-				Balances: Balances{
-					"Assets:Cash":    Balance{u: -246},
-					"Expenses:Drink": Balance{u: 123},
 				},
 			},
 			&BalanceAssert{

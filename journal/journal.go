@@ -111,13 +111,11 @@ func (j *Journal) addEntry(e Entry) error {
 }
 
 func (j *Journal) addTransaction(e *Transaction) error {
-	e.Balances = make(Balances)
 	for _, s := range e.Splits {
 		if err := j.checkAccountClosed(s.Account); err != nil {
 			return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 		}
 		j.Balances.Add(s.Account, s.Amount)
-		e.Balances[s.Account] = j.Balances[s.Account].Copy()
 	}
 	j.Entries = append(j.Entries, e)
 	return nil

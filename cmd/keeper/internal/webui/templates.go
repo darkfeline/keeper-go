@@ -193,9 +193,10 @@ func (e ledgerRow) Date() string {
 }
 
 func makeLedgerRows(e journal.Entry, a journal.Account) []ledgerRow {
+	b := make(journal.Balance)
 	switch e := e.(type) {
 	case *journal.Transaction:
-		return convertTransaction(e, a)
+		return convertTransaction(b, a, e)
 	case *journal.BalanceAssert:
 		return convertBalance(e)
 	case *journal.CloseAccount:
@@ -245,7 +246,7 @@ func balanceUnits(b ...journal.Balance) []journal.Unit {
 	return units
 }
 
-func convertTransaction(e *journal.Transaction, a journal.Account) []ledgerRow {
+func convertTransaction(b journal.Balance, a journal.Account, e *journal.Transaction) []ledgerRow {
 	var entries []ledgerRow
 	first := true
 	for _, s := range e.Splits {
@@ -255,6 +256,7 @@ func convertTransaction(e *journal.Transaction, a journal.Account) []ledgerRow {
 		le := ledgerRow{
 			Amount: s.Amount,
 		}
+		b.Add(s.Amount)
 		if first {
 			le.Entry = e
 			le.Description = e.Description
@@ -265,7 +267,7 @@ func convertTransaction(e *journal.Transaction, a journal.Account) []ledgerRow {
 	if len(entries) == 0 {
 		return entries
 	}
-	amts := e.Balances[a].Amounts()
+	amts := b.Amounts()
 	if len(amts) == 0 {
 		return entries
 	}
