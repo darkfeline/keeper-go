@@ -61,7 +61,7 @@ end
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("transactions mismatch (-want +got):\n%s", diff)
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
 
