@@ -15,6 +15,10 @@
 package journal
 
 import (
+	"fmt"
+	"sort"
+	"time"
+
 	"cloud.google.com/go/civil"
 
 	"go.felesatra.moe/keeper/kpr/token"
@@ -76,4 +80,36 @@ func (Transaction) entry() {}
 type Split struct {
 	Account Account
 	Amount  Amount
+}
+
+func sortEntries(e []Entry) {
+	type pair struct {
+		k int64
+		v Entry
+	}
+	ks := make([]pair, len(e))
+	for i, e := range e {
+		ks[i] = pair{entryKey(e), e}
+	}
+	sort.Slice(ks, func(i, j int) bool {
+		return ks[i].k < ks[j].k
+	})
+	for i, k := range ks {
+		e[i] = k.v
+	}
+}
+
+func entryKey(e Entry) int64 {
+	switch e := e.(type) {
+	case Transaction:
+		return dateKey(e.Date())
+	case BalanceAssert:
+		return dateKey(e.Date()) + 1
+	default:
+		panic(fmt.Sprintf("unknown Entry type %T", e))
+	}
+}
+
+func dateKey(d civil.Date) int64 {
+	return d.In(time.UTC).Unix()
 }
