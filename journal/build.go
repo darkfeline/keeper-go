@@ -64,27 +64,27 @@ func (b *builder) build(t []ast.Entry) ([]Entry, error) {
 	var entries []Entry
 	for _, n := range t {
 		switch n := n.(type) {
-		case ast.SingleBalance:
+		case *ast.SingleBalance:
 			e, err := b.buildSingleBalance(n)
 			if err != nil {
 				continue
 			}
 			entries = append(entries, e)
-		case ast.MultiBalance:
+		case *ast.MultiBalance:
 			e, err := b.buildMultiBalance(n)
 			if err != nil {
 				continue
 			}
 			entries = append(entries, e)
-		case ast.Transaction:
+		case *ast.Transaction:
 			e, err := b.buildTransaction(n)
 			if err != nil {
 				continue
 			}
 			entries = append(entries, e)
-		case ast.UnitDecl:
+		case *ast.UnitDecl:
 			b.addUnit(n)
-		case ast.CloseAccount:
+		case *ast.CloseAccount:
 			e, err := b.buildCloseAccount(n)
 			if err != nil {
 				continue
@@ -105,8 +105,8 @@ func (b *builder) errorf(pos token.Pos, format string, v ...interface{}) {
 	b.errs.Add(b.fset.Position(pos), fmt.Sprintf(format, v...))
 }
 
-func (b *builder) buildSingleBalance(n ast.SingleBalance) (BalanceAssert, error) {
-	a, err := b.buildBalanceHeader(n.BalanceHeader)
+func (b *builder) buildSingleBalance(n *ast.SingleBalance) (*BalanceAssert, error) {
+	a, err := b.buildBalanceHeader(&n.BalanceHeader)
 	if err != nil {
 		return a, err
 	}
@@ -118,13 +118,13 @@ func (b *builder) buildSingleBalance(n ast.SingleBalance) (BalanceAssert, error)
 	return a, nil
 }
 
-func (b *builder) buildMultiBalance(n ast.MultiBalance) (BalanceAssert, error) {
-	e, err := b.buildBalanceHeader(n.BalanceHeader)
+func (b *builder) buildMultiBalance(n *ast.MultiBalance) (*BalanceAssert, error) {
+	e, err := b.buildBalanceHeader(&n.BalanceHeader)
 	if err != nil {
 		return e, err
 	}
 	for _, n := range n.Amounts {
-		line := n.(ast.AmountLine)
+		line := n.(*ast.AmountLine)
 		amount, err := b.buildAmount(line.Amount)
 		if err != nil {
 			return e, err
@@ -134,11 +134,11 @@ func (b *builder) buildMultiBalance(n ast.MultiBalance) (BalanceAssert, error) {
 	return e, nil
 }
 
-func (b *builder) buildBalanceHeader(n ast.BalanceHeader) (BalanceAssert, error) {
+func (b *builder) buildBalanceHeader(n *ast.BalanceHeader) (*BalanceAssert, error) {
 	assertKind(n.Date, token.DATE)
 	assertKind(n.Account, token.ACCOUNT)
 
-	a := BalanceAssert{
+	a := &BalanceAssert{
 		EntryPos: b.nodePos(n),
 		Account:  Account(n.Account.Value),
 		Tree:     n.Tok == token.TBAL,
@@ -157,11 +157,11 @@ func (b *builder) buildBalanceHeader(n ast.BalanceHeader) (BalanceAssert, error)
 	return a, nil
 }
 
-func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
+func (b *builder) buildTransaction(n *ast.Transaction) (*Transaction, error) {
 	assertKind(n.Date, token.DATE)
 	assertKind(n.Description, token.STRING)
 
-	t := Transaction{
+	t := &Transaction{
 		EntryPos:    b.nodePos(n),
 		Description: parseString(n.Description.Value),
 	}
@@ -176,7 +176,7 @@ func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
 	bal := make(Balance)
 	t.Splits = make([]Split, len(n.Splits))
 	for i, n := range n.Splits {
-		n := n.(ast.SplitLine)
+		n := n.(*ast.SplitLine)
 		assertKind(n.Account, token.ACCOUNT)
 		s := &t.Splits[i]
 		s.Account = Account(n.Account.Value)
@@ -188,7 +188,7 @@ func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
 			empty = s
 			continue
 		}
-		a, err := b.buildAmount(*n.Amount)
+		a, err := b.buildAmount(n.Amount)
 		if err != nil {
 			return t, err
 		}
@@ -213,7 +213,7 @@ func (b *builder) buildTransaction(n ast.Transaction) (Transaction, error) {
 	return t, nil
 }
 
-func (b *builder) buildAmount(n ast.Amount) (Amount, error) {
+func (b *builder) buildAmount(n *ast.Amount) (Amount, error) {
 	assertKind(n.Decimal, token.DECIMAL)
 	assertKind(n.Unit, token.USYMBOL)
 
@@ -242,10 +242,10 @@ func (b *builder) buildAmount(n ast.Amount) (Amount, error) {
 	return a, nil
 }
 
-func (b *builder) buildCloseAccount(n ast.CloseAccount) (CloseAccount, error) {
+func (b *builder) buildCloseAccount(n *ast.CloseAccount) (*CloseAccount, error) {
 	assertKind(n.Date, token.DATE)
 	assertKind(n.Account, token.ACCOUNT)
-	e := CloseAccount{
+	e := &CloseAccount{
 		EntryPos: b.nodePos(n),
 		Account:  Account(n.Account.Value),
 	}
@@ -258,7 +258,7 @@ func (b *builder) buildCloseAccount(n ast.CloseAccount) (CloseAccount, error) {
 	return e, nil
 }
 
-func (b *builder) addUnit(n ast.UnitDecl) {
+func (b *builder) addUnit(n *ast.UnitDecl) {
 	assertKind(n.Unit, token.USYMBOL)
 	assertKind(n.Scale, token.DECIMAL)
 
@@ -305,7 +305,7 @@ func validateUnit(lit string) (ok bool) {
 	return true
 }
 
-func assertKind(n ast.BasicValue, tok token.Token) {
+func assertKind(n *ast.BasicValue, tok token.Token) {
 	if n.Kind != tok {
 		panic(fmt.Sprintf("token was %s not %s", n.Kind, tok))
 	}

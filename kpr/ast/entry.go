@@ -28,108 +28,108 @@ type BadEntry struct {
 	From, To token.Pos
 }
 
-func (b BadEntry) Pos() token.Pos {
+func (b *BadEntry) Pos() token.Pos {
 	return b.From
 }
 
-func (b BadEntry) End() token.Pos {
+func (b *BadEntry) End() token.Pos {
 	return b.To
 }
 
-func (BadEntry) entry() {}
+func (*BadEntry) entry() {}
 
 // A SingleBalance node represents a balance entry node on a single
 // line.
 type SingleBalance struct {
 	BalanceHeader
-	Amount Amount
+	Amount *Amount
 }
 
-func (b SingleBalance) End() token.Pos {
+func (b *SingleBalance) End() token.Pos {
 	return b.Amount.End()
 }
 
-func (SingleBalance) entry() {}
+func (*SingleBalance) entry() {}
 
 // A MultiBalance node represents a balance entry node spanning
 // multiple lines.
 type MultiBalance struct {
 	BalanceHeader
 	Amounts []LineNode // AmountLine, BadLine
-	EndTok  End
+	EndTok  *End
 }
 
-func (b MultiBalance) End() token.Pos {
+func (b *MultiBalance) End() token.Pos {
 	return b.EndTok.End()
 }
 
-func (MultiBalance) entry() {}
+func (*MultiBalance) entry() {}
 
 // A BalanceHeader contains the fields shared by balance entry nodes.
 type BalanceHeader struct {
 	TokPos  token.Pos
 	Tok     token.Token // BALANCE, TBAL
-	Date    BasicValue  // DATE
-	Account BasicValue  // ACCOUNT
+	Date    *BasicValue // DATE
+	Account *BasicValue // ACCOUNT
 }
 
-func (b BalanceHeader) Pos() token.Pos {
+func (b *BalanceHeader) Pos() token.Pos {
 	return b.TokPos
 }
 
-func (b BalanceHeader) End() token.Pos {
+func (b *BalanceHeader) End() token.Pos {
 	return b.Account.End()
 }
 
 // A UnitDecl node represents a unit declaration entry node.
 type UnitDecl struct {
 	TokPos token.Pos
-	Unit   BasicValue // IDENT
-	Scale  BasicValue // DECIMAL
+	Unit   *BasicValue // IDENT
+	Scale  *BasicValue // DECIMAL
 }
 
-func (u UnitDecl) Pos() token.Pos {
+func (u *UnitDecl) Pos() token.Pos {
 	return u.TokPos
 }
 
-func (u UnitDecl) End() token.Pos {
+func (u *UnitDecl) End() token.Pos {
 	return u.Scale.End()
 }
 
-func (UnitDecl) entry() {}
+func (*UnitDecl) entry() {}
 
 // A Transaction node represents a transaction entry node.
 type Transaction struct {
 	TokPos      token.Pos
-	Date        BasicValue // DATE
-	Description BasicValue // STRING
-	Splits      []LineNode // SplitLine, BadLine
-	EndTok      End
+	Date        *BasicValue // DATE
+	Description *BasicValue // STRING
+	Splits      []LineNode  // SplitLine, BadLine
+	EndTok      *End
 }
 
-func (t Transaction) Pos() token.Pos {
+func (t *Transaction) Pos() token.Pos {
 	return t.TokPos
 }
 
-func (t Transaction) End() token.Pos {
+func (t *Transaction) End() token.Pos {
 	return t.EndTok.End()
 }
 
-func (Transaction) entry() {}
+func (*Transaction) entry() {}
 
 // A CloseAccount node represents a close account entry node.
 type CloseAccount struct {
 	TokPos  token.Pos
-	Date    BasicValue // DATE
-	Account BasicValue // ACCOUNT
+	Date    *BasicValue // DATE
+	Account *BasicValue // ACCOUNT
 }
 
-func (c CloseAccount) Pos() token.Pos {
+func (c *CloseAccount) Pos() token.Pos {
 	return c.TokPos
 }
 
-func (c CloseAccount) End() token.Pos {
+func (c *CloseAccount) End() token.Pos {
 	return c.Account.End()
 }
 
-func (CloseAccount) entry() {}
+func (*CloseAccount) entry() {}

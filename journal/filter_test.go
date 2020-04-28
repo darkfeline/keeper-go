@@ -32,14 +32,14 @@ func TestEntriesEnding(t *testing.T) {
 		{
 			desc: "happy",
 			ts: []Entry{
-				Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
-				Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
-				Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
 			},
 			d: civil.Date{2001, 5, 6},
 			want: []Entry{
-				Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
-				Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
 			},
 		},
 		{
@@ -51,21 +51,21 @@ func TestEntriesEnding(t *testing.T) {
 		{
 			desc: "beginning",
 			ts: []Entry{
-				Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
-				Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
-				Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
 			},
 			d: civil.Date{2001, 5, 5},
 			want: []Entry{
-				Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
 			},
 		},
 		{
 			desc: "past beginning",
 			ts: []Entry{
-				Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
-				Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
-				Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
 			},
 			d:    civil.Date{2001, 5, 4},
 			want: []Entry{},
@@ -73,29 +73,29 @@ func TestEntriesEnding(t *testing.T) {
 		{
 			desc: "end",
 			ts: []Entry{
-				Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
-				Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
-				Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
 			},
 			d: civil.Date{2001, 5, 7},
 			want: []Entry{
-				Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
-				Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
-				Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
 			},
 		},
 		{
 			desc: "past end",
 			ts: []Entry{
-				Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
-				Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
-				Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
 			},
 			d: civil.Date{2001, 5, 8},
 			want: []Entry{
-				Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
-				Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
-				Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 5}, Description: "foo"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 6}, Description: "bar"},
+				&Transaction{EntryDate: civil.Date{2001, 5, 7}, Description: "baz"},
 			},
 		},
 	}

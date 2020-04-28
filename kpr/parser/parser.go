@@ -136,18 +136,18 @@ func isEntryKeyword(tok token.Token) bool {
 	}
 }
 
-func (p *parser) scanLineAsBad(from token.Pos) ast.BadLine {
-	return ast.BadLine{From: from, To: p.scanLine()}
+func (p *parser) scanLineAsBad(from token.Pos) *ast.BadLine {
+	return &ast.BadLine{From: from, To: p.scanLine()}
 }
 
-func (p *parser) scanLineAsBadEntry(from token.Pos) ast.BadEntry {
-	return ast.BadEntry{From: from, To: p.scanLine()}
+func (p *parser) scanLineAsBadEntry(from token.Pos) *ast.BadEntry {
+	return &ast.BadEntry{From: from, To: p.scanLine()}
 }
 
 // scanUntilEntryAsBad scans until the next entry and returns a BadEntry for
 // the intervening tokens.
-func (p *parser) scanUntilEntryAsBad(from token.Pos) ast.BadEntry {
-	return ast.BadEntry{From: from, To: p.scanUntilEntry()}
+func (p *parser) scanUntilEntryAsBad(from token.Pos) *ast.BadEntry {
+	return &ast.BadEntry{From: from, To: p.scanUntilEntry()}
 }
 
 func (p *parser) errorf(pos token.Pos, format string, v ...interface{}) {
@@ -191,7 +191,7 @@ func (p *parser) parseEntry(pos token.Pos, tok token.Token, lit string) ast.Entr
 }
 
 func (p *parser) parseTransaction(pos token.Pos) ast.Entry {
-	t := ast.Transaction{
+	t := &ast.Transaction{
 		TokPos: pos,
 	}
 
@@ -200,14 +200,14 @@ func (p *parser) parseTransaction(pos token.Pos) ast.Entry {
 		p.errorf(pos, "in transaction expected DATE not %s %s", tok, lit)
 		return p.scanUntilEntryAsBad(t.Pos())
 	}
-	t.Date = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+	t.Date = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
 	if tok != token.STRING {
 		p.errorf(pos, "in transaction expected STRING not %s %s", tok, lit)
 		return p.scanUntilEntryAsBad(t.Pos())
 	}
-	t.Description = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+	t.Description = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
 	if tok != token.NEWLINE {
@@ -226,7 +226,7 @@ func (p *parser) parseTransaction(pos token.Pos) ast.Entry {
 	if tok != token.END {
 		panic("unexpected token")
 	}
-	t.EndTok = ast.End{TokPos: pos}
+	t.EndTok = &ast.End{TokPos: pos}
 
 	pos, tok, lit = p.scan()
 	if tok != token.NEWLINE {
@@ -263,12 +263,12 @@ func (p *parser) parseSplits() ([]ast.LineNode, error) {
 }
 
 func (p *parser) parseSplit() ast.LineNode {
-	var s ast.SplitLine
+	s := &ast.SplitLine{}
 	pos, tok, lit := p.scan()
 	if tok != token.ACCOUNT {
 		panic(fmt.Sprintf("unexpected %s %s in split", tok, lit))
 	}
-	s.Account = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+	s.Account = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
 	switch tok {
@@ -284,7 +284,7 @@ func (p *parser) parseSplit() ast.LineNode {
 	if err != nil {
 		return p.scanLineAsBad(s.Pos())
 	}
-	s.Amount = &a
+	s.Amount = a
 	pos, tok, lit = p.scan()
 	if tok != token.NEWLINE {
 		p.errorf(pos, "in split bad token %s %s", tok, lit)
@@ -296,28 +296,28 @@ func (p *parser) parseSplit() ast.LineNode {
 // parseAmount parses an amount.  If parsing fails, the scanning state
 // is returned to just before the offending token.
 // The error is reported via errorf.
-func (p *parser) parseAmount() (ast.Amount, error) {
-	var a ast.Amount
+func (p *parser) parseAmount() (*ast.Amount, error) {
+	a := &ast.Amount{}
 	pos, tok, lit := p.scan()
 	if tok != token.DECIMAL {
 		p.unread(pos, tok, lit)
 		p.errorf(pos, "in amount expected DECIMAL not %s %s", tok, lit)
-		return a, fmt.Errorf("bad token %s", tok)
+		return nil, fmt.Errorf("bad token %s", tok)
 	}
-	a.Decimal = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+	a.Decimal = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
 	if tok != token.USYMBOL {
 		p.unread(pos, tok, lit)
 		p.errorf(pos, "in amount expected USYMBOL not %s %s", tok, lit)
-		return a, fmt.Errorf("bad token %s", tok)
+		return nil, fmt.Errorf("bad token %s", tok)
 	}
-	a.Unit = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+	a.Unit = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 	return a, nil
 }
 
 func (p *parser) parseUnitDecl(pos token.Pos) ast.Entry {
-	u := ast.UnitDecl{
+	u := &ast.UnitDecl{
 		TokPos: pos,
 	}
 
@@ -327,7 +327,7 @@ func (p *parser) parseUnitDecl(pos token.Pos) ast.Entry {
 		p.unread(pos, tok, lit)
 		return p.scanLineAsBadEntry(u.Pos())
 	}
-	u.Unit = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+	u.Unit = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
 	if tok != token.DECIMAL {
@@ -335,7 +335,7 @@ func (p *parser) parseUnitDecl(pos token.Pos) ast.Entry {
 		p.unread(pos, tok, lit)
 		return p.scanLineAsBadEntry(u.Pos())
 	}
-	u.Scale = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+	u.Scale = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
 	if tok != token.NEWLINE {
@@ -357,7 +357,7 @@ func (p *parser) parseBalance(pos token.Pos, tok token.Token) ast.Entry {
 		p.unread(pos, tok, lit)
 		return p.scanLineAsBadEntry(h.Pos())
 	}
-	h.Date = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+	h.Date = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
 	if tok != token.ACCOUNT {
@@ -365,7 +365,7 @@ func (p *parser) parseBalance(pos token.Pos, tok token.Token) ast.Entry {
 		p.unread(pos, tok, lit)
 		return p.scanLineAsBadEntry(h.Pos())
 	}
-	h.Account = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+	h.Account = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
 	switch tok {
@@ -385,7 +385,7 @@ func (p *parser) parseBalance(pos token.Pos, tok token.Token) ast.Entry {
 // If parsing fails, the scanning state is returned to just before the
 // offending token.
 func (p *parser) parseBalanceSingleAmount(h ast.BalanceHeader) ast.Entry {
-	b := ast.SingleBalance{
+	b := &ast.SingleBalance{
 		BalanceHeader: h,
 	}
 	a, err := p.parseAmount()
@@ -403,7 +403,7 @@ func (p *parser) parseBalanceSingleAmount(h ast.BalanceHeader) ast.Entry {
 }
 
 func (p *parser) parseBalanceMultipleAmounts(h ast.BalanceHeader) ast.Entry {
-	b := ast.MultiBalance{
+	b := &ast.MultiBalance{
 		BalanceHeader: h,
 	}
 	for {
@@ -416,11 +416,11 @@ func (p *parser) parseBalanceMultipleAmounts(h ast.BalanceHeader) ast.Entry {
 				b.Amounts = append(b.Amounts, a)
 				continue
 			}
-			b.Amounts = append(b.Amounts, ast.AmountLine{Amount: a})
+			b.Amounts = append(b.Amounts, &ast.AmountLine{Amount: a})
 		case token.NEWLINE:
 			continue
 		case token.END:
-			b.EndTok = ast.End{TokPos: pos}
+			b.EndTok = &ast.End{TokPos: pos}
 			pos, tok, lit = p.scan()
 			if tok != token.NEWLINE {
 				p.errorf(pos, "after end bad token %s %s", tok, lit)
@@ -440,7 +440,7 @@ func (p *parser) parseBalanceMultipleAmounts(h ast.BalanceHeader) ast.Entry {
 }
 
 func (p *parser) parseCloseAccount(pos token.Pos) ast.Entry {
-	e := ast.CloseAccount{
+	e := &ast.CloseAccount{
 		TokPos: pos,
 	}
 
@@ -450,7 +450,7 @@ func (p *parser) parseCloseAccount(pos token.Pos) ast.Entry {
 		p.unread(pos, tok, lit)
 		return p.scanLineAsBadEntry(e.Pos())
 	}
-	e.Date = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+	e.Date = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
 	if tok != token.ACCOUNT {
@@ -458,7 +458,7 @@ func (p *parser) parseCloseAccount(pos token.Pos) ast.Entry {
 		p.unread(pos, tok, lit)
 		return p.scanLineAsBadEntry(e.Pos())
 	}
-	e.Account = ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+	e.Account = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
 	if tok != token.NEWLINE {

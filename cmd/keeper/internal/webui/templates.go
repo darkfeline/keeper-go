@@ -38,7 +38,7 @@ type baseData struct {
 var indexTemplate = template.Must(clone(baseTemplate).Parse(indexText))
 
 type indexData struct {
-	BalanceErrors []journal.BalanceAssert
+	BalanceErrors []*journal.BalanceAssert
 }
 
 func (indexData) Title() string { return "" }
@@ -194,11 +194,11 @@ func (e ledgerRow) Date() string {
 
 func makeLedgerRows(e journal.Entry, a journal.Account) []ledgerRow {
 	switch e := e.(type) {
-	case journal.Transaction:
+	case *journal.Transaction:
 		return convertTransaction(e, a)
-	case journal.BalanceAssert:
+	case *journal.BalanceAssert:
 		return convertBalance(e)
-	case journal.CloseAccount:
+	case *journal.CloseAccount:
 		return []ledgerRow{{
 			Entry:       e,
 			Description: "(closed)",
@@ -208,7 +208,7 @@ func makeLedgerRows(e journal.Entry, a journal.Account) []ledgerRow {
 	}
 }
 
-func convertBalance(e journal.BalanceAssert) []ledgerRow {
+func convertBalance(e *journal.BalanceAssert) []ledgerRow {
 	units := balanceUnits(e.Actual, e.Declared, e.Diff)
 	var entries []ledgerRow
 	for _, u := range units {
@@ -245,7 +245,7 @@ func balanceUnits(b ...journal.Balance) []journal.Unit {
 	return units
 }
 
-func convertTransaction(e journal.Transaction, a journal.Account) []ledgerRow {
+func convertTransaction(e *journal.Transaction, a journal.Account) []ledgerRow {
 	var entries []ledgerRow
 	first := true
 	for _, s := range e.Splits {

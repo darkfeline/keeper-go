@@ -24,15 +24,15 @@ import (
 func TestSortEntries(t *testing.T) {
 	t.Parallel()
 	got := []Entry{
-		BalanceAssert{EntryDate: civil.Date{2000, 1, 5}},
-		CloseAccount{EntryDate: civil.Date{2000, 1, 5}},
-		Transaction{EntryDate: civil.Date{2000, 1, 5}},
+		&BalanceAssert{EntryDate: civil.Date{2000, 1, 5}},
+		&CloseAccount{EntryDate: civil.Date{2000, 1, 5}},
+		&Transaction{EntryDate: civil.Date{2000, 1, 5}},
 	}
 	sortEntries(got)
 	want := []Entry{
-		Transaction{EntryDate: civil.Date{2000, 1, 5}},
-		BalanceAssert{EntryDate: civil.Date{2000, 1, 5}},
-		CloseAccount{EntryDate: civil.Date{2000, 1, 5}},
+		&Transaction{EntryDate: civil.Date{2000, 1, 5}},
+		&BalanceAssert{EntryDate: civil.Date{2000, 1, 5}},
+		&CloseAccount{EntryDate: civil.Date{2000, 1, 5}},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)

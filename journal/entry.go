@@ -43,19 +43,19 @@ type BalanceAssert struct {
 	Diff     Balance // Actual - Declared
 }
 
-func (b BalanceAssert) Position() token.Position {
+func (b *BalanceAssert) Position() token.Position {
 	return b.EntryPos
 }
 
-func (b BalanceAssert) Date() civil.Date {
+func (b *BalanceAssert) Date() civil.Date {
 	return b.EntryDate
 }
 
-func (b BalanceAssert) sortKey() int64 {
+func (b *BalanceAssert) sortKey() int64 {
 	return dateKey(b.EntryDate) + 1
 }
 
-func (BalanceAssert) entry() {}
+func (*BalanceAssert) entry() {}
 
 // A Transaction entry describes a bookkeeping transaction.
 // The total balance of all splits should be zero.
@@ -69,19 +69,19 @@ type Transaction struct {
 	Balances Balances
 }
 
-func (t Transaction) Position() token.Position {
+func (t *Transaction) Position() token.Position {
 	return t.EntryPos
 }
 
-func (t Transaction) Date() civil.Date {
+func (t *Transaction) Date() civil.Date {
 	return t.EntryDate
 }
 
-func (t Transaction) sortKey() int64 {
+func (t *Transaction) sortKey() int64 {
 	return dateKey(t.EntryDate)
 }
 
-func (Transaction) entry() {}
+func (*Transaction) entry() {}
 
 // Split is one split in a transaction.
 // This describes a change in the amount of one unit for one account.
@@ -97,19 +97,19 @@ type CloseAccount struct {
 	Account   Account
 }
 
-func (c CloseAccount) Position() token.Position {
+func (c *CloseAccount) Position() token.Position {
 	return c.EntryPos
 }
 
-func (c CloseAccount) Date() civil.Date {
+func (c *CloseAccount) Date() civil.Date {
 	return c.EntryDate
 }
 
-func (c CloseAccount) sortKey() int64 {
+func (c *CloseAccount) sortKey() int64 {
 	return dateKey(c.EntryDate) + 2
 }
 
-func (CloseAccount) entry() {}
+func (*CloseAccount) entry() {}
 
 func sortEntries(e []Entry) {
 	type pair struct {

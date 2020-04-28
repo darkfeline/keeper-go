@@ -31,25 +31,25 @@ type End struct {
 	TokPos token.Pos
 }
 
-func (d End) Pos() token.Pos {
+func (d *End) Pos() token.Pos {
 	return d.TokPos
 }
 
-func (d End) End() token.Pos {
+func (d *End) End() token.Pos {
 	return token.Pos(int(d.TokPos) + 3)
 }
 
 // An Amount node represents an amount.
 type Amount struct {
-	Decimal BasicValue // DECIMAL
-	Unit    BasicValue // IDENT
+	Decimal *BasicValue // DECIMAL
+	Unit    *BasicValue // IDENT
 }
 
-func (a Amount) Pos() token.Pos {
+func (a *Amount) Pos() token.Pos {
 	return a.Decimal.Pos()
 }
 
-func (a Amount) End() token.Pos {
+func (a *Amount) End() token.Pos {
 	return a.Unit.End()
 }
 
@@ -60,10 +60,10 @@ type BasicValue struct {
 	Value    string
 }
 
-func (v BasicValue) Pos() token.Pos {
+func (v *BasicValue) Pos() token.Pos {
 	return v.ValuePos
 }
 
-func (v BasicValue) End() token.Pos {
+func (v *BasicValue) End() token.Pos {
 	return token.Pos(int(v.ValuePos) + len(v.Value))
 }

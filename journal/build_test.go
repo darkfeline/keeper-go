@@ -38,13 +38,13 @@ end
 	}
 	u := Unit{Symbol: "USD", Scale: 100}
 	want := []Entry{
-		BalanceAssert{
+		&BalanceAssert{
 			EntryDate: civil.Date{2001, 2, 3},
 			EntryPos:  token.Position{Offset: 13, Line: 2, Column: 1},
 			Account:   "Some:account",
 			Declared:  Balance{u: -120},
 		},
-		Transaction{
+		&Transaction{
 			EntryDate:   civil.Date{2001, 2, 3},
 			EntryPos:    token.Position{Offset: 55, Line: 3, Column: 1},
 			Description: "Buy stuff",
@@ -112,7 +112,7 @@ tbal 2001-02-03 Some:account -1.20 USD
 	}
 	u := Unit{Symbol: "USD", Scale: 100}
 	want := []Entry{
-		BalanceAssert{
+		&BalanceAssert{
 			EntryDate: civil.Date{2001, 2, 3},
 			EntryPos:  token.Position{Offset: 13, Line: 2, Column: 1},
 			Tree:      true,
@@ -134,7 +134,7 @@ func TestBuildEntries_close(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []Entry{
-		CloseAccount{
+		&CloseAccount{
 			EntryDate: civil.Date{2001, 2, 3},
 			EntryPos:  token.Position{Offset: 0, Line: 1, Column: 1},
 			Account:   "Some:account",

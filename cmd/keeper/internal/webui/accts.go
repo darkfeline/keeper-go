@@ -31,18 +31,18 @@ func filterEntries(e []journal.Entry, f func(journal.Account) bool) []journal.En
 	var e2 []journal.Entry
 	for _, e := range e {
 		switch e := e.(type) {
-		case journal.Transaction:
+		case *journal.Transaction:
 			for _, s := range e.Splits {
 				if f(s.Account) {
 					e2 = append(e2, e)
 					break
 				}
 			}
-		case journal.BalanceAssert:
+		case *journal.BalanceAssert:
 			if f(e.Account) {
 				e2 = append(e2, e)
 			}
-		case journal.CloseAccount:
+		case *journal.CloseAccount:
 			if f(e.Account) {
 				e2 = append(e2, e)
 			}
@@ -57,13 +57,13 @@ func entryAccounts(e ...journal.Entry) []journal.Account {
 	seen := make(map[journal.Account]bool)
 	for _, e := range e {
 		switch e := e.(type) {
-		case journal.Transaction:
+		case *journal.Transaction:
 			for _, s := range e.Splits {
 				seen[s.Account] = true
 			}
-		case journal.BalanceAssert:
+		case *journal.BalanceAssert:
 			seen[e.Account] = true
-		case journal.CloseAccount:
+		case *journal.CloseAccount:
 			seen[e.Account] = true
 		default:
 			panic(fmt.Sprintf("unknown entry %T", e))

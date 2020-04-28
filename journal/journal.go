@@ -26,13 +26,13 @@ type Journal struct {
 	// Entries are all of the entries, sorted chronologically.
 	Entries []Entry
 	// Closed contains closed accounts.
-	Closed map[Account]CloseAccount
+	Closed map[Account]*CloseAccount
 	// Balances is the final balance for all accounts.
 	Balances Balances
 	// Summary is the total balance including sub-accounts for all accounts.
 	Summary Summary
 	// BalanceErrors contains the balance assertion entries that failed.
-	BalanceErrors []BalanceAssert
+	BalanceErrors []*BalanceAssert
 }
 
 // Compile compiles keeper file source into a Journal.
@@ -83,7 +83,7 @@ func openInputFiles(inputs []input) ([]inputBytes, error) {
 // Entries should be sorted.
 func compile(e []Entry) (*Journal, error) {
 	j := &Journal{
-		Closed:   make(map[Account]CloseAccount),
+		Closed:   make(map[Account]*CloseAccount),
 		Balances: make(Balances),
 		Summary:  make(Summary),
 	}
@@ -97,11 +97,11 @@ func compile(e []Entry) (*Journal, error) {
 
 func (j *Journal) addEntry(e Entry) error {
 	switch e := e.(type) {
-	case Transaction:
+	case *Transaction:
 		return j.addTransaction(e)
-	case BalanceAssert:
+	case *BalanceAssert:
 		return j.addBalanceAssert(e)
-	case CloseAccount:
+	case *CloseAccount:
 		j.Entries = append(j.Entries, e)
 		if err := j.checkAccountClosed(e.Account); err != nil {
 			return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
@@ -113,7 +113,7 @@ func (j *Journal) addEntry(e Entry) error {
 	}
 }
 
-func (j *Journal) addTransaction(e Transaction) error {
+func (j *Journal) addTransaction(e *Transaction) error {
 	e.Balances = make(Balances)
 	for _, s := range e.Splits {
 		if err := j.checkAccountClosed(s.Account); err != nil {
@@ -127,7 +127,7 @@ func (j *Journal) addTransaction(e Transaction) error {
 	return nil
 }
 
-func (j *Journal) addBalanceAssert(e BalanceAssert) error {
+func (j *Journal) addBalanceAssert(e *BalanceAssert) error {
 	if err := j.checkAccountClosed(e.Account); err != nil {
 		return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 	}

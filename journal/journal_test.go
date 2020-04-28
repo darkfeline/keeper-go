@@ -25,7 +25,7 @@ func TestCompile(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
 	e := []Entry{
-		Transaction{
+		&Transaction{
 			EntryDate:   civil.Date{2000, 1, 2},
 			Description: "buy stuff",
 			Splits: []Split{
@@ -33,7 +33,7 @@ func TestCompile(t *testing.T) {
 				split("Expenses:Food", 123, u),
 			},
 		},
-		BalanceAssert{
+		&BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Cash",
 			Declared:  Balance{u: -232},
@@ -45,7 +45,7 @@ func TestCompile(t *testing.T) {
 	}
 	t.Run("entries", func(t *testing.T) {
 		want := []Entry{
-			Transaction{
+			&Transaction{
 				EntryDate:   civil.Date{2000, 1, 2},
 				Description: "buy stuff",
 				Splits: []Split{
@@ -57,7 +57,7 @@ func TestCompile(t *testing.T) {
 					"Expenses:Food": Balance{u: 123},
 				},
 			},
-			BalanceAssert{
+			&BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 2},
 				Account:   "Assets:Cash",
 				Declared:  Balance{u: -232},
@@ -82,7 +82,7 @@ func TestCompile_balances(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
 	e := []Entry{
-		Transaction{
+		&Transaction{
 			EntryDate:   civil.Date{2000, 1, 2},
 			Description: "buy stuff",
 			Splits: []Split{
@@ -90,12 +90,12 @@ func TestCompile_balances(t *testing.T) {
 				split("Expenses:Food", 123, u),
 			},
 		},
-		BalanceAssert{
+		&BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Cash",
 			Declared:  Balance{u: -232},
 		},
-		Transaction{
+		&Transaction{
 			EntryDate:   civil.Date{2000, 1, 3},
 			Description: "buy stuff",
 			Splits: []Split{
@@ -103,12 +103,12 @@ func TestCompile_balances(t *testing.T) {
 				split("Expenses:Drink", 123, u),
 			},
 		},
-		BalanceAssert{
+		&BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 3},
 			Account:   "Assets:Cash",
 			Declared:  Balance{u: -232},
 		},
-		BalanceAssert{
+		&BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 3},
 			Tree:      true,
 			Account:   "Expenses",
@@ -121,7 +121,7 @@ func TestCompile_balances(t *testing.T) {
 	}
 	t.Run("entries", func(t *testing.T) {
 		want := []Entry{
-			Transaction{
+			&Transaction{
 				EntryDate:   civil.Date{2000, 1, 2},
 				Description: "buy stuff",
 				Splits: []Split{
@@ -133,14 +133,14 @@ func TestCompile_balances(t *testing.T) {
 					"Expenses:Food": Balance{u: 123},
 				},
 			},
-			BalanceAssert{
+			&BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 2},
 				Account:   "Assets:Cash",
 				Declared:  Balance{u: -232},
 				Actual:    Balance{u: -123},
 				Diff:      Balance{u: 109},
 			},
-			Transaction{
+			&Transaction{
 				EntryDate:   civil.Date{2000, 1, 3},
 				Description: "buy stuff",
 				Splits: []Split{
@@ -152,14 +152,14 @@ func TestCompile_balances(t *testing.T) {
 					"Expenses:Drink": Balance{u: 123},
 				},
 			},
-			BalanceAssert{
+			&BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 3},
 				Account:   "Assets:Cash",
 				Declared:  Balance{u: -232},
 				Actual:    Balance{u: -246},
 				Diff:      Balance{u: -14},
 			},
-			BalanceAssert{
+			&BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 3},
 				Account:   "Expenses",
 				Tree:      true,
@@ -196,11 +196,11 @@ func TestCompile_tx_after_close(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
 	e := []Entry{
-		CloseAccount{
+		&CloseAccount{
 			EntryDate: civil.Date{2000, 1, 1},
 			Account:   "Assets:Cash",
 		},
-		Transaction{
+		&Transaction{
 			EntryDate:   civil.Date{2000, 1, 2},
 			Description: "buy stuff",
 			Splits: []Split{

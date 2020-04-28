@@ -28,38 +28,38 @@ type BadLine struct {
 	From, To token.Pos
 }
 
-func (b BadLine) Pos() token.Pos {
+func (b *BadLine) Pos() token.Pos {
 	return b.From
 }
 
-func (b BadLine) End() token.Pos {
+func (b *BadLine) End() token.Pos {
 	return b.To
 }
 
-func (BadLine) lineNode() {}
+func (*BadLine) lineNode() {}
 
 // A SplitLine node represents a split line node in a transaction.
 type SplitLine struct {
-	Account BasicValue // STRING
+	Account *BasicValue // STRING
 	Amount  *Amount
 }
 
-func (s SplitLine) Pos() token.Pos {
+func (s *SplitLine) Pos() token.Pos {
 	return s.Account.Pos()
 }
 
-func (s SplitLine) End() token.Pos {
+func (s *SplitLine) End() token.Pos {
 	if s.Amount == nil {
 		return s.Account.End()
 	}
 	return s.Amount.End()
 }
 
-func (SplitLine) lineNode() {}
+func (*SplitLine) lineNode() {}
 
 // An AmountLine node represents an amount line node.
 type AmountLine struct {
-	Amount
+	*Amount
 }
 
-func (AmountLine) lineNode() {}
+func (*AmountLine) lineNode() {}
