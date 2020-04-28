@@ -105,116 +105,17 @@ end
 	}
 }
 
-func TestParseBytes_single_tbal(t *testing.T) {
+func TestParseBytes_invalid_token(t *testing.T) {
 	t.Parallel()
-	const input = `tbal 2001-02-03 Some:account 123.45 USD
-`
-	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := []ast.Entry{
-		ast.SingleBalance{
-			BalanceHeader: ast.BalanceHeader{
-				TokPos:  1,
-				Tok:     token.TBAL,
-				Date:    val(6, token.DATE, "2001-02-03"),
-				Account: val(17, token.ACCOUNT, "Some:account"),
-			},
-			Amount: ast.Amount{
-				Decimal: val(30, token.DECIMAL, "123.45"),
-				Unit:    val(37, token.USYMBOL, "USD"),
-			},
-		},
-	}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("entries mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestParseBytes_multi_tbal(t *testing.T) {
-	t.Parallel()
-	const input = `tbal 2001-02-03 Some:account
-123.45 USD
-1234 JPY
-end
-`
-	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := []ast.Entry{
-		ast.MultiBalance{
-			BalanceHeader: ast.BalanceHeader{
-				TokPos:  1,
-				Tok:     token.TBAL,
-				Date:    val(6, token.DATE, "2001-02-03"),
-				Account: val(17, token.ACCOUNT, "Some:account"),
-			},
-			Amounts: []ast.LineNode{
-				ast.AmountLine{Amount: ast.Amount{
-					Decimal: val(30, token.DECIMAL, "123.45"),
-					Unit:    val(37, token.USYMBOL, "USD"),
-				}},
-				ast.AmountLine{Amount: ast.Amount{
-					Decimal: val(41, token.DECIMAL, "1234"),
-					Unit:    val(46, token.USYMBOL, "JPY"),
-				}},
-			},
-			EndTok: ast.End{TokPos: 50},
-		},
-	}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("entries mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestParseBytes_unterminated_multi_tbal(t *testing.T) {
-	t.Parallel()
-	const input = `tbal 2001-02-03 Some:account
-123.45 USD
-`
+	const input = `.`
 	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
 	if err == nil {
 		t.Errorf("Expected error")
 	}
 	want := []ast.Entry{
-		ast.BadEntry{From: 1, To: 41},
-	}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("entries mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestParseBytes_split_without_amount(t *testing.T) {
-	t.Parallel()
-	const input = `tx 2001-02-03 "Buy stuff"
-Some:account 1.2 USD
-Expenses:Stuff
-end
-`
-	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := []ast.Entry{
-		ast.Transaction{
-			TokPos:      1,
-			Date:        val(4, token.DATE, "2001-02-03"),
-			Description: val(15, token.STRING, `"Buy stuff"`),
-			Splits: []ast.LineNode{
-				ast.SplitLine{
-					Account: val(27, token.ACCOUNT, "Some:account"),
-					Amount: &ast.Amount{
-						Decimal: val(40, token.DECIMAL, "1.2"),
-						Unit:    val(44, token.USYMBOL, "USD"),
-					},
-				},
-				ast.SplitLine{
-					Account: val(48, token.ACCOUNT, "Expenses:Stuff"),
-				},
-			},
-			EndTok: ast.End{TokPos: 63},
+		ast.BadEntry{
+			From: 1,
+			To:   2,
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
@@ -295,6 +196,42 @@ end
 	}
 }
 
+func TestParseBytes_split_without_amount(t *testing.T) {
+	t.Parallel()
+	const input = `tx 2001-02-03 "Buy stuff"
+Some:account 1.2 USD
+Expenses:Stuff
+end
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []ast.Entry{
+		ast.Transaction{
+			TokPos:      1,
+			Date:        val(4, token.DATE, "2001-02-03"),
+			Description: val(15, token.STRING, `"Buy stuff"`),
+			Splits: []ast.LineNode{
+				ast.SplitLine{
+					Account: val(27, token.ACCOUNT, "Some:account"),
+					Amount: &ast.Amount{
+						Decimal: val(40, token.DECIMAL, "1.2"),
+						Unit:    val(44, token.USYMBOL, "USD"),
+					},
+				},
+				ast.SplitLine{
+					Account: val(48, token.ACCOUNT, "Expenses:Stuff"),
+				},
+			},
+			EndTok: ast.End{TokPos: 63},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestParseBytes_unterminated_tx(t *testing.T) {
 	t.Parallel()
 	const input = `unit USD 100
@@ -342,18 +279,81 @@ Some:account
 	}
 }
 
-func TestParseBytes_invalid_token(t *testing.T) {
+func TestParseBytes_single_tbal(t *testing.T) {
 	t.Parallel()
-	const input = `.`
+	const input = `tbal 2001-02-03 Some:account 123.45 USD
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []ast.Entry{
+		ast.SingleBalance{
+			BalanceHeader: ast.BalanceHeader{
+				TokPos:  1,
+				Tok:     token.TBAL,
+				Date:    val(6, token.DATE, "2001-02-03"),
+				Account: val(17, token.ACCOUNT, "Some:account"),
+			},
+			Amount: ast.Amount{
+				Decimal: val(30, token.DECIMAL, "123.45"),
+				Unit:    val(37, token.USYMBOL, "USD"),
+			},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestParseBytes_multi_tbal(t *testing.T) {
+	t.Parallel()
+	const input = `tbal 2001-02-03 Some:account
+123.45 USD
+1234 JPY
+end
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []ast.Entry{
+		ast.MultiBalance{
+			BalanceHeader: ast.BalanceHeader{
+				TokPos:  1,
+				Tok:     token.TBAL,
+				Date:    val(6, token.DATE, "2001-02-03"),
+				Account: val(17, token.ACCOUNT, "Some:account"),
+			},
+			Amounts: []ast.LineNode{
+				ast.AmountLine{Amount: ast.Amount{
+					Decimal: val(30, token.DECIMAL, "123.45"),
+					Unit:    val(37, token.USYMBOL, "USD"),
+				}},
+				ast.AmountLine{Amount: ast.Amount{
+					Decimal: val(41, token.DECIMAL, "1234"),
+					Unit:    val(46, token.USYMBOL, "JPY"),
+				}},
+			},
+			EndTok: ast.End{TokPos: 50},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestParseBytes_unterminated_multi_tbal(t *testing.T) {
+	t.Parallel()
+	const input = `tbal 2001-02-03 Some:account
+123.45 USD
+`
 	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
 	if err == nil {
 		t.Errorf("Expected error")
 	}
 	want := []ast.Entry{
-		ast.BadEntry{
-			From: 1,
-			To:   2,
-		},
+		ast.BadEntry{From: 1, To: 41},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
