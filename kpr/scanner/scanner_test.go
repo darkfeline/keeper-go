@@ -161,6 +161,24 @@ end
 				{63, token.NEWLINE, "\n"},
 			},
 		},
+		{
+			desc: "tbal entry",
+			text: `unit USD 100
+tbal 2001-02-03 Some:account 123.45 USD
+`,
+			want: []result{
+				{1, token.UNIT, "unit"},
+				{6, token.USYMBOL, "USD"},
+				{10, token.DECIMAL, "100"},
+				{13, token.NEWLINE, "\n"},
+				{14, token.TBAL, "tbal"},
+				{19, token.DATE, "2001-02-03"},
+				{30, token.ACCOUNT, "Some:account"},
+				{43, token.DECIMAL, "123.45"},
+				{50, token.USYMBOL, "USD"},
+				{53, token.NEWLINE, "\n"},
+			},
+		},
 	}
 	for _, c := range cases {
 		c := c

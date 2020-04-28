@@ -341,14 +341,20 @@ func lexLower(s *Scanner) stateFn {
 	case "tx":
 		s.emit(token.TX)
 		return lexExprEnd
+	case "end":
+		s.emit(token.END)
+		return lexExprEnd
 	case "balance":
 		s.emit(token.BALANCE)
 		return lexExprEnd
 	case "unit":
 		s.emit(token.UNIT)
 		return lexExprEnd
-	case "end":
-		s.emit(token.END)
+	case "tbal":
+		s.emit(token.TBAL)
+		return lexExprEnd
+	case "close":
+		s.emit(token.CLOSE)
 		return lexExprEnd
 	}
 	if s.accept(digits + ":_") {
