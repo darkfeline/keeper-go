@@ -156,11 +156,11 @@ func TestCompile_balances(t *testing.T) {
 	})
 }
 
-func TestCompile_tx_after_close(t *testing.T) {
+func TestCompile_tx_after_disable(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
 	e := []Entry{
-		&CloseAccount{
+		&DisableAccount{
 			EntryDate: civil.Date{2000, 1, 1},
 			Account:   "Assets:Cash",
 		},

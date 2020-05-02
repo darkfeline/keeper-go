@@ -42,7 +42,7 @@ func filterEntries(e []journal.Entry, f func(journal.Account) bool) []journal.En
 			if f(e.Account) {
 				e2 = append(e2, e)
 			}
-		case *journal.CloseAccount:
+		case *journal.DisableAccount:
 			if f(e.Account) {
 				e2 = append(e2, e)
 			}
@@ -63,7 +63,7 @@ func entryAccounts(e ...journal.Entry) []journal.Account {
 			}
 		case *journal.BalanceAssert:
 			seen[e.Account] = true
-		case *journal.CloseAccount:
+		case *journal.DisableAccount:
 			seen[e.Account] = true
 		default:
 			panic(fmt.Sprintf("unknown entry %T", e))

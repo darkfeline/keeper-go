@@ -25,8 +25,8 @@ import (
 type Journal struct {
 	// Entries are all of the entries, sorted chronologically.
 	Entries []Entry
-	// Closed contains closed accounts.
-	Closed map[Account]*CloseAccount
+	// Disabled contains disabled accounts.
+	Disabled map[Account]*DisableAccount
 	// Balances is the final balance for all accounts.
 	Balances Balances
 	// BalanceErrors contains the balance assertion entries that failed.
@@ -81,7 +81,7 @@ func openInputFiles(inputs []input) ([]inputBytes, error) {
 // Entries should be sorted.
 func compile(e []Entry) (*Journal, error) {
 	j := &Journal{
-		Closed:   make(map[Account]*CloseAccount),
+		Disabled: make(map[Account]*DisableAccount),
 		Balances: make(Balances),
 	}
 	for _, e := range e {
@@ -98,12 +98,12 @@ func (j *Journal) addEntry(e Entry) error {
 		return j.addTransaction(e)
 	case *BalanceAssert:
 		return j.addBalanceAssert(e)
-	case *CloseAccount:
+	case *DisableAccount:
 		j.Entries = append(j.Entries, e)
-		if err := j.checkAccountClosed(e.Account); err != nil {
+		if err := j.checkAccountDisabled(e.Account); err != nil {
 			return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 		}
-		j.Closed[e.Account] = e
+		j.Disabled[e.Account] = e
 		return nil
 	default:
 		panic(fmt.Sprintf("unknown Entry type %T", e))
@@ -112,7 +112,7 @@ func (j *Journal) addEntry(e Entry) error {
 
 func (j *Journal) addTransaction(e *Transaction) error {
 	for _, s := range e.Splits {
-		if err := j.checkAccountClosed(s.Account); err != nil {
+		if err := j.checkAccountDisabled(s.Account); err != nil {
 			return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 		}
 		j.Balances.Add(s.Account, s.Amount)
@@ -122,7 +122,7 @@ func (j *Journal) addTransaction(e *Transaction) error {
 }
 
 func (j *Journal) addBalanceAssert(e *BalanceAssert) error {
-	if err := j.checkAccountClosed(e.Account); err != nil {
+	if err := j.checkAccountDisabled(e.Account); err != nil {
 		return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 	}
 	bal, ok := j.Balances[e.Account]
@@ -142,9 +142,9 @@ func (j *Journal) addBalanceAssert(e *BalanceAssert) error {
 	return nil
 }
 
-func (j *Journal) checkAccountClosed(a Account) error {
-	if e, ok := j.Closed[a]; ok {
-		return fmt.Errorf("account %s is closed by entry %s", a, e)
+func (j *Journal) checkAccountDisabled(a Account) error {
+	if e, ok := j.Disabled[a]; ok {
+		return fmt.Errorf("account %s is disabled by entry %s", a, e)
 	}
 	return nil
 }

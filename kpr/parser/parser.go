@@ -129,7 +129,7 @@ func (p *parser) scanUntilEntry() token.Pos {
 
 func isEntryKeyword(tok token.Token) bool {
 	switch tok {
-	case token.TX, token.BALANCE, token.UNIT, token.CLOSE:
+	case token.TX, token.BALANCE, token.UNIT, token.DISABLE:
 		return true
 	default:
 		return false
@@ -182,8 +182,8 @@ func (p *parser) parseEntry(pos token.Pos, tok token.Token, lit string) ast.Entr
 		return p.parseUnitDecl(pos)
 	case token.BALANCE:
 		return p.parseBalance(pos)
-	case token.CLOSE:
-		return p.parseCloseAccount(pos)
+	case token.DISABLE:
+		return p.parseDisableAccount(pos)
 	default:
 		p.errorf(pos, "bad entry keyword %s", lit)
 		return p.scanUntilEntryAsBad(pos)
@@ -438,14 +438,14 @@ func (p *parser) parseBalanceMultipleAmounts(h ast.BalanceHeader) ast.Entry {
 	}
 }
 
-func (p *parser) parseCloseAccount(pos token.Pos) ast.Entry {
-	e := &ast.CloseAccount{
+func (p *parser) parseDisableAccount(pos token.Pos) ast.Entry {
+	e := &ast.DisableAccount{
 		TokPos: pos,
 	}
 
 	pos, tok, lit := p.scan()
 	if tok != token.DATE {
-		p.errorf(pos, "in close account expected DATE not %s %s", tok, lit)
+		p.errorf(pos, "in disable account expected DATE not %s %s", tok, lit)
 		p.unread(pos, tok, lit)
 		return p.scanLineAsBadEntry(e.Pos())
 	}
@@ -453,7 +453,7 @@ func (p *parser) parseCloseAccount(pos token.Pos) ast.Entry {
 
 	pos, tok, lit = p.scan()
 	if tok != token.ACCOUNT {
-		p.errorf(pos, "in close account expected ACCOUNT not %s %s", tok, lit)
+		p.errorf(pos, "in disable account expected ACCOUNT not %s %s", tok, lit)
 		p.unread(pos, tok, lit)
 		return p.scanLineAsBadEntry(e.Pos())
 	}
@@ -461,7 +461,7 @@ func (p *parser) parseCloseAccount(pos token.Pos) ast.Entry {
 
 	pos, tok, lit = p.scan()
 	if tok != token.NEWLINE {
-		p.errorf(pos, "in close account expected NEWLINE not %s %s", tok, lit)
+		p.errorf(pos, "in disable account expected NEWLINE not %s %s", tok, lit)
 		return p.scanLineAsBadEntry(e.Pos())
 	}
 

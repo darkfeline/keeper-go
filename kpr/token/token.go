@@ -42,5 +42,5 @@ const (
 	END
 	BALANCE
 	UNIT
-	CLOSE
+	DISABLE
 )

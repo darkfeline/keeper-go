@@ -116,19 +116,19 @@ func (t *Transaction) End() token.Pos {
 
 func (*Transaction) entry() {}
 
-// A CloseAccount node represents a close account entry node.
-type CloseAccount struct {
+// A DisableAccount node represents a disable account entry node.
+type DisableAccount struct {
 	TokPos  token.Pos
 	Date    *BasicValue // DATE
 	Account *BasicValue // ACCOUNT
 }
 
-func (c *CloseAccount) Pos() token.Pos {
+func (c *DisableAccount) Pos() token.Pos {
 	return c.TokPos
 }
 
-func (c *CloseAccount) End() token.Pos {
+func (c *DisableAccount) End() token.Pos {
 	return c.Account.End()
 }
 
-func (*CloseAccount) entry() {}
+func (*DisableAccount) entry() {}

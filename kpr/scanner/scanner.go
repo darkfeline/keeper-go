@@ -350,8 +350,8 @@ func lexLower(s *Scanner) stateFn {
 	case "unit":
 		s.emit(token.UNIT)
 		return lexExprEnd
-	case "close":
-		s.emit(token.CLOSE)
+	case "disable":
+		s.emit(token.DISABLE)
 		return lexExprEnd
 	}
 	if s.accept(digits + ":_") {

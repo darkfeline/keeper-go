@@ -199,10 +199,10 @@ func makeLedgerRows(e journal.Entry, a journal.Account) []ledgerRow {
 		return convertTransaction(b, a, e)
 	case *journal.BalanceAssert:
 		return convertBalance(e)
-	case *journal.CloseAccount:
+	case *journal.DisableAccount:
 		return []ledgerRow{{
 			Entry:       e,
-			Description: "(closed)",
+			Description: "(disabled)",
 		}}
 	default:
 		panic(fmt.Sprintf("unknown entry %T", e))

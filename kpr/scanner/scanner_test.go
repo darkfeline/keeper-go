@@ -162,12 +162,12 @@ end
 			},
 		},
 		{
-			desc: "close",
-			text: `close 2001-02-03 Some:account`,
+			desc: "disable",
+			text: `disable 2001-02-03 Some:account`,
 			want: []result{
-				{1, token.CLOSE, "close"},
-				{7, token.DATE, "2001-02-03"},
-				{18, token.ACCOUNT, "Some:account"},
+				{1, token.DISABLE, "disable"},
+				{9, token.DATE, "2001-02-03"},
+				{20, token.ACCOUNT, "Some:account"},
 			},
 		},
 	}

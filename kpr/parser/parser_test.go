@@ -276,19 +276,19 @@ Some:account
 	}
 }
 
-func TestParseBytes_close(t *testing.T) {
+func TestParseBytes_disable(t *testing.T) {
 	t.Parallel()
-	const input = `close 2001-02-03 Some:account
+	const input = `disable 2001-02-03 Some:account
 `
 	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := []ast.Entry{
-		&ast.CloseAccount{
+		&ast.DisableAccount{
 			TokPos:  1,
-			Date:    val(7, token.DATE, "2001-02-03"),
-			Account: val(18, token.ACCOUNT, "Some:account"),
+			Date:    val(9, token.DATE, "2001-02-03"),
+			Account: val(20, token.ACCOUNT, "Some:account"),
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {

@@ -84,8 +84,8 @@ func (b *builder) build(t []ast.Entry) ([]Entry, error) {
 			entries = append(entries, e)
 		case *ast.UnitDecl:
 			b.addUnit(n)
-		case *ast.CloseAccount:
-			e, err := b.buildCloseAccount(n)
+		case *ast.DisableAccount:
+			e, err := b.buildDisableAccount(n)
 			if err != nil {
 				continue
 			}
@@ -241,10 +241,10 @@ func (b *builder) buildAmount(n *ast.Amount) (Amount, error) {
 	return a, nil
 }
 
-func (b *builder) buildCloseAccount(n *ast.CloseAccount) (*CloseAccount, error) {
+func (b *builder) buildDisableAccount(n *ast.DisableAccount) (*DisableAccount, error) {
 	assertKind(n.Date, token.DATE)
 	assertKind(n.Account, token.ACCOUNT)
-	e := &CloseAccount{
+	e := &DisableAccount{
 		EntryPos: b.nodePos(n),
 		Account:  Account(n.Account.Value),
 	}
