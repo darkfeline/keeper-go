@@ -143,8 +143,8 @@ func (j *Journal) addBalanceAssert(e *BalanceAssert) error {
 }
 
 func (j *Journal) checkAccountClosed(a Account) error {
-	if _, ok := j.Closed[a]; ok {
-		return fmt.Errorf("account %s is closed", a)
+	if e, ok := j.Closed[a]; ok {
+		return fmt.Errorf("account %s is closed by entry %s", a, e)
 	}
 	return nil
 }
