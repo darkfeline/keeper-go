@@ -129,7 +129,7 @@ func (p *parser) scanUntilEntry() token.Pos {
 
 func isEntryKeyword(tok token.Token) bool {
 	switch tok {
-	case token.TX, token.BALANCE, token.UNIT, token.TBAL, token.CLOSE:
+	case token.TX, token.BALANCE, token.UNIT, token.CLOSE:
 		return true
 	default:
 		return false
@@ -180,8 +180,8 @@ func (p *parser) parseEntry(pos token.Pos, tok token.Token, lit string) ast.Entr
 		return p.parseTransaction(pos)
 	case token.UNIT:
 		return p.parseUnitDecl(pos)
-	case token.BALANCE, token.TBAL:
-		return p.parseBalance(pos, tok)
+	case token.BALANCE:
+		return p.parseBalance(pos)
 	case token.CLOSE:
 		return p.parseCloseAccount(pos)
 	default:
@@ -345,10 +345,9 @@ func (p *parser) parseUnitDecl(pos token.Pos) ast.Entry {
 	return u
 }
 
-func (p *parser) parseBalance(pos token.Pos, tok token.Token) ast.Entry {
+func (p *parser) parseBalance(pos token.Pos) ast.Entry {
 	h := ast.BalanceHeader{
 		TokPos: pos,
-		Tok:    tok,
 	}
 
 	pos, tok, lit := p.scan()

@@ -68,7 +68,6 @@ func (*MultiBalance) entry() {}
 // A BalanceHeader contains the fields shared by balance entry nodes.
 type BalanceHeader struct {
 	TokPos  token.Pos
-	Tok     token.Token // BALANCE, TBAL
 	Date    *BasicValue // DATE
 	Account *BasicValue // ACCOUNT
 }

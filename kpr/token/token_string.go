@@ -21,13 +21,12 @@ func _() {
 	_ = x[END-10]
 	_ = x[BALANCE-11]
 	_ = x[UNIT-12]
-	_ = x[TBAL-13]
-	_ = x[CLOSE-14]
+	_ = x[CLOSE-13]
 }
 
-const _Token_name = "ILLEGALEOFCOMMENTNEWLINESTRINGUSYMBOLACCOUNTDECIMALDATETXENDBALANCEUNITTBALCLOSE"
+const _Token_name = "ILLEGALEOFCOMMENTNEWLINESTRINGUSYMBOLACCOUNTDECIMALDATETXENDBALANCEUNITCLOSE"
 
-var _Token_index = [...]uint8{0, 7, 10, 17, 24, 30, 37, 44, 51, 55, 57, 60, 67, 71, 75, 80}
+var _Token_index = [...]uint8{0, 7, 10, 17, 24, 30, 37, 44, 51, 55, 57, 60, 67, 71, 76}
 
 func (i Token) String() string {
 	if i < 0 || i >= Token(len(_Token_index)-1) {

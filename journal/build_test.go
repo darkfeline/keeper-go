@@ -101,30 +101,6 @@ unit USD 10
 	}
 }
 
-func TestBuildEntries_tbal(t *testing.T) {
-	t.Parallel()
-	const input = `unit USD 100
-tbal 2001-02-03 Some:account -1.20 USD
-`
-	got, err := buildEntries(inputBytes{"", []byte(input)})
-	if err != nil {
-		t.Fatal(err)
-	}
-	u := Unit{Symbol: "USD", Scale: 100}
-	want := []Entry{
-		&BalanceAssert{
-			EntryDate: civil.Date{2001, 2, 3},
-			EntryPos:  token.Position{Offset: 13, Line: 2, Column: 1},
-			Tree:      true,
-			Account:   "Some:account",
-			Declared:  Balance{u: -120},
-		},
-	}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("entries mismatch (-want +got):\n%s", diff)
-	}
-}
-
 func TestBuildEntries_close(t *testing.T) {
 	t.Parallel()
 	const input = `close 2001-02-03 Some:account

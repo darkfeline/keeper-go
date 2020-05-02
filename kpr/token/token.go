@@ -42,6 +42,5 @@ const (
 	END
 	BALANCE
 	UNIT
-	TBAL
 	CLOSE
 )

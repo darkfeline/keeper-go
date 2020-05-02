@@ -141,7 +141,6 @@ func (b *builder) buildBalanceHeader(n *ast.BalanceHeader) (*BalanceAssert, erro
 	a := &BalanceAssert{
 		EntryPos: b.nodePos(n),
 		Account:  Account(n.Account.Value),
-		Tree:     n.Tok == token.TBAL,
 		Declared: make(Balance),
 		// Actual and Diff get set when the entries are added
 		// to the Journal, so we don't have to initialize them

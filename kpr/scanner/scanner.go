@@ -350,9 +350,6 @@ func lexLower(s *Scanner) stateFn {
 	case "unit":
 		s.emit(token.UNIT)
 		return lexExprEnd
-	case "tbal":
-		s.emit(token.TBAL)
-		return lexExprEnd
 	case "close":
 		s.emit(token.CLOSE)
 		return lexExprEnd

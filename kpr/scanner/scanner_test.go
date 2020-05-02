@@ -162,21 +162,12 @@ end
 			},
 		},
 		{
-			desc: "tbal entry",
-			text: `unit USD 100
-tbal 2001-02-03 Some:account 123.45 USD
-`,
+			desc: "close",
+			text: `close 2001-02-03 Some:account`,
 			want: []result{
-				{1, token.UNIT, "unit"},
-				{6, token.USYMBOL, "USD"},
-				{10, token.DECIMAL, "100"},
-				{13, token.NEWLINE, "\n"},
-				{14, token.TBAL, "tbal"},
-				{19, token.DATE, "2001-02-03"},
-				{30, token.ACCOUNT, "Some:account"},
-				{43, token.DECIMAL, "123.45"},
-				{50, token.USYMBOL, "USD"},
-				{53, token.NEWLINE, "\n"},
+				{1, token.CLOSE, "close"},
+				{7, token.DATE, "2001-02-03"},
+				{18, token.ACCOUNT, "Some:account"},
 			},
 		},
 	}

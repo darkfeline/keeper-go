@@ -29,8 +29,6 @@ type Journal struct {
 	Closed map[Account]*CloseAccount
 	// Balances is the final balance for all accounts.
 	Balances Balances
-	// Summary is the total balance including sub-accounts for all accounts.
-	Summary Summary
 	// BalanceErrors contains the balance assertion entries that failed.
 	BalanceErrors []*BalanceAssert
 }
@@ -85,7 +83,6 @@ func compile(e []Entry) (*Journal, error) {
 	j := &Journal{
 		Closed:   make(map[Account]*CloseAccount),
 		Balances: make(Balances),
-		Summary:  make(Summary),
 	}
 	for _, e := range e {
 		if err := j.addEntry(e); err != nil {
@@ -120,7 +117,6 @@ func (j *Journal) addTransaction(e *Transaction) error {
 			return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 		}
 		j.Balances.Add(s.Account, s.Amount)
-		j.Summary.Add(s.Account, s.Amount)
 		e.Balances[s.Account] = j.Balances[s.Account].Copy()
 	}
 	j.Entries = append(j.Entries, e)
@@ -131,13 +127,7 @@ func (j *Journal) addBalanceAssert(e *BalanceAssert) error {
 	if err := j.checkAccountClosed(e.Account); err != nil {
 		return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 	}
-	var m map[Account]Balance
-	if e.Tree {
-		m = j.Summary
-	} else {
-		m = j.Balances
-	}
-	bal, ok := m[e.Account]
+	bal, ok := j.Balances[e.Account]
 	switch ok {
 	case true:
 		bal = bal.Copy()
