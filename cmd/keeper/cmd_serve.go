@@ -15,31 +15,35 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/spf13/cobra"
 	"go.felesatra.moe/keeper/cmd/keeper/internal/webui"
 	"go.felesatra.moe/keeper/journal"
 )
 
-var serveCmd = &command{
-	name: "serve",
-	run: func(cmd *command, args []string) {
-		fs := flag.NewFlagSet(cmd.name, flag.ExitOnError)
-		port := fs.String("port", "8888", "Port to listen on")
-		if err := fs.Parse(args); err != nil {
-			panic(err)
-		}
+func init() {
+	serveCmd.Flags().StringVar(&servePort, "port", "8888", "Port to listen on")
+	rootCmd.AddCommand(serveCmd)
+}
+
+var servePort string
+
+var serveCmd = &cobra.Command{
+	Use:   "serve",
+	Short: "Run web UI",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
 		var o []journal.Option
-		for _, f := range fs.Args() {
+		for _, f := range args {
 			o = append(o, journal.File(f))
 		}
 
-		fmt.Fprintf(os.Stderr, "Listening on port %s\n", *port)
+		fmt.Fprintf(os.Stderr, "Listening on port %s\n", servePort)
 		h := webui.NewHandler(o)
-		log.Fatal(http.ListenAndServe(":"+*port, h))
+		log.Fatal(http.ListenAndServe(":"+servePort, h))
 	},
 }

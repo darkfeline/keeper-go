@@ -15,28 +15,30 @@
 package main
 
 import (
-	"flag"
+	"errors"
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
 	"go.felesatra.moe/keeper/journal"
 )
 
-var checkCmd = &command{
-	name: "check",
-	run: func(cmd *command, args []string) {
-		fs := flag.NewFlagSet(cmd.name, flag.ExitOnError)
-		if err := fs.Parse(args); err != nil {
-			panic(err)
-		}
+func init() {
+	rootCmd.AddCommand(checkCmd)
+}
+
+var checkCmd = &cobra.Command{
+	Use:   "check",
+	Short: "Check keeper files for errors",
+	Args:  cobra.MinimumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
 		var o []journal.Option
-		for _, f := range fs.Args() {
+		for _, f := range args {
 			o = append(o, journal.File(f))
 		}
 		j, err := journal.Compile(o...)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "keeper: %s\n", err)
-			os.Exit(1)
+			return err
 		}
 		if len(j.BalanceErrors) > 0 {
 			for _, e := range j.BalanceErrors {
@@ -44,8 +46,8 @@ var checkCmd = &command{
 					e.EntryPos, e.EntryDate, e.Account,
 					e.Declared, e.Actual, e.Diff)
 			}
-			fmt.Fprintf(os.Stderr, "keeper: balance errors\n")
-			os.Exit(1)
+			return errors.New("balance errors")
 		}
+		return nil
 	},
 }
