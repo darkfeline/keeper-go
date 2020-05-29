@@ -17,20 +17,31 @@ package main
 import (
 	"fmt"
 	"os"
-
-	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
-	Use:           "keeper",
-	Short:         "Accounting and bookkeeping tools for programmers",
-	SilenceUsage:  true,
-	SilenceErrors: true,
+func main() {
+	args := os.Args[1:]
+	if len(args) < 1 {
+		fmt.Fprintf(os.Stderr, "keeper: no command specified\n")
+		os.Exit(2)
+	}
+	n := args[0]
+	for _, c := range commands {
+		if n == c.name {
+			c.run(c, args[1:])
+			return
+		}
+	}
+	fmt.Fprintf(os.Stderr, "keeper: unknown command %s\n", n)
+	os.Exit(2)
 }
 
-func main() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		os.Exit(1)
-	}
+var commands = []*command{
+	checkCmd,
+	serveCmd,
+}
+
+type command struct {
+	name string
+	run  func(*command, []string)
 }
