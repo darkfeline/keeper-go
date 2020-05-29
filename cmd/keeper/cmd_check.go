@@ -23,12 +23,10 @@ import (
 )
 
 var checkCmd = &command{
-	name: "check",
+	usageLine: "check [files]",
 	run: func(cmd *command, args []string) {
-		fs := flag.NewFlagSet(cmd.name, flag.ExitOnError)
-		if err := fs.Parse(args); err != nil {
-			panic(err)
-		}
+		fs := flag.NewFlagSet(cmd.name(), flag.ExitOnError)
+		_ = fs.Parse(args) // cannot return error due to ExitOnError flag
 		var o []journal.Option
 		for _, f := range fs.Args() {
 			o = append(o, journal.File(f))

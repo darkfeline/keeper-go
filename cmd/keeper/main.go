@@ -17,6 +17,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 	}
 	n := args[0]
 	for _, c := range commands {
-		if n == c.name {
+		if n == c.name() {
 			c.run(c, args[1:])
 			return
 		}
@@ -42,6 +43,10 @@ var commands = []*command{
 }
 
 type command struct {
-	name string
-	run  func(*command, []string)
+	usageLine string
+	run       func(*command, []string)
+}
+
+func (c *command) name() string {
+	return strings.SplitN(c.usageLine, " ", 2)[0]
 }

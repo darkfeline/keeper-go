@@ -26,13 +26,11 @@ import (
 )
 
 var serveCmd = &command{
-	name: "serve",
+	usageLine: "serve [-port port]",
 	run: func(cmd *command, args []string) {
-		fs := flag.NewFlagSet(cmd.name, flag.ExitOnError)
+		fs := flag.NewFlagSet(cmd.name(), flag.ExitOnError)
 		port := fs.String("port", "8888", "Port to listen on")
-		if err := fs.Parse(args); err != nil {
-			panic(err)
-		}
+		_ = fs.Parse(args) // cannot return error due to ExitOnError flag
 		var o []journal.Option
 		for _, f := range fs.Args() {
 			o = append(o, journal.File(f))
