@@ -99,12 +99,7 @@ func (j *Journal) addEntry(e Entry) error {
 	case *BalanceAssert:
 		return j.addBalanceAssert(e)
 	case *DisableAccount:
-		j.Entries = append(j.Entries, e)
-		if err := j.checkAccountDisabled(e.Account); err != nil {
-			return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
-		}
-		j.Disabled[e.Account] = e
-		return nil
+		return j.addDisableAccount(e)
 	default:
 		panic(fmt.Sprintf("unknown Entry type %T", e))
 	}
@@ -139,6 +134,19 @@ func (j *Journal) addBalanceAssert(e *BalanceAssert) error {
 	if !e.Diff.Empty() {
 		j.BalanceErrors = append(j.BalanceErrors, e)
 	}
+	return nil
+}
+
+func (j *Journal) addDisableAccount(e *DisableAccount) error {
+	if err := j.checkAccountDisabled(e.Account); err != nil {
+		return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
+	}
+	if bal := j.Balances[e.Account]; bal != nil && !bal.Empty() {
+		return fmt.Errorf("add entry %T at %s: account has non-empty balance %s",
+			e, e.Position(), bal)
+	}
+	j.Disabled[e.Account] = e
+	j.Entries = append(j.Entries, e)
 	return nil
 }
 

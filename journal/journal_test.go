@@ -179,6 +179,29 @@ func TestCompile_tx_after_disable(t *testing.T) {
 	}
 }
 
+func TestCompile_disable_nonempty_account(t *testing.T) {
+	t.Parallel()
+	u := Unit{Symbol: "USD", Scale: 100}
+	e := []Entry{
+		&Transaction{
+			EntryDate:   civil.Date{2000, 1, 1},
+			Description: "buy stuff",
+			Splits: []Split{
+				split("Income:Salary", -123, u),
+				split("Assets:Cash", 123, u),
+			},
+		},
+		&DisableAccount{
+			EntryDate: civil.Date{2000, 1, 2},
+			Account:   "Assets:Cash",
+		},
+	}
+	_, err := compile(e)
+	if err == nil {
+		t.Error("Expected error")
+	}
+}
+
 func TestBalanceDiff(t *testing.T) {
 	t.Parallel()
 	t.Run("bug", func(t *testing.T) {
