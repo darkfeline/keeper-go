@@ -16,6 +16,7 @@ package webui
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
@@ -85,7 +86,7 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
-	end := getQueryDate(req)
+	end := lastDay(getQueryMonth(req))
 	j, err := h.compile(journal.Ending(end))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -95,7 +96,7 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	b := j.Balances
 	d := stmtData{
 		Title: "Income Statement",
-		Date:  end,
+		Month: formatMonth(end),
 	}
 	add := func(r ...stmtRow) {
 		d.Rows = append(d.Rows, r...)
@@ -125,7 +126,7 @@ func (h handler) handleCapital(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
-	end := getQueryDate(req)
+	end := lastDay(getQueryMonth(req))
 	j, err := h.compile(journal.Ending(end))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -135,7 +136,7 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 	b := j.Balances
 	d := stmtData{
 		Title: "Balance Sheet",
-		Date:  end,
+		Month: formatMonth(end),
 	}
 	add := func(r ...stmtRow) {
 		d.Rows = append(d.Rows, r...)
@@ -173,12 +174,25 @@ func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
 	panic("Not implemented")
 }
 
-func getQueryDate(req *http.Request) civil.Date {
-	v := req.URL.Query()["date"]
+func lastDay(d civil.Date) civil.Date {
+	next := d.AddDays(1)
+	for next.Month == d.Month {
+		d = next
+		next = d.AddDays(1)
+	}
+	return d
+}
+
+func formatMonth(d civil.Date) string {
+	return fmt.Sprintf("%04d-%02d", d.Year, d.Month)
+}
+
+func getQueryMonth(req *http.Request) civil.Date {
+	v := req.URL.Query()["month"]
 	if len(v) == 0 {
 		return civil.DateOf(time.Now())
 	}
-	d, err := civil.ParseDate(v[0])
+	d, err := civil.ParseDate(v[0] + "-01")
 	if err != nil {
 		return civil.DateOf(time.Now())
 	}

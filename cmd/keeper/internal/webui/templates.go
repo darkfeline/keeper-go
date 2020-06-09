@@ -19,7 +19,6 @@ import (
 	"html/template"
 	"sort"
 
-	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/journal"
 )
 
@@ -120,7 +119,7 @@ var stmtTemplate = template.Must(clone(baseTemplate).Parse(stmtText))
 
 type stmtData struct {
 	Title string
-	Date  civil.Date
+	Month string // YYYY-MM
 	Rows  []stmtRow
 }
 
