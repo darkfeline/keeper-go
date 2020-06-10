@@ -191,8 +191,7 @@ func (e ledgerRow) Date() string {
 	return e.Entry.Date().String()
 }
 
-func makeLedgerRows(e journal.Entry, a journal.Account) []ledgerRow {
-	b := make(journal.Balance)
+func makeLedgerRows(b journal.Balance, e journal.Entry, a journal.Account) []ledgerRow {
 	switch e := e.(type) {
 	case *journal.Transaction:
 		return convertTransaction(b, a, e)

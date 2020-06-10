@@ -207,8 +207,9 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	d := ledgerData{Account: account}
+	b := make(journal.Balance)
 	for _, e := range accountEntries(j.Entries, account) {
-		d.Rows = append(d.Rows, makeLedgerRows(e, account)...)
+		d.Rows = append(d.Rows, makeLedgerRows(b, e, account)...)
 	}
 	execute(w, ledgerTemplate, d)
 }
