@@ -21,8 +21,13 @@ import (
 )
 
 func journalAccountTree(j *journal.Journal) *accountTree {
-	a := entryAccounts(j.Entries...)
-	return makeAccountTree(a)
+	var as []journal.Account
+	for _, a := range entryAccounts(j.Entries...) {
+		if j.Disabled[a] == nil {
+			as = append(as, a)
+		}
+	}
+	return makeAccountTree(as)
 }
 
 type accountTree struct {
