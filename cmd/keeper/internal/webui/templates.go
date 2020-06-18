@@ -24,6 +24,7 @@ import (
 
 //go:generate binpack -name baseText base.html
 //go:generate binpack -name styleText style.css
+//go:generate binpack -name collapseText CollapsibleLists.src.js
 
 var baseTemplate = template.Must(template.New("base").Parse(baseText))
 

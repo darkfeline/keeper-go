@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="/style.css">
+    <script src="/CollapsibleLists.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        CollapsibleLists.apply();
+      });
+    </script>
     <title>Keeper Web UI{{if .Title}} - {{.Title}}{{end}}</title>
   </head>
   <body>

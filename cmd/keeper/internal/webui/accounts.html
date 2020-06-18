@@ -5,7 +5,7 @@
 <a href="/ledger?account={{.Account}}">{{.Account.Leaf}}</a>
 {{end}}
 {{- if .Children}}
-<ul>
+<ul class="collapsibleList">
   {{- range .Children}}
   <li>{{template "account tree" .}}</li>
   {{- end}}

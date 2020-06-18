@@ -31,6 +31,7 @@ func NewHandler(o []journal.Option) http.Handler {
 	m := http.NewServeMux()
 	m.HandleFunc("/", h.handleIndex)
 	m.HandleFunc("/style.css", h.handleStyle)
+	m.HandleFunc("/CollapsibleLists.js", h.handleCollapse)
 	m.HandleFunc("/accounts", h.handleAccounts)
 	m.HandleFunc("/trial", h.handleTrial)
 	m.HandleFunc("/income", h.handleIncome)
@@ -71,6 +72,10 @@ func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
 
 func (h handler) handleStyle(w http.ResponseWriter, req *http.Request) {
 	http.ServeContent(w, req, "style.css", time.Time{}, strings.NewReader(styleText))
+}
+
+func (h handler) handleCollapse(w http.ResponseWriter, req *http.Request) {
+	http.ServeContent(w, req, "CollapsibleLists.js", time.Time{}, strings.NewReader(collapseText))
 }
 
 func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
