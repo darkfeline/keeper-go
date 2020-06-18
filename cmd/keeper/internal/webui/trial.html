@@ -11,8 +11,13 @@
   <tbody>
     {{- range .Rows}}
     <tr{{if .Account}} class="section"{{end}}>
-      <td>{{.Account}}</td>
-
+      <td>
+        {{- if eq .Account "Total" -}}
+        Total
+        {{- else if .Account -}}
+        <a href="/ledger?account={{.Account}}">{{.Account}}</a>
+        {{- end -}}
+      </td>
       <td class="amount">{{if .DebitBal.Unit.Symbol}}{{.DebitBal}}{{end}}</td>
       <td class="amount">{{if .CreditBal.Unit.Symbol}}{{.CreditBal}}{{end}}</td>
       <tr>
