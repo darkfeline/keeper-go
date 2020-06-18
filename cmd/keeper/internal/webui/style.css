@@ -20,6 +20,10 @@ nav.sitenav ul > li {
     list-style-type: none;
 }
 
+ul, ol {
+    padding-left: 20px;
+}
+
 table, th, td {
     border: 1px solid black;
     border-collapse: collapse;
