@@ -24,7 +24,13 @@
     <tr>
     {{else}}
     <tr{{if .Description}} class="section"{{end}}>
-      <td>{{.Description}}</td>
+      <td>
+        {{- if .Account -}}
+        <a href="/ledger?account={{.Description}}">{{.Description}}</a>
+        {{- else -}}
+        {{.Description}}
+        {{- end -}}
+      </td>
       <td class="amount">{{if .Amount.Unit.Symbol}}{{.Amount}}{{end}}</td>
     <tr>
     {{end}}

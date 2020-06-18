@@ -127,6 +127,7 @@ type stmtData struct {
 type stmtRow struct {
 	Description string
 	Section     bool
+	Account     bool
 	Amount      journal.Amount
 }
 
@@ -138,6 +139,7 @@ func makeStmtRows(a []journal.Account, b journal.Balances) ([]stmtRow, journal.B
 			e := stmtRow{Amount: amt}
 			if i == 0 {
 				e.Description = string(a)
+				e.Account = true
 			}
 			r = append(r, e)
 			t.Add(amt)
