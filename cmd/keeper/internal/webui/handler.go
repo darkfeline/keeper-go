@@ -16,13 +16,13 @@ package webui
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
 	"time"
 
 	"cloud.google.com/go/civil"
+	"go.felesatra.moe/keeper/internal/month"
 	"go.felesatra.moe/keeper/journal"
 )
 
@@ -91,7 +91,7 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
-	end := lastDay(getQueryMonth(req))
+	end := month.LastDay(getQueryMonth(req))
 	j, err := h.compile(journal.Ending(end))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -101,7 +101,7 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	b := j.Balances
 	d := stmtData{
 		Title: "Income Statement",
-		Month: formatMonth(end),
+		Month: month.Format(end),
 	}
 	add := func(r ...stmtRow) {
 		d.Rows = append(d.Rows, r...)
@@ -131,7 +131,7 @@ func (h handler) handleCapital(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
-	end := lastDay(getQueryMonth(req))
+	end := month.LastDay(getQueryMonth(req))
 	j, err := h.compile(journal.Ending(end))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -141,7 +141,7 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 	b := j.Balances
 	d := stmtData{
 		Title: "Balance Sheet",
-		Month: formatMonth(end),
+		Month: month.Format(end),
 	}
 	add := func(r ...stmtRow) {
 		d.Rows = append(d.Rows, r...)
@@ -179,25 +179,12 @@ func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
 	panic("Not implemented")
 }
 
-func lastDay(d civil.Date) civil.Date {
-	next := d.AddDays(1)
-	for next.Month == d.Month {
-		d = next
-		next = d.AddDays(1)
-	}
-	return d
-}
-
-func formatMonth(d civil.Date) string {
-	return fmt.Sprintf("%04d-%02d", d.Year, d.Month)
-}
-
 func getQueryMonth(req *http.Request) civil.Date {
 	v := req.URL.Query()["month"]
 	if len(v) == 0 {
 		return civil.DateOf(time.Now())
 	}
-	d, err := civil.ParseDate(v[0] + "-01")
+	d, err := month.Parse(v[0])
 	if err != nil {
 		return civil.DateOf(time.Now())
 	}
