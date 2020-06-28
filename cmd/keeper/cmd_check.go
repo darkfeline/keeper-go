@@ -35,14 +35,18 @@ var checkCmd = &command{
 			fmt.Fprintf(os.Stderr, "keeper: %s\n", err)
 			os.Exit(1)
 		}
-		if len(j.BalanceErrors) > 0 {
-			for _, e := range j.BalanceErrors {
-				fmt.Fprintf(os.Stderr, "%s %s %s declared %s, actual %s (diff %s)\n",
-					e.EntryPos, e.EntryDate, e.Account,
-					e.Declared, e.Actual, e.Diff)
-			}
-			fmt.Fprintf(os.Stderr, "keeper: balance errors\n")
-			os.Exit(1)
-		}
+		checkBalanceErrsAndExit(j)
 	},
+}
+
+func checkBalanceErrsAndExit(j *journal.Journal) {
+	if len(j.BalanceErrors) > 0 {
+		for _, e := range j.BalanceErrors {
+			fmt.Fprintf(os.Stderr, "%s %s %s declared %s, actual %s (diff %s)\n",
+				e.EntryPos, e.EntryDate, e.Account,
+				e.Declared, e.Actual, e.Diff)
+		}
+		fmt.Fprintf(os.Stderr, "keeper: balance errors\n")
+		os.Exit(1)
+	}
 }
