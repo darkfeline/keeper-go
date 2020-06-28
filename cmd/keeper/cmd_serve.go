@@ -33,10 +33,7 @@ var serveCmd = &command{
 		if err := fs.Parse(args); err != nil {
 			panic(err)
 		}
-		var o []journal.Option
-		for _, f := range fs.Args() {
-			o = append(o, journal.File(f))
-		}
+		o := []journal.Option{journal.File(fs.Args()...)}
 
 		fmt.Fprintf(os.Stderr, "Listening on port %s\n", *port)
 		h := webui.NewHandler(o)

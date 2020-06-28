@@ -61,12 +61,12 @@ type inputFile struct {
 
 func (inputFile) input() {}
 
-// File returns an option that specifies an input file.
-func File(filename string) Option {
+// File returns an option that specifies input files.
+func File(filename ...string) Option {
 	return optionSetter(func(o *options) {
-		o.inputs = append(o.inputs, inputFile{
-			filename: filename,
-		})
+		for _, f := range filename {
+			o.inputs = append(o.inputs, inputFile{filename: f})
+		}
 	})
 }
 

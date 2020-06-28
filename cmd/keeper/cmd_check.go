@@ -29,10 +29,7 @@ var checkCmd = &command{
 		if err := fs.Parse(args); err != nil {
 			panic(err)
 		}
-		var o []journal.Option
-		for _, f := range fs.Args() {
-			o = append(o, journal.File(f))
-		}
+		o := []journal.Option{journal.File(fs.Args()...)}
 		j, err := journal.Compile(o...)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "keeper: %s\n", err)
