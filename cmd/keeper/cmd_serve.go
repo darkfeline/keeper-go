@@ -30,7 +30,9 @@ var serveCmd = &command{
 	run: func(cmd *command, args []string) {
 		fs := flag.NewFlagSet(cmd.name(), flag.ExitOnError)
 		port := fs.String("port", "8888", "Port to listen on")
-		_ = fs.Parse(args) // cannot return error due to ExitOnError flag
+		if err := fs.Parse(args); err != nil {
+			panic(err)
+		}
 		var o []journal.Option
 		for _, f := range fs.Args() {
 			o = append(o, journal.File(f))
