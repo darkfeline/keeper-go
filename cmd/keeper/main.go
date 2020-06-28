@@ -39,6 +39,7 @@ func main() {
 
 var commands = []*command{
 	checkCmd,
+	closeCmd,
 	serveCmd,
 }
 
@@ -49,4 +50,8 @@ type command struct {
 
 func (c *command) name() string {
 	return strings.SplitN(c.usageLine, " ", 2)[0]
+}
+
+func (c *command) printUsage() {
+	fmt.Fprintf(os.Stderr, "Usage: keeper %s\n", c.usageLine)
 }
