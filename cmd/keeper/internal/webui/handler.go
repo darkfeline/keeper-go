@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/civil"
+	"go.felesatra.moe/keeper/chart"
 	"go.felesatra.moe/keeper/internal/month"
 	"go.felesatra.moe/keeper/journal"
 )
@@ -174,6 +175,14 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 	}
 	add(stmtRow{})
 	add(makeStmtBalance("Total Liabilities & Equity", lt)...)
+
+	c := chart.New(j.Accounts())
+	_, tt := makeStmtRows(c.Trading(), b)
+	for _, a := range tt.Amounts() {
+		lt.Add(a)
+	}
+	add(stmtRow{})
+	add(makeStmtBalance("Total w/ Trading", lt)...)
 
 	execute(w, stmtTemplate, d)
 }

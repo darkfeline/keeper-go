@@ -25,6 +25,7 @@ type Chart struct {
 	assets      []Account
 	liabilities []Account
 	equity      []Account
+	trading     []Account
 }
 
 func New(a []Account) *Chart {
@@ -41,6 +42,8 @@ func New(a []Account) *Chart {
 			c.liabilities = append(c.liabilities, a)
 		case a.Under("Equity"):
 			c.equity = append(c.equity, a)
+		case a.Under("Trading"):
+			c.trading = append(c.trading, a)
 		}
 	}
 	return c
@@ -64,4 +67,8 @@ func (c *Chart) Liabilities() []Account {
 
 func (c *Chart) Equity() []Account {
 	return c.equity
+}
+
+func (c *Chart) Trading() []Account {
+	return c.trading
 }
