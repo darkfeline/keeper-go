@@ -17,6 +17,7 @@ package month
 
 import (
 	"fmt"
+	"time"
 
 	"cloud.google.com/go/civil"
 )
@@ -33,11 +34,32 @@ func Format(d civil.Date) string {
 	return fmt.Sprintf("%04d-%02d", d.Year, d.Month)
 }
 
-func LastDay(d civil.Date) civil.Date {
-	next := d.AddDays(1)
-	for next.Month == d.Month {
-		d = next
-		next = d.AddDays(1)
-	}
+func Now() civil.Date {
+	d := civil.DateOf(time.Now())
+	return FirstDay(d)
+}
+
+func FirstDay(d civil.Date) civil.Date {
+	d.Day = 1
 	return d
+}
+
+func LastDay(d civil.Date) civil.Date {
+	return Next(d).AddDays(-1)
+}
+
+func Next(d civil.Date) civil.Date {
+	cur := d.Month
+	for d.Month == cur {
+		d = d.AddDays(21)
+	}
+	return FirstDay(d)
+}
+
+func Prev(d civil.Date) civil.Date {
+	cur := d.Month
+	for d.Month == cur {
+		d = d.AddDays(-21)
+	}
+	return FirstDay(d)
 }
