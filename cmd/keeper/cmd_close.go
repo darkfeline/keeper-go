@@ -28,10 +28,11 @@ import (
 )
 
 var closeCmd = &command{
-	usageLine: "close [-m month] [files]",
+	usageLine: "close [-month month] [-trading] [files]",
 	run: func(cmd *command, args []string) {
 		fs := flag.NewFlagSet(cmd.name(), flag.ExitOnError)
 		m := fs.String("month", "", "Month to close")
+		t := fs.Bool("trading", false, "Include trading accounts")
 		if err := fs.Parse(args); err != nil {
 			panic(err)
 		}
@@ -62,30 +63,28 @@ var closeCmd = &command{
 			os.Exit(1)
 		}
 		checkBalanceErrsAndExit(j)
-		_ = printClosingTx(os.Stdout, j, month.Next(d))
+		c := chart.New(j.Accounts())
+		a := c.Income()
+		a = append(a, c.Expenses()...)
+		if *t {
+			a = append(a, c.Trading()...)
+		}
+		_ = printClosingTx(os.Stdout, j, month.Next(d), c.Equity()[0], a)
 	},
 }
 
-func printClosingTx(w io.Writer, j *journal.Journal, d civil.Date) error {
+func printClosingTx(w io.Writer, j *journal.Journal, d civil.Date, dst journal.Account, a []journal.Account) error {
 	bw := bufio.NewWriter(w)
 	fmt.Fprintf(bw, "tx %s \"Closing\"\n", d)
-	c := chart.New(j.Accounts())
 	b := make(journal.Balance)
-	for _, a := range c.Income() {
+	for _, a := range a {
 		for _, am := range j.Balances[a].Amounts() {
 			fmt.Fprintf(bw, "%s %s\n", a, am.Neg())
 			b.Add(am)
 		}
 	}
-	for _, a := range c.Expenses() {
-		for _, am := range j.Balances[a].Amounts() {
-			fmt.Fprintf(bw, "%s %s\n", a, am.Neg())
-			b.Add(am)
-		}
-	}
-	a := c.Equity()[0]
 	for _, am := range b.Amounts() {
-		fmt.Fprintf(bw, "%s %s\n", a, am)
+		fmt.Fprintf(bw, "%s %s\n", dst, am)
 	}
 	fmt.Fprintf(bw, "end\n")
 	return bw.Flush()
