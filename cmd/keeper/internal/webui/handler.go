@@ -121,6 +121,9 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	add(r...)
 	add(makeStmtBalance("Total Expenses", et)...)
 
+	for _, am := range et.Amounts() {
+		rt.Add(am.Neg())
+	}
 	add(stmtRow{Description: "Net Profit", Section: true})
 	add(makeStmtBalance("Total Net Profit", rt)...)
 	execute(w, stmtTemplate, d)
