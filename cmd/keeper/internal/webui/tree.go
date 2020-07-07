@@ -22,7 +22,7 @@ import (
 
 func journalAccountTree(j *journal.Journal) *accountTree {
 	var as []journal.Account
-	for _, a := range entryAccounts(j.Entries...) {
+	for _, a := range j.Accounts() {
 		if j.Disabled[a] == nil {
 			as = append(as, a)
 		}

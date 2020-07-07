@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 )
 
 // A Journal represents accounting information compiled from keeper file source.
@@ -31,6 +32,31 @@ type Journal struct {
 	Balances Balances
 	// BalanceErrors contains the balance assertion entries that failed.
 	BalanceErrors []*BalanceAssert
+}
+
+// Accounts returns all accounts referenced in the journal's entries.
+func (j *Journal) Accounts() []Account {
+	seen := make(map[Account]bool)
+	for _, e := range j.Entries {
+		switch e := e.(type) {
+		case *Transaction:
+			for _, s := range e.Splits {
+				seen[s.Account] = true
+			}
+		case *BalanceAssert:
+			seen[e.Account] = true
+		case *DisableAccount:
+			seen[e.Account] = true
+		default:
+			panic(fmt.Sprintf("unknown entry %T", e))
+		}
+	}
+	var a []Account
+	for acc := range seen {
+		a = append(a, acc)
+	}
+	sort.Slice(a, func(i, j int) bool { return a[i] < a[j] })
+	return a
 }
 
 // Compile compiles keeper file source into a Journal.
