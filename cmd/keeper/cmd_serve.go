@@ -26,7 +26,7 @@ import (
 )
 
 var serveCmd = &command{
-	usageLine: "serve [-port port]",
+	usageLine: "serve [-port port] [files]",
 	run: func(cmd *command, args []string) {
 		fs := flag.NewFlagSet(cmd.name(), flag.ExitOnError)
 		port := fs.String("port", "8888", "Port to listen on")
