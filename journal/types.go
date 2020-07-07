@@ -168,8 +168,9 @@ func (b Balance) String() string {
 	if len(b) == 0 {
 		return "0"
 	}
-	s := make([]string, len(b))
-	for i, a := range b.Amounts() {
+	amts := b.Amounts()
+	s := make([]string, len(amts))
+	for i, a := range amts {
 		s[i] = a.String()
 	}
 	return strings.Join(s, ", ")

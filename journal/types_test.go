@@ -188,6 +188,37 @@ func TestBalance_Equal_ignore_zero(t *testing.T) {
 	}
 }
 
+func TestBalance_String(t *testing.T) {
+	t.Parallel()
+	b := Balance{
+		Unit{Symbol: "AAA", Scale: 1000}: -123,
+		Unit{Symbol: "BBB", Scale: 1000}: -321,
+		Unit{Symbol: "CCC", Scale: 1000}: 0,
+	}
+	got := b.String()
+	want := "-0.123 AAA, -0.321 BBB"
+	if got != want {
+		t.Errorf("Got %#v, want %#v", got, want)
+	}
+}
+
+func TestBalance_Amounts(t *testing.T) {
+	t.Parallel()
+	b := Balance{
+		Unit{Symbol: "AAA", Scale: 1000}: -123,
+		Unit{Symbol: "BBB", Scale: 1000}: -321,
+		Unit{Symbol: "CCC", Scale: 1000}: 0,
+	}
+	got := b.Amounts()
+	want := []Amount{
+		Amount{Unit: Unit{Symbol: "AAA", Scale: 1000}, Number: -123},
+		Amount{Unit: Unit{Symbol: "BBB", Scale: 1000}, Number: -321},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Amounts() mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func ExampleSummary_Add() {
 	s := make(Summary)
 	s.Add("Assets:Cash", Amount{
