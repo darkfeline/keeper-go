@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"sort"
 
+	"go.felesatra.moe/keeper/chart"
 	"go.felesatra.moe/keeper/journal"
 )
 
@@ -78,51 +79,26 @@ func entryAccounts(e ...journal.Entry) []journal.Account {
 }
 
 func revenueAccounts(a []journal.Account) []journal.Account {
-	var a2 []journal.Account
-	for _, a := range a {
-		if a.Under("Income") {
-			a2 = append(a2, a)
-		}
-	}
-	return a2
+	c := chart.New(a)
+	return c.Income()
 }
 
 func expenseAccounts(a []journal.Account) []journal.Account {
-	var a2 []journal.Account
-	for _, a := range a {
-		if a.Under("Expenses") {
-			a2 = append(a2, a)
-		}
-	}
-	return a2
+	c := chart.New(a)
+	return c.Expenses()
 }
 
 func assetAccounts(a []journal.Account) []journal.Account {
-	var a2 []journal.Account
-	for _, a := range a {
-		if a.Under("Assets") {
-			a2 = append(a2, a)
-		}
-	}
-	return a2
+	c := chart.New(a)
+	return c.Assets()
 }
 
 func liabilityAccounts(a []journal.Account) []journal.Account {
-	var a2 []journal.Account
-	for _, a := range a {
-		if a.Under("Liabilities") {
-			a2 = append(a2, a)
-		}
-	}
-	return a2
+	c := chart.New(a)
+	return c.Liabilities()
 }
 
 func equityAccounts(a []journal.Account) []journal.Account {
-	var a2 []journal.Account
-	for _, a := range a {
-		if a.Under("Equity") {
-			a2 = append(a2, a)
-		}
-	}
-	return a2
+	c := chart.New(a)
+	return c.Equity()
 }
