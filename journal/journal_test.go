@@ -196,9 +196,20 @@ func TestCompile_disable_nonempty_account(t *testing.T) {
 			Account:   "Assets:Cash",
 		},
 	}
-	_, err := compile(e)
-	if err == nil {
-		t.Error("Expected error")
+	got, err := compile(e)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []*BalanceAssert{
+		{
+			EntryDate: civil.Date{2000, 1, 2},
+			Account:   "Assets:Cash",
+			Actual:    Balance{u: 123},
+			Diff:      Balance{u: 123},
+		},
+	}
+	if diff := cmp.Diff(got.BalanceErrors, want); diff != "" {
+		t.Errorf("balance errors mismatch (-want +got):\n%s", diff)
 	}
 }
 

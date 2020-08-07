@@ -168,8 +168,14 @@ func (j *Journal) addDisableAccount(e *DisableAccount) error {
 		return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 	}
 	if bal := j.Balances[e.Account]; bal != nil && !bal.Empty() {
-		return fmt.Errorf("add entry %T at %s: account has non-empty balance %s",
-			e, e.Position(), bal)
+		j.BalanceErrors = append(j.BalanceErrors, &BalanceAssert{
+			EntryPos:  e.EntryPos,
+			EntryDate: e.EntryDate,
+			Account:   e.Account,
+			Declared:  Balance{},
+			Actual:    bal,
+			Diff:      bal,
+		})
 	}
 	j.Disabled[e.Account] = e
 	j.Entries = append(j.Entries, e)
