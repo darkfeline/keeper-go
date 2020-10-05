@@ -18,9 +18,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 
+	"github.com/coreos/go-systemd/activation"
 	"go.felesatra.moe/keeper/cmd/keeper/internal/webui"
 	"go.felesatra.moe/keeper/journal"
 )
@@ -33,10 +35,23 @@ var serveCmd = &command{
 		if err := fs.Parse(args); err != nil {
 			panic(err)
 		}
+		var listener net.Listener
+		ls, err := activation.Listeners()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(ls) >= 1 {
+			listener = ls[0]
+			fmt.Fprintf(os.Stderr, "Using activation socket\n")
+		} else {
+			listener, err = net.Listen("tcp", *port)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Fprintf(os.Stderr, "Listening on port %s\n", *port)
+		}
 		o := []journal.Option{journal.File(fs.Args()...)}
-
-		fmt.Fprintf(os.Stderr, "Listening on port %s\n", *port)
 		h := webui.NewHandler(o)
-		log.Fatal(http.ListenAndServe(":"+*port, h))
+		log.Fatal(http.Serve(listener, h))
 	},
 }
