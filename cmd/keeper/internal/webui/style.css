@@ -1,6 +1,8 @@
 nav.sitenav {
     display: flex;
     align-items: center;
+    border-bottom: 2px solid black;
+    padding: 5px;
 }
 nav.sitenav a {
     text-decoration: none;
