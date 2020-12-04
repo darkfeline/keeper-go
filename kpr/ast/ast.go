@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Package ast declares the types used to represent syntax trees for
-// keeper files.
+// kpr files.
 package ast
 
 import (

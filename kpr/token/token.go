@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Package token defines constants representing the lexical tokens of
-// keeper files and basic operations on tokens (printing, predicates).
+// kpr files and basic operations on tokens (printing, predicates).
 package token
 
 // Token is the set of lexical tokens for keeper files.
