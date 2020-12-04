@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package journal implements bookkeeping journals with keeper files.
+// Package journal implements the processing of bookkeeping journals from kpr files.
 package journal
 
 import (
