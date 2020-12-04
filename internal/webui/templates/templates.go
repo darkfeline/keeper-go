@@ -19,12 +19,10 @@ import (
 	"fmt"
 	"html/template"
 
-	"go.felesatra.moe/keeper/internal/tree"
 	"go.felesatra.moe/keeper/journal"
 )
 
 //go:generate binpack -name StyleText style.css
-//go:generate binpack -name CollapseText CollapsibleLists.src.js
 
 //go:generate binpack -name baseText base.html
 
@@ -44,16 +42,6 @@ type IndexData struct {
 }
 
 func (IndexData) Title() string { return "" }
-
-//go:generate binpack -name accountsText accounts.html
-
-var Accounts = template.Must(clone(Base).Parse(accountsText))
-
-type AccountsData struct {
-	AccountTree *tree.AccountTree
-}
-
-func (AccountsData) Title() string { return "Accounts" }
 
 //go:generate binpack -name trialText trial.html
 

@@ -26,7 +26,6 @@ import (
 	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/chart"
 	"go.felesatra.moe/keeper/internal/month"
-	"go.felesatra.moe/keeper/internal/tree"
 	"go.felesatra.moe/keeper/internal/webui/templates"
 	"go.felesatra.moe/keeper/journal"
 )
@@ -39,8 +38,6 @@ func NewHandler(c *chart.Config, o []journal.Option) http.Handler {
 	m := http.NewServeMux()
 	m.HandleFunc("/", h.handleIndex)
 	m.HandleFunc("/style.css", h.handleStyle)
-	m.HandleFunc("/CollapsibleLists.js", h.handleCollapse)
-	m.HandleFunc("/accounts", h.handleAccounts)
 	m.HandleFunc("/trial", h.handleTrial)
 	m.HandleFunc("/income", h.handleIncome)
 	m.HandleFunc("/capital", h.handleCapital)
@@ -67,24 +64,8 @@ func (h handler) handleIndex(w http.ResponseWriter, req *http.Request) {
 	h.execute(w, templates.Index, d)
 }
 
-func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
-	j, err := h.compile()
-	if err != nil {
-		h.writeError(w, err)
-		return
-	}
-	d := templates.AccountsData{
-		AccountTree: tree.JournalAccountTree(j),
-	}
-	h.execute(w, templates.Accounts, d)
-}
-
 func (h handler) handleStyle(w http.ResponseWriter, req *http.Request) {
 	http.ServeContent(w, req, "style.css", time.Time{}, strings.NewReader(templates.StyleText))
-}
-
-func (h handler) handleCollapse(w http.ResponseWriter, req *http.Request) {
-	http.ServeContent(w, req, "CollapsibleLists.js", time.Time{}, strings.NewReader(templates.CollapseText))
 }
 
 func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
