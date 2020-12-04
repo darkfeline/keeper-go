@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package webui
+package tree
 
 import (
 	"reflect"
@@ -24,16 +24,16 @@ import (
 
 func TestMakeAccountTree(t *testing.T) {
 	t.Parallel()
-	type c = []*accountTree
+	type c = []*AccountTree
 	cases := []struct {
 		desc string
 		a    []journal.Account
-		want *accountTree
+		want *AccountTree
 	}{
 		{
 			desc: "simple",
 			a:    []journal.Account{"IJN:Ayanami", "USS:Laffey"},
-			want: &accountTree{Virtual: true, Children: c{
+			want: &AccountTree{Virtual: true, Children: c{
 				{Account: "IJN", Virtual: true, Children: c{
 					{Account: "IJN:Ayanami"},
 				}},
@@ -48,7 +48,7 @@ func TestMakeAccountTree(t *testing.T) {
 				"Expenses:Foo:Bar:Baz",
 				"Expenses:Spam:Eggs:Ham",
 			},
-			want: &accountTree{Virtual: true, Children: c{
+			want: &AccountTree{Virtual: true, Children: c{
 				{Account: "Expenses", Virtual: true, Children: c{
 					{Account: "Expenses:Foo", Virtual: true, Children: c{
 						{Account: "Expenses:Foo:Bar", Virtual: true, Children: c{
@@ -69,7 +69,7 @@ func TestMakeAccountTree(t *testing.T) {
 				"Expenses:Foo",
 				"Expenses:Foo:Bar:Baz",
 			},
-			want: &accountTree{Virtual: true, Children: c{
+			want: &AccountTree{Virtual: true, Children: c{
 				{Account: "Expenses", Virtual: true, Children: c{
 					{Account: "Expenses:Foo", Children: c{
 						{Account: "Expenses:Foo:Bar", Virtual: true, Children: c{
@@ -84,7 +84,7 @@ func TestMakeAccountTree(t *testing.T) {
 				"Assets:2019:Foo",
 				"Assets:2020:Foo",
 			},
-			want: &accountTree{Virtual: true, Children: c{
+			want: &AccountTree{Virtual: true, Children: c{
 				{Account: "Assets", Virtual: true, Children: c{
 					{Account: "Assets:2019", Virtual: true, Children: c{
 						{Account: "Assets:2019:Foo"},

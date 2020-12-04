@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package webui
+package tree
 
 import (
 	"strings"
@@ -20,7 +20,7 @@ import (
 	"go.felesatra.moe/keeper/journal"
 )
 
-func journalAccountTree(j *journal.Journal) *accountTree {
+func JournalAccountTree(j *journal.Journal) *AccountTree {
 	var as []journal.Account
 	for _, a := range j.Accounts() {
 		if j.Disabled[a] == nil {
@@ -30,22 +30,22 @@ func journalAccountTree(j *journal.Journal) *accountTree {
 	return makeAccountTree(as)
 }
 
-type accountTree struct {
+type AccountTree struct {
 	Account  journal.Account
 	Virtual  bool
-	Children []*accountTree
+	Children []*AccountTree
 }
 
 // accounts must be sorted.
-func makeAccountTree(a []journal.Account) *accountTree {
-	at := &accountTree{
+func makeAccountTree(a []journal.Account) *AccountTree {
+	at := &AccountTree{
 		Virtual: true,
 	}
 	makeAccountTree1(a, at, 0)
 	return at
 }
 
-func makeAccountTree1(a []journal.Account, at *accountTree, i int) int {
+func makeAccountTree1(a []journal.Account, at *AccountTree, i int) int {
 	cur := at.Account
 	curParts := cur.Parts()
 	for i < len(a) {
@@ -57,7 +57,7 @@ func makeAccountTree1(a []journal.Account, at *accountTree, i int) int {
 		nextParts := next.Parts()
 		prefix := commonPrefix(curParts, nextParts)
 		nextPart := nextParts[len(curParts)]
-		at2 := &accountTree{
+		at2 := &AccountTree{
 			Account: journal.Account(strings.Join(append(cur.Parts(), nextPart), ":")),
 			Virtual: len(nextParts) > len(prefix)+1,
 		}

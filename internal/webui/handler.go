@@ -19,12 +19,15 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
 	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/chart"
 	"go.felesatra.moe/keeper/internal/month"
+	"go.felesatra.moe/keeper/internal/tree"
+	"go.felesatra.moe/keeper/internal/webui/templates"
 	"go.felesatra.moe/keeper/journal"
 )
 
@@ -58,10 +61,10 @@ func (h handler) handleIndex(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	d := indexData{
+	d := templates.IndexData{
 		BalanceErrors: j.BalanceErrors,
 	}
-	h.execute(w, indexTemplate, d)
+	h.execute(w, templates.Index, d)
 }
 
 func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
@@ -70,18 +73,18 @@ func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	d := accountsData{
-		AccountTree: journalAccountTree(j),
+	d := templates.AccountsData{
+		AccountTree: tree.JournalAccountTree(j),
 	}
-	h.execute(w, accountsTemplate, d)
+	h.execute(w, templates.Accounts, d)
 }
 
 func (h handler) handleStyle(w http.ResponseWriter, req *http.Request) {
-	http.ServeContent(w, req, "style.css", time.Time{}, strings.NewReader(styleText))
+	http.ServeContent(w, req, "style.css", time.Time{}, strings.NewReader(templates.StyleText))
 }
 
 func (h handler) handleCollapse(w http.ResponseWriter, req *http.Request) {
-	http.ServeContent(w, req, "CollapsibleLists.js", time.Time{}, strings.NewReader(collapseText))
+	http.ServeContent(w, req, "CollapsibleLists.js", time.Time{}, strings.NewReader(templates.CollapseText))
 }
 
 func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
@@ -92,8 +95,8 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 	}
 	r, t := makeTrialRows(j.Accounts(), j.Balances)
 	r = append(r, t.Rows("Total")...)
-	d := trialData{Rows: r}
-	h.execute(w, trialTemplate, d)
+	d := templates.TrialData{Rows: r}
+	h.execute(w, templates.Trial, d)
 }
 
 func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
@@ -111,22 +114,22 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 
 	a := j.Accounts()
 	b := j.Balances
-	d := stmtData{
+	d := templates.StmtData{
 		Title: "Income Statement",
 		Month: month.Format(end),
 	}
-	add := func(r ...stmtRow) {
+	add := func(r ...templates.StmtRow) {
 		d.Rows = append(d.Rows, r...)
 	}
 
-	add(stmtRow{Description: "Income", Section: true})
+	add(templates.StmtRow{Description: "Income", Section: true})
 	// Income is credit balance.
 	b.Neg()
 	r, rt := makeStmtRows(filter(a, c.IsIncome), b)
 	add(r...)
 	add(makeStmtBalance("Total Income", rt)...)
 
-	add(stmtRow{Description: "Expenses", Section: true})
+	add(templates.StmtRow{Description: "Expenses", Section: true})
 	// Expenses are debit balance.
 	b.Neg()
 	r, et := makeStmtRows(filter(a, c.IsExpenses), b)
@@ -136,9 +139,9 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	for _, am := range et.Amounts() {
 		rt.Add(am.Neg())
 	}
-	add(stmtRow{Description: "Net Profit", Section: true})
+	add(templates.StmtRow{Description: "Net Profit", Section: true})
 	add(makeStmtBalance("Total Net Profit", rt)...)
-	h.execute(w, stmtTemplate, d)
+	h.execute(w, templates.Stmt, d)
 }
 
 func (h handler) handleCapital(w http.ResponseWriter, req *http.Request) {
@@ -160,28 +163,28 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 
 	a := j.Accounts()
 	b := j.Balances
-	d := stmtData{
+	d := templates.StmtData{
 		Title: "Balance Sheet",
 		Month: month.Format(end),
 	}
-	add := func(r ...stmtRow) {
+	add := func(r ...templates.StmtRow) {
 		d.Rows = append(d.Rows, r...)
 	}
 
-	add(stmtRow{Description: "Assets", Section: true})
+	add(templates.StmtRow{Description: "Assets", Section: true})
 	// Assets are debit balance.
 	r, t := makeStmtRows(filter(a, c.IsAssets), b)
 	add(r...)
 	add(makeStmtBalance("Total Assets", t)...)
 
-	add(stmtRow{Description: "Liabilities", Section: true})
+	add(templates.StmtRow{Description: "Liabilities", Section: true})
 	// Liabilities are credit balance.
 	b.Neg()
 	r, lt := makeStmtRows(filter(a, c.IsLiabilities), b)
 	add(r...)
 	add(makeStmtBalance("Total Liabilities", lt)...)
 
-	add(stmtRow{Description: "Equity", Section: true})
+	add(templates.StmtRow{Description: "Equity", Section: true})
 	// Equity is credit balance.
 	r, et := makeStmtRows(filter(a, c.IsEquity), b)
 	add(r...)
@@ -190,17 +193,17 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 	for _, a := range et.Amounts() {
 		lt.Add(a)
 	}
-	add(stmtRow{})
+	add(templates.StmtRow{})
 	add(makeStmtBalance("Total Liabilities & Equity", lt)...)
 
 	_, tt := makeStmtRows(filter(j.Accounts(), c.IsTrading), b)
 	for _, a := range tt.Amounts() {
 		lt.Add(a)
 	}
-	add(stmtRow{})
+	add(templates.StmtRow{})
 	add(makeStmtBalance("Total w/ Trading", lt)...)
 
-	h.execute(w, stmtTemplate, d)
+	h.execute(w, templates.Stmt, d)
 }
 
 func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
@@ -226,12 +229,12 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	d := ledgerData{Account: account}
+	d := templates.LedgerData{Account: account}
 	b := make(journal.Balance)
 	for _, e := range accountEntries(j.Entries, account) {
 		d.Rows = append(d.Rows, makeLedgerRows(b, e, account)...)
 	}
-	h.execute(w, ledgerTemplate, d)
+	h.execute(w, templates.Ledger, d)
 }
 
 func (h handler) compile(o ...journal.Option) (*journal.Journal, error) {
@@ -265,4 +268,166 @@ func getQueryAccount(req *http.Request) journal.Account {
 		return ""
 	}
 	return journal.Account(v[0])
+}
+
+type totalBalance struct {
+	Debit  journal.Balance
+	Credit journal.Balance
+}
+
+func (t totalBalance) Rows(desc string) []templates.TrialRow {
+	var r []templates.TrialRow
+	for i, u := range balanceUnits(t.Debit, t.Credit) {
+		e := templates.TrialRow{
+			DebitBal:  t.Debit.Amount(u),
+			CreditBal: t.Credit.Amount(u),
+		}
+		if i == 0 {
+			e.Account = desc
+		}
+		r = append(r, e)
+	}
+	return r
+}
+
+func makeTrialRows(a []journal.Account, b journal.Balances) ([]templates.TrialRow, totalBalance) {
+	t := totalBalance{
+		Debit:  make(journal.Balance),
+		Credit: make(journal.Balance),
+	}
+	var r []templates.TrialRow
+	for _, a := range a {
+		for i, amt := range b[a].Amounts() {
+			e := templates.TrialRow{}
+			if amt.Number > 0 {
+				e.DebitBal = amt
+				t.Debit.Add(amt)
+			} else {
+				e.CreditBal = amt
+				t.Credit.Add(amt)
+			}
+			if i == 0 {
+				e.Account = string(a)
+			}
+			r = append(r, e)
+		}
+	}
+	return r, t
+}
+
+func makeStmtRows(a []journal.Account, b journal.Balances) ([]templates.StmtRow, journal.Balance) {
+	t := make(journal.Balance)
+	var r []templates.StmtRow
+	for _, a := range a {
+		for i, amt := range b[a].Amounts() {
+			e := templates.StmtRow{Amount: amt}
+			if i == 0 {
+				e.Description = string(a)
+				e.Account = true
+			}
+			r = append(r, e)
+			t.Add(amt)
+		}
+	}
+	return r, t
+}
+
+func makeStmtBalance(desc string, b journal.Balance) []templates.StmtRow {
+	var r []templates.StmtRow
+	for i, u := range balanceUnits(b) {
+		e := templates.StmtRow{Amount: b.Amount(u)}
+		if i == 0 {
+			e.Description = desc
+		}
+		r = append(r, e)
+	}
+	return r
+}
+
+func makeLedgerRows(b journal.Balance, e journal.Entry, a journal.Account) []templates.LedgerRow {
+	switch e := e.(type) {
+	case *journal.Transaction:
+		return convertTransaction(b, a, e)
+	case *journal.BalanceAssert:
+		return convertBalance(e)
+	case *journal.DisableAccount:
+		return []templates.LedgerRow{{
+			Entry:       e,
+			Description: "(disabled)",
+		}}
+	default:
+		panic(fmt.Sprintf("unknown entry %T", e))
+	}
+}
+
+func convertBalance(e *journal.BalanceAssert) []templates.LedgerRow {
+	units := balanceUnits(e.Actual, e.Declared, e.Diff)
+	var entries []templates.LedgerRow
+	for _, u := range units {
+		le := templates.LedgerRow{
+			Entry:   e,
+			Balance: e.Actual.Amount(u),
+		}
+		if e.Diff[u] == 0 {
+			le.Description = "(balance)"
+		} else {
+			le.Description = fmt.Sprintf("(balance error, declared %s, diff %s)",
+				e.Declared.Amount(u), e.Diff.Amount(u))
+		}
+		entries = append(entries, le)
+	}
+	return entries
+}
+
+// balanceUnits returns all of the units in the balances.
+func balanceUnits(b ...journal.Balance) []journal.Unit {
+	seen := make(map[journal.Unit]bool)
+	for _, b := range b {
+		for u := range b {
+			seen[u] = true
+		}
+	}
+	var units []journal.Unit
+	for u, v := range seen {
+		if v {
+			units = append(units, u)
+		}
+	}
+	sort.Slice(units, func(i, j int) bool { return units[i].Symbol < units[j].Symbol })
+	return units
+}
+
+func convertTransaction(b journal.Balance, a journal.Account, e *journal.Transaction) []templates.LedgerRow {
+	var entries []templates.LedgerRow
+	first := true
+	for _, s := range e.Splits {
+		if s.Account != a {
+			continue
+		}
+		le := templates.LedgerRow{
+			Amount: s.Amount,
+		}
+		b.Add(s.Amount)
+		if first {
+			le.Entry = e
+			le.Description = e.Description
+			first = false
+		}
+		entries = append(entries, le)
+	}
+	if len(entries) == 0 {
+		return entries
+	}
+	amts := b.Amounts()
+	if len(amts) == 0 {
+		return entries
+	}
+	entries[len(entries)-1].Balance = amts[0]
+	for _, a := range amts[1:] {
+		le := templates.LedgerRow{
+			Balance: a,
+		}
+		entries = append(entries, le)
+	}
+	return entries
 }
