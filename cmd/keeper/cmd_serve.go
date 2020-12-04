@@ -20,7 +20,7 @@ import (
 	"net/http"
 
 	"github.com/coreos/go-systemd/activation"
-	"go.felesatra.moe/keeper/cmd/keeper/internal/webui"
+	"go.felesatra.moe/keeper/internal/webui"
 	"go.felesatra.moe/keeper/journal"
 )
 
