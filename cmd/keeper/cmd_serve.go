@@ -34,17 +34,17 @@ var serveCmd = &command{
 		var listener net.Listener
 		ls, err := activation.Listeners()
 		if err != nil {
-			errf("%s", err)
+			log.Fatal(err)
 		}
 		if len(ls) >= 1 {
 			listener = ls[0]
-			errf("using activation socket")
+			log.Printf("using activation socket")
 		} else {
 			listener, err = net.Listen("tcp", *addr)
 			if err != nil {
 				log.Fatal(err)
 			}
-			errf("listening on %s", *addr)
+			log.Printf("listening on %s", *addr)
 		}
 		o := []journal.Option{journal.File(fs.Args()...)}
 		h := webui.NewHandler(c, o)

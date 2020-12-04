@@ -17,14 +17,15 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 )
 
 func main() {
+	log.SetPrefix("keeper: ")
 	if len(os.Args) < 2 {
-		errf("no command specified")
-		os.Exit(2)
+		log.Fatal("no command specified")
 	}
 	cmd, args := os.Args[1], os.Args[2:]
 	for _, c := range commands {
@@ -33,8 +34,7 @@ func main() {
 			os.Exit(0)
 		}
 	}
-	errf("unknown command %s", cmd)
-	os.Exit(2)
+	log.Fatalf("unknown command %s", cmd)
 }
 
 var commands = []*command{
@@ -59,9 +59,4 @@ func (c *command) flagSet() *flag.FlagSet {
 		fs.PrintDefaults()
 	}
 	return fs
-}
-
-// errf prints annotated lines to stderr.
-func errf(format string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, "keeper: "+format+"\n", v...)
 }

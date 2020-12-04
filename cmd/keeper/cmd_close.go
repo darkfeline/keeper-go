@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"os"
 
 	"cloud.google.com/go/civil"
@@ -43,8 +44,7 @@ var closeCmd = &command{
 			var err error
 			d, err = month.Parse(*m)
 			if err != nil {
-				errf("%s", err)
-				os.Exit(2)
+				log.Fatal(err)
 			}
 		} else {
 			d = month.Prev(month.Now())
@@ -56,8 +56,7 @@ var closeCmd = &command{
 		}
 		j, err := journal.Compile(o...)
 		if err != nil {
-			errf("%s", err)
-			os.Exit(1)
+			log.Fatal(err)
 		}
 		checkBalanceErrsAndExit(j)
 		var a []journal.Account
