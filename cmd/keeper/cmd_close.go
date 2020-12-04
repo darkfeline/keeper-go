@@ -16,13 +16,11 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"io"
 	"os"
 
 	"cloud.google.com/go/civil"
-	"go.felesatra.moe/keeper/chart"
 	"go.felesatra.moe/keeper/internal/month"
 	"go.felesatra.moe/keeper/journal"
 )
@@ -30,14 +28,13 @@ import (
 var closeCmd = &command{
 	usageLine: "close [-month month] [-trading] [files]",
 	run: func(cmd *command, args []string) {
-		fs := flag.NewFlagSet(cmd.name(), flag.ExitOnError)
+		fs := cmd.flagSet()
+		c := configPath(fs)
 		m := fs.String("month", "", "Month to close")
 		t := fs.Bool("trading", false, "Include trading accounts")
-		if err := fs.Parse(args); err != nil {
-			panic(err)
-		}
+		fs.Parse(args)
 		if fs.NArg() < 1 {
-			cmd.printUsage()
+			fs.Usage()
 			os.Exit(2)
 		}
 
@@ -46,7 +43,7 @@ var closeCmd = &command{
 			var err error
 			d, err = month.Parse(*m)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "keeper: %s\n", err)
+				errf("%s", err)
 				os.Exit(2)
 			}
 		} else {
@@ -59,17 +56,23 @@ var closeCmd = &command{
 		}
 		j, err := journal.Compile(o...)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "keeper: %s\n", err)
+			errf("%s", err)
 			os.Exit(1)
 		}
 		checkBalanceErrsAndExit(j)
-		c := chart.New(j.Accounts())
-		a := c.Income()
-		a = append(a, c.Expenses()...)
-		if *t {
-			a = append(a, c.Trading()...)
+		var a []journal.Account
+		var equity journal.Account
+		for _, ac := range j.Accounts() {
+			switch {
+			case c.IsIncome(ac), c.IsExpenses(ac):
+				a = append(a, ac)
+			case *t && c.IsTrading(ac):
+				a = append(a, ac)
+			case equity == "" && c.IsEquity(ac):
+				equity = ac
+			}
 		}
-		_ = printClosingTx(os.Stdout, j, month.Next(d), c.Equity()[0], a)
+		_ = printClosingTx(os.Stdout, j, month.Next(d), equity, a)
 	},
 }
 
@@ -88,4 +91,14 @@ func printClosingTx(w io.Writer, j *journal.Journal, d civil.Date, dst journal.A
 	}
 	fmt.Fprintf(bw, "end\n")
 	return bw.Flush()
+}
+
+func filter(a []journal.Account, f func(a journal.Account) bool) []journal.Account {
+	var new []journal.Account
+	for _, a := range a {
+		if f(a) {
+			new = append(new, a)
+		}
+	}
+	return new
 }

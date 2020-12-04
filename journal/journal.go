@@ -67,7 +67,7 @@ func Compile(o ...Option) (*Journal, error) {
 	inputs, err := openInputFiles(opts.inputs)
 	e, err := buildEntries(inputs...)
 	if err != nil {
-		return nil, fmt.Errorf("keeper: %s", err)
+		return nil, fmt.Errorf("compile journal: %s", err)
 	}
 	sortEntries(e)
 	if d := opts.ending; d.IsValid() {
@@ -75,7 +75,7 @@ func Compile(o ...Option) (*Journal, error) {
 	}
 	j, err := compile(e)
 	if err != nil {
-		return nil, fmt.Errorf("keeper: %s", err)
+		return nil, fmt.Errorf("compile journal: %s", err)
 	}
 	return j, nil
 }

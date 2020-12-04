@@ -15,25 +15,25 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strings"
 )
 
 func main() {
-	args := os.Args[1:]
-	if len(args) < 1 {
-		fmt.Fprintf(os.Stderr, "keeper: no command specified\n")
+	if len(os.Args) < 2 {
+		errf("no command specified")
 		os.Exit(2)
 	}
-	n := args[0]
+	cmd, args := os.Args[1], os.Args[2:]
 	for _, c := range commands {
-		if n == c.name() {
-			c.run(c, args[1:])
-			return
+		if cmd == c.name() {
+			c.run(c, args)
+			os.Exit(0)
 		}
 	}
-	fmt.Fprintf(os.Stderr, "keeper: unknown command %s\n", n)
+	errf("unknown command %s", cmd)
 	os.Exit(2)
 }
 
@@ -52,6 +52,16 @@ func (c *command) name() string {
 	return strings.SplitN(c.usageLine, " ", 2)[0]
 }
 
-func (c *command) printUsage() {
-	fmt.Fprintf(os.Stderr, "Usage: keeper %s\n", c.usageLine)
+func (c *command) flagSet() *flag.FlagSet {
+	fs := flag.NewFlagSet(c.name(), flag.ExitOnError)
+	fs.Usage = func() {
+		fmt.Fprintf(fs.Output(), "Usage: keeper %s\n", c.usageLine)
+		fs.PrintDefaults()
+	}
+	return fs
+}
+
+// errf prints annotated lines to stderr.
+func errf(format string, v ...interface{}) {
+	fmt.Fprintf(os.Stderr, "keeper: "+format+"\n", v...)
 }

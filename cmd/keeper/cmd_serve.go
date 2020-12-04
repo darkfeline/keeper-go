@@ -15,12 +15,9 @@
 package main
 
 import (
-	"flag"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
-	"os"
 
 	"github.com/coreos/go-systemd/activation"
 	"go.felesatra.moe/keeper/cmd/keeper/internal/webui"
@@ -28,30 +25,29 @@ import (
 )
 
 var serveCmd = &command{
-	usageLine: "serve [-port port] [files]",
+	usageLine: "serve [-addr address] [-config path] [files]",
 	run: func(cmd *command, args []string) {
-		fs := flag.NewFlagSet(cmd.name(), flag.ExitOnError)
-		port := fs.String("port", "8888", "Port to listen on")
-		if err := fs.Parse(args); err != nil {
-			panic(err)
-		}
+		fs := cmd.flagSet()
+		c := configPath(fs)
+		addr := fs.String("addr", "localhost:8888", "Address to listen on")
+		fs.Parse(args)
 		var listener net.Listener
 		ls, err := activation.Listeners()
 		if err != nil {
-			log.Fatal(err)
+			errf("%s", err)
 		}
 		if len(ls) >= 1 {
 			listener = ls[0]
-			fmt.Fprintf(os.Stderr, "Using activation socket\n")
+			errf("using activation socket")
 		} else {
-			listener, err = net.Listen("tcp", *port)
+			listener, err = net.Listen("tcp", *addr)
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Fprintf(os.Stderr, "Listening on port %s\n", *port)
+			errf("listening on %s", *addr)
 		}
 		o := []journal.Option{journal.File(fs.Args()...)}
-		h := webui.NewHandler(o)
+		h := webui.NewHandler(c, o)
 		log.Fatal(http.Serve(listener, h))
 	},
 }

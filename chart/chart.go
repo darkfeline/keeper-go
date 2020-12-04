@@ -15,60 +15,58 @@
 // Package chart is not stable.
 package chart
 
-import "go.felesatra.moe/keeper/journal"
+import (
+	"fmt"
+	"io"
+	"strings"
+
+	"github.com/pelletier/go-toml"
+	"go.felesatra.moe/keeper/journal"
+)
 
 type Account = journal.Account
 
-type Chart struct {
-	income      []Account
-	expenses    []Account
-	assets      []Account
-	liabilities []Account
-	equity      []Account
-	trading     []Account
+type Config struct {
+	CashAcctPrefix []string `toml:"cash_account_prefix"`
 }
 
-func New(a []Account) *Chart {
-	c := &Chart{}
-	for _, a := range a {
-		switch {
-		case a.Under("Income"):
-			c.income = append(c.income, a)
-		case a.Under("Expenses"):
-			c.expenses = append(c.expenses, a)
-		case a.Under("Assets"):
-			c.assets = append(c.assets, a)
-		case a.Under("Liabilities"):
-			c.liabilities = append(c.liabilities, a)
-		case a.Under("Equity"):
-			c.equity = append(c.equity, a)
-		case a.Under("Trading"):
-			c.trading = append(c.trading, a)
+func LoadConfig(c *Config, r io.Reader) error {
+	d := toml.NewDecoder(r)
+	if err := d.Decode(c); err != nil {
+		return fmt.Errorf("load chart config: %s", err)
+	}
+	return nil
+}
+
+func (c *Config) IsIncome(a Account) bool {
+	return a.Under("Income")
+}
+
+func (c *Config) IsExpenses(a Account) bool {
+	return a.Under("Expenses")
+}
+
+func (c *Config) IsAssets(a Account) bool {
+	return a.Under("Assets")
+}
+
+func (c *Config) IsLiabilities(a Account) bool {
+	return a.Under("Liabilities")
+}
+
+func (c *Config) IsEquity(a Account) bool {
+	return a.Under("Equity")
+}
+
+func (c *Config) IsTrading(a Account) bool {
+	return a.Under("Trading")
+}
+
+func (c *Config) IsCash(a Account) bool {
+	for _, p := range c.CashAcctPrefix {
+		if strings.HasPrefix(string(a), p) {
+			return true
 		}
 	}
-	return c
-}
-
-func (c *Chart) Income() []Account {
-	return c.income
-}
-
-func (c *Chart) Expenses() []Account {
-	return c.expenses
-}
-
-func (c *Chart) Assets() []Account {
-	return c.assets
-}
-
-func (c *Chart) Liabilities() []Account {
-	return c.liabilities
-}
-
-func (c *Chart) Equity() []Account {
-	return c.equity
-}
-
-func (c *Chart) Trading() []Account {
-	return c.trading
+	return false
 }

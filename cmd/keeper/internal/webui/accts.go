@@ -17,7 +17,6 @@ package webui
 import (
 	"fmt"
 
-	"go.felesatra.moe/keeper/chart"
 	"go.felesatra.moe/keeper/journal"
 )
 
@@ -53,27 +52,12 @@ func filterEntries(e []journal.Entry, f func(journal.Account) bool) []journal.En
 	return e2
 }
 
-func revenueAccounts(a []journal.Account) []journal.Account {
-	c := chart.New(a)
-	return c.Income()
-}
-
-func expenseAccounts(a []journal.Account) []journal.Account {
-	c := chart.New(a)
-	return c.Expenses()
-}
-
-func assetAccounts(a []journal.Account) []journal.Account {
-	c := chart.New(a)
-	return c.Assets()
-}
-
-func liabilityAccounts(a []journal.Account) []journal.Account {
-	c := chart.New(a)
-	return c.Liabilities()
-}
-
-func equityAccounts(a []journal.Account) []journal.Account {
-	c := chart.New(a)
-	return c.Equity()
+func filter(a []journal.Account, f func(a journal.Account) bool) []journal.Account {
+	var new []journal.Account
+	for _, a := range a {
+		if f(a) {
+			new = append(new, a)
+		}
+	}
+	return new
 }

@@ -14,7 +14,9 @@
 
 package journal
 
-import "cloud.google.com/go/civil"
+import (
+	"cloud.google.com/go/civil"
+)
 
 // An Option is passed to Compile to configure compilation.
 type Option interface {
@@ -29,11 +31,12 @@ type options struct {
 func makeOptions(o []Option) options {
 	var op options
 	for _, o := range o {
-		o.(optionSetter)(&op)
+		o.setOptions(&op)
 	}
 	return op
 }
 
+// An input defines an input source for compiling a journal, e.g., bytes or a file.
 type input interface {
 	input()
 }
@@ -45,14 +48,24 @@ type inputBytes struct {
 
 func (inputBytes) input() {}
 
+func (o inputBytes) setOptions(opt *options) {
+	opt.inputs = append(opt.inputs, o)
+}
+
 // Bytes returns an option that specifies input bytes.
 func Bytes(filename string, src []byte) Option {
-	return optionSetter(func(o *options) {
-		o.inputs = append(o.inputs, inputBytes{
-			filename: filename,
-			src:      src,
-		})
-	})
+	return inputBytes{
+		filename: filename,
+		src:      src,
+	}
+}
+
+type multiOpt []Option
+
+func (o multiOpt) setOptions(opt *options) {
+	for _, o := range o {
+		o.setOptions(opt)
+	}
 }
 
 type inputFile struct {
@@ -61,26 +74,31 @@ type inputFile struct {
 
 func (inputFile) input() {}
 
+func (o inputFile) setOptions(opt *options) {
+	opt.inputs = append(opt.inputs, o)
+}
+
 // File returns an option that specifies input files.
 func File(filename ...string) Option {
-	return optionSetter(func(o *options) {
-		for _, f := range filename {
-			o.inputs = append(o.inputs, inputFile{filename: f})
-		}
-	})
+	var o multiOpt
+	for _, f := range filename {
+		o = append(o, inputFile{filename: f})
+	}
+	return o
+}
+
+type endingOpt struct {
+	date civil.Date
+}
+
+func (o endingOpt) setOptions(opt *options) {
+	opt.ending = o.date
 }
 
 // Ending returns an option that limits a compiled journal to entries
 // ending on or before the given date.
 func Ending(d civil.Date) Option {
-	return optionSetter(func(o *options) {
-		o.ending = d
-	})
-}
-
-// An optionSetter is a function that implements the Option interface.
-type optionSetter func(*options)
-
-func (f optionSetter) setOptions(o *options) {
-	f(o)
+	return endingOpt{
+		date: d,
+	}
 }

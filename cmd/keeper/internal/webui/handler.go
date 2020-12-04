@@ -16,6 +16,7 @@ package webui
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
@@ -27,8 +28,11 @@ import (
 	"go.felesatra.moe/keeper/journal"
 )
 
-func NewHandler(o []journal.Option) http.Handler {
-	h := handler{o}
+func NewHandler(c *chart.Config, o []journal.Option) http.Handler {
+	h := handler{
+		c: c,
+		o: o,
+	}
 	m := http.NewServeMux()
 	m.HandleFunc("/", h.handleIndex)
 	m.HandleFunc("/style.css", h.handleStyle)
@@ -44,31 +48,32 @@ func NewHandler(o []journal.Option) http.Handler {
 }
 
 type handler struct {
+	c *chart.Config
 	o []journal.Option
 }
 
 func (h handler) handleIndex(w http.ResponseWriter, req *http.Request) {
 	j, err := h.compile()
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		h.writeError(w, err)
 		return
 	}
 	d := indexData{
 		BalanceErrors: j.BalanceErrors,
 	}
-	execute(w, indexTemplate, d)
+	h.execute(w, indexTemplate, d)
 }
 
 func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
 	j, err := h.compile()
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		h.writeError(w, err)
 		return
 	}
 	d := accountsData{
 		AccountTree: journalAccountTree(j),
 	}
-	execute(w, accountsTemplate, d)
+	h.execute(w, accountsTemplate, d)
 }
 
 func (h handler) handleStyle(w http.ResponseWriter, req *http.Request) {
@@ -82,22 +87,28 @@ func (h handler) handleCollapse(w http.ResponseWriter, req *http.Request) {
 func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 	j, err := h.compile()
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		h.writeError(w, err)
 		return
 	}
 	r, t := makeTrialRows(j.Accounts(), j.Balances)
 	r = append(r, t.Rows("Total")...)
 	d := trialData{Rows: r}
-	execute(w, trialTemplate, d)
+	h.execute(w, trialTemplate, d)
 }
 
 func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	end := month.LastDay(getQueryMonth(req))
 	j, err := h.compile(journal.Ending(end))
 	if err != nil {
+		h.writeError(w, err)
+		return
+	}
+	c, err := h.chartConfig()
+	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+
 	a := j.Accounts()
 	b := j.Balances
 	d := stmtData{
@@ -111,14 +122,14 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	add(stmtRow{Description: "Income", Section: true})
 	// Income is credit balance.
 	b.Neg()
-	r, rt := makeStmtRows(revenueAccounts(a), b)
+	r, rt := makeStmtRows(filter(a, c.IsIncome), b)
 	add(r...)
 	add(makeStmtBalance("Total Income", rt)...)
 
 	add(stmtRow{Description: "Expenses", Section: true})
 	// Expenses are debit balance.
 	b.Neg()
-	r, et := makeStmtRows(expenseAccounts(a), b)
+	r, et := makeStmtRows(filter(a, c.IsExpenses), b)
 	add(r...)
 	add(makeStmtBalance("Total Expenses", et)...)
 
@@ -127,7 +138,7 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	}
 	add(stmtRow{Description: "Net Profit", Section: true})
 	add(makeStmtBalance("Total Net Profit", rt)...)
-	execute(w, stmtTemplate, d)
+	h.execute(w, stmtTemplate, d)
 }
 
 func (h handler) handleCapital(w http.ResponseWriter, req *http.Request) {
@@ -138,9 +149,15 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 	end := month.LastDay(getQueryMonth(req))
 	j, err := h.compile(journal.Ending(end))
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		h.writeError(w, err)
 		return
 	}
+	c, err := h.chartConfig()
+	if err != nil {
+		h.writeError(w, err)
+		return
+	}
+
 	a := j.Accounts()
 	b := j.Balances
 	d := stmtData{
@@ -153,20 +170,20 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 
 	add(stmtRow{Description: "Assets", Section: true})
 	// Assets are debit balance.
-	r, t := makeStmtRows(assetAccounts(a), b)
+	r, t := makeStmtRows(filter(a, c.IsAssets), b)
 	add(r...)
 	add(makeStmtBalance("Total Assets", t)...)
 
 	add(stmtRow{Description: "Liabilities", Section: true})
 	// Liabilities are credit balance.
 	b.Neg()
-	r, lt := makeStmtRows(liabilityAccounts(a), b)
+	r, lt := makeStmtRows(filter(a, c.IsLiabilities), b)
 	add(r...)
 	add(makeStmtBalance("Total Liabilities", lt)...)
 
 	add(stmtRow{Description: "Equity", Section: true})
 	// Equity is credit balance.
-	r, et := makeStmtRows(equityAccounts(a), b)
+	r, et := makeStmtRows(filter(a, c.IsEquity), b)
 	add(r...)
 	add(makeStmtBalance("Total Equity", et)...)
 
@@ -176,15 +193,14 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 	add(stmtRow{})
 	add(makeStmtBalance("Total Liabilities & Equity", lt)...)
 
-	c := chart.New(j.Accounts())
-	_, tt := makeStmtRows(c.Trading(), b)
+	_, tt := makeStmtRows(filter(j.Accounts(), c.IsTrading), b)
 	for _, a := range tt.Amounts() {
 		lt.Add(a)
 	}
 	add(stmtRow{})
 	add(makeStmtBalance("Total w/ Trading", lt)...)
 
-	execute(w, stmtTemplate, d)
+	h.execute(w, stmtTemplate, d)
 }
 
 func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
@@ -207,7 +223,7 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 	account := getQueryAccount(req)
 	j, err := h.compile()
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		h.writeError(w, err)
 		return
 	}
 	d := ledgerData{Account: account}
@@ -215,7 +231,7 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 	for _, e := range accountEntries(j.Entries, account) {
 		d.Rows = append(d.Rows, makeLedgerRows(b, e, account)...)
 	}
-	execute(w, ledgerTemplate, d)
+	h.execute(w, ledgerTemplate, d)
 }
 
 func (h handler) compile(o ...journal.Option) (*journal.Journal, error) {
@@ -225,19 +241,28 @@ func (h handler) compile(o ...journal.Option) (*journal.Journal, error) {
 	return journal.Compile(o2...)
 }
 
+func (h handler) chartConfig() (*chart.Config, error) {
+	return h.c, nil
+}
+
+func (h handler) writeError(w http.ResponseWriter, err error) {
+	msg := fmt.Sprintf("Error: %s\n\nDebug info:\n\nhandler: %#v", err, h)
+	http.Error(w, msg, 500)
+}
+
+func (h handler) execute(w http.ResponseWriter, t *template.Template, data interface{}) {
+	var b bytes.Buffer
+	if err := t.Execute(&b, data); err != nil {
+		h.writeError(w, err)
+		return
+	}
+	w.Write(b.Bytes())
+}
+
 func getQueryAccount(req *http.Request) journal.Account {
 	v := req.URL.Query()["account"]
 	if len(v) == 0 {
 		return ""
 	}
 	return journal.Account(v[0])
-}
-
-func execute(w http.ResponseWriter, t *template.Template, data interface{}) {
-	var b bytes.Buffer
-	if err := t.Execute(&b, data); err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-	w.Write(b.Bytes())
 }

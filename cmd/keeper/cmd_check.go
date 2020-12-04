@@ -15,8 +15,6 @@
 package main
 
 import (
-	"flag"
-	"fmt"
 	"os"
 
 	"go.felesatra.moe/keeper/journal"
@@ -25,14 +23,12 @@ import (
 var checkCmd = &command{
 	usageLine: "check [files]",
 	run: func(cmd *command, args []string) {
-		fs := flag.NewFlagSet(cmd.name(), flag.ExitOnError)
-		if err := fs.Parse(args); err != nil {
-			panic(err)
-		}
+		fs := cmd.flagSet()
+		fs.Parse(args)
 		o := []journal.Option{journal.File(fs.Args()...)}
 		j, err := journal.Compile(o...)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "keeper: %s\n", err)
+			errf("%s", err)
 			os.Exit(1)
 		}
 		checkBalanceErrsAndExit(j)
@@ -42,11 +38,11 @@ var checkCmd = &command{
 func checkBalanceErrsAndExit(j *journal.Journal) {
 	if len(j.BalanceErrors) > 0 {
 		for _, e := range j.BalanceErrors {
-			fmt.Fprintf(os.Stderr, "%s %s %s declared %s, actual %s (diff %s)\n",
+			errf("%s %s %s declared %s, actual %s (diff %s)",
 				e.EntryPos, e.EntryDate, e.Account,
 				e.Declared, e.Actual, e.Diff)
 		}
-		fmt.Fprintf(os.Stderr, "keeper: balance errors\n")
+		errf("balance errors")
 		os.Exit(1)
 	}
 }
