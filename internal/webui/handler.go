@@ -167,7 +167,12 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 
 	add(templates.StmtRow{Description: "Equity", Section: true})
 	// Equity is credit balance.
-	r, et := makeStmtRows(filter(a, c.IsEquity), b)
+	r, et := makeStmtRows(filter(a, func(a journal.Account) bool {
+		return c.IsEquity(a) ||
+			c.IsIncome(a) ||
+			c.IsExpenses(a) ||
+			c.IsTrading(a)
+	}), b)
 	add(r...)
 	add(makeStmtBalance("Total Equity", et)...)
 
@@ -176,13 +181,6 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 	}
 	add(templates.StmtRow{})
 	add(makeStmtBalance("Total Liabilities & Equity", lt)...)
-
-	_, tt := makeStmtRows(filter(j.Accounts(), c.IsTrading), b)
-	for _, a := range tt.Amounts() {
-		lt.Add(a)
-	}
-	add(templates.StmtRow{})
-	add(makeStmtBalance("Total w/ Trading", lt)...)
 
 	h.execute(w, templates.Stmt, d)
 }
