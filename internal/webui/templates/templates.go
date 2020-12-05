@@ -71,9 +71,12 @@ type StmtData struct {
 
 type StmtRow struct {
 	Description string
-	Section     bool
-	Account     bool
-	Amount      journal.Amount
+	// Indicates the row is a section header, giving it emphasis.
+	Section bool
+	// Indicates the description is an account name and makes it a
+	// link to the account's ledger page.
+	Account bool
+	Amount  journal.Amount
 }
 
 //go:generate binpack -name ledgerText ledger.html
