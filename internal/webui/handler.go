@@ -89,7 +89,7 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	c, err := h.classifier()
+	c, err := h.config()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -144,7 +144,7 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	c, err := h.classifier()
+	c, err := h.config()
 	if err != nil {
 		h.writeError(w, err)
 		return
@@ -234,7 +234,7 @@ func (h handler) compile(o ...journal.Option) (*journal.Journal, error) {
 	return journal.Compile(o2...)
 }
 
-func (h handler) classifier() (*config.Config, error) {
+func (h handler) config() (*config.Config, error) {
 	c := &config.Config{}
 	if h.configPath == "" {
 		return c, nil
