@@ -104,6 +104,13 @@ func (b Balance) Add(a Amount) {
 	b[a.Unit] += a.Number
 }
 
+// AddBal adds the amounts of the argument balance.
+func (b Balance) AddBal(b2 Balance) {
+	for k, v := range b2 {
+		b[k] += v
+	}
+}
+
 // Sub subtracts an amount from the balance.
 func (b Balance) Sub(a Amount) {
 	b.Add(a.Neg())

@@ -116,9 +116,8 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	s.addRows(r...)
 	s.addBalance("Total Expenses", et)
 
-	for _, am := range et.Amounts() {
-		rt.Add(am.Neg())
-	}
+	et.Neg()
+	rt.AddBal(et)
 	s.addSection("Net Profit")
 	s.addBalance("Total Net Profit", rt)
 	h.execute(w, templates.Stmt, s.StmtData)
@@ -174,9 +173,7 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 	s.addRows(r...)
 	s.addBalance("Total Equity", et)
 
-	for _, a := range et.Amounts() {
-		lt.Add(a)
-	}
+	lt.AddBal(et)
 	s.addRows(templates.StmtRow{})
 	s.addBalance("Total Liabilities & Equity", lt)
 
