@@ -48,6 +48,7 @@ func LastDay(d civil.Date) civil.Date {
 	return Next(d).AddDays(-1)
 }
 
+// Next returns the first day of the next month.
 func Next(d civil.Date) civil.Date {
 	cur := d.Month
 	for d.Month == cur {
@@ -56,6 +57,7 @@ func Next(d civil.Date) civil.Date {
 	return FirstDay(d)
 }
 
+// Prev returns the first day of the previous month.
 func Prev(d civil.Date) civil.Date {
 	cur := d.Month
 	for d.Month == cur {
