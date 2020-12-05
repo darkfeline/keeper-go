@@ -95,34 +95,33 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 
 	a := j.Accounts()
 	b := j.Balances
-	d := templates.StmtData{
-		Title: "Income Statement",
-		Month: month.Format(end),
-	}
-	add := func(r ...templates.StmtRow) {
-		d.Rows = append(d.Rows, r...)
+	s := stmt{
+		StmtData: &templates.StmtData{
+			Title: "Income Statement",
+			Month: month.Format(end),
+		},
 	}
 
-	add(templates.StmtRow{Description: "Income", Section: true})
+	s.addSection("Income")
 	// Income is credit balance.
 	b.Neg()
 	r, rt := makeStmtRows(filter(a, c.IsIncome), b)
-	add(r...)
-	add(makeStmtBalance("Total Income", rt)...)
+	s.addRows(r...)
+	s.addBalance("Total Income", rt)
 
-	add(templates.StmtRow{Description: "Expenses", Section: true})
+	s.addSection("Expenses")
 	// Expenses are debit balance.
 	b.Neg()
 	r, et := makeStmtRows(filter(a, c.IsExpenses), b)
-	add(r...)
-	add(makeStmtBalance("Total Expenses", et)...)
+	s.addRows(r...)
+	s.addBalance("Total Expenses", et)
 
 	for _, am := range et.Amounts() {
 		rt.Add(am.Neg())
 	}
-	add(templates.StmtRow{Description: "Net Profit", Section: true})
-	add(makeStmtBalance("Total Net Profit", rt)...)
-	h.execute(w, templates.Stmt, d)
+	s.addSection("Net Profit")
+	s.addBalance("Total Net Profit", rt)
+	h.execute(w, templates.Stmt, s.StmtData)
 }
 
 func (h handler) handleCapital(w http.ResponseWriter, req *http.Request) {
@@ -144,28 +143,27 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 
 	a := j.Accounts()
 	b := j.Balances
-	d := templates.StmtData{
-		Title: "Balance Sheet",
-		Month: month.Format(end),
-	}
-	add := func(r ...templates.StmtRow) {
-		d.Rows = append(d.Rows, r...)
+	s := stmt{
+		StmtData: &templates.StmtData{
+			Title: "Balance Sheet",
+			Month: month.Format(end),
+		},
 	}
 
-	add(templates.StmtRow{Description: "Assets", Section: true})
+	s.addSection("Assets")
 	// Assets are debit balance.
 	r, t := makeStmtRows(filter(a, c.IsAssets), b)
-	add(r...)
-	add(makeStmtBalance("Total Assets", t)...)
+	s.addRows(r...)
+	s.addBalance("Total Assets", t)
 
-	add(templates.StmtRow{Description: "Liabilities", Section: true})
+	s.addSection("Liabilities")
 	// Liabilities are credit balance.
 	b.Neg()
 	r, lt := makeStmtRows(filter(a, c.IsLiabilities), b)
-	add(r...)
-	add(makeStmtBalance("Total Liabilities", lt)...)
+	s.addRows(r...)
+	s.addBalance("Total Liabilities", lt)
 
-	add(templates.StmtRow{Description: "Equity", Section: true})
+	s.addSection("Equity")
 	// Equity is credit balance.
 	r, et := makeStmtRows(filter(a, func(a journal.Account) bool {
 		return c.IsEquity(a) ||
@@ -173,16 +171,16 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 			c.IsExpenses(a) ||
 			c.IsTrading(a)
 	}), b)
-	add(r...)
-	add(makeStmtBalance("Total Equity", et)...)
+	s.addRows(r...)
+	s.addBalance("Total Equity", et)
 
 	for _, a := range et.Amounts() {
 		lt.Add(a)
 	}
-	add(templates.StmtRow{})
-	add(makeStmtBalance("Total Liabilities & Equity", lt)...)
+	s.addRows(templates.StmtRow{})
+	s.addBalance("Total Liabilities & Equity", lt)
 
-	h.execute(w, templates.Stmt, d)
+	h.execute(w, templates.Stmt, s.StmtData)
 }
 
 func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
@@ -311,18 +309,6 @@ func makeStmtRows(a []journal.Account, b journal.Balances) ([]templates.StmtRow,
 	return r, t
 }
 
-func makeStmtBalance(desc string, b journal.Balance) []templates.StmtRow {
-	var r []templates.StmtRow
-	for i, u := range balanceUnits(b) {
-		e := templates.StmtRow{Amount: b.Amount(u)}
-		if i == 0 {
-			e.Description = desc
-		}
-		r = append(r, e)
-	}
-	return r
-}
-
 func makeLedgerRows(b journal.Balance, e journal.Entry, a journal.Account) []templates.LedgerRow {
 	switch e := e.(type) {
 	case *journal.Transaction:
@@ -409,4 +395,29 @@ func convertTransaction(b journal.Balance, a journal.Account, e *journal.Transac
 		entries = append(entries, le)
 	}
 	return entries
+}
+
+type stmt struct {
+	*templates.StmtData
+}
+
+func (s stmt) addRows(r ...templates.StmtRow) {
+	s.Rows = append(s.Rows, r...)
+}
+
+func (s stmt) addSection(desc string) {
+	s.addRows(templates.StmtRow{
+		Description: desc,
+		Section:     true,
+	})
+}
+
+func (s stmt) addBalance(desc string, b journal.Balance) {
+	for i, u := range balanceUnits(b) {
+		e := templates.StmtRow{Amount: b.Amount(u)}
+		if i == 0 {
+			e.Description = desc
+		}
+		s.addRows(e)
+	}
 }
