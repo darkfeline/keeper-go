@@ -129,7 +129,7 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	expenses.Neg()
 	income.AddBal(expenses)
 	s.addSection("Net Profit")
-	s.addBalanceRow(templates.StmtRow{Description: "Total Net Profit"}, income)
+	s.addBalanceRows(templates.StmtRow{Description: "Total Net Profit"}, income)
 	h.execute(w, templates.Stmt, s.StmtData)
 }
 
@@ -191,7 +191,7 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 
 	equity.AddBal(liabilities)
 	s.addRows(templates.StmtRow{})
-	s.addBalanceRow(templates.StmtRow{Description: "Total Liabilities & Equity"}, equity)
+	s.addBalanceRows(templates.StmtRow{Description: "Total Liabilities & Equity"}, equity)
 
 	h.execute(w, templates.Stmt, s.StmtData)
 }
@@ -435,7 +435,7 @@ func (s *stmt) addRows(r ...templates.StmtRow) {
 // Since balances have multiple units, this adds multiple rows.
 // The argument row's fields, except for the amount, is used for the
 // first row only.
-func (s *stmt) addBalanceRow(r templates.StmtRow, b journal.Balance) {
+func (s *stmt) addBalanceRows(r templates.StmtRow, b journal.Balance) {
 	for _, v := range b.Amounts() {
 		r.Amount = v
 		s.addRows(r)
@@ -453,7 +453,7 @@ func (s *stmt) addSection(desc string) {
 // Adds rows for an account.
 // The account balance is added to a running total.
 func (s *stmt) addAccount(a journal.Account, b journal.Balance) {
-	s.addBalanceRow(templates.StmtRow{
+	s.addBalanceRows(templates.StmtRow{
 		Description: string(a),
 		Account:     true,
 	}, b)
@@ -468,7 +468,7 @@ func (s *stmt) addTotal(desc string) {
 	if s.bal == nil {
 		s.bal = make(journal.Balance)
 	}
-	s.addBalanceRow(templates.StmtRow{Description: desc}, s.bal)
+	s.addBalanceRows(templates.StmtRow{Description: desc}, s.bal)
 	s.bal.Clear()
 }
 
