@@ -213,6 +213,19 @@ func (b Balances) Neg() {
 	}
 }
 
+// Accounts returns all of the accounts with balances in sorted order.
+func (b Balances) Accounts() []Account {
+	var new []Account
+	for a, b := range b {
+		if b.Empty() {
+			continue
+		}
+		new = append(new, a)
+	}
+	sort.Slice(new, func(i, j int) bool { return new[i] < new[j] })
+	return new
+}
+
 // A Summary tracks the total balance including sub-accounts for all accounts.
 type Summary map[Account]Balance
 

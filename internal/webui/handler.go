@@ -232,11 +232,11 @@ func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
 		am journal.Amount
 	}
 	var infl, outfl []fl
-	for a, b := range delta {
+	for _, a := range delta.Accounts() {
 		if c.IsCash(a) {
 			continue
 		}
-		for _, am := range b.Amounts() {
+		for _, am := range delta[a].Amounts() {
 			if am.Number > 0 {
 				infl = append(infl, fl{a, am})
 			} else if am.Number < 0 {
