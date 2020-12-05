@@ -133,6 +133,13 @@ func (b Balance) Empty() bool {
 	return true
 }
 
+// Clear clears the balance, making it empty/zero.
+func (b Balance) Clear() {
+	for k := range b {
+		delete(b, k)
+	}
+}
+
 // Amount returns the amount of the given unit in the balance.
 func (b Balance) Amount(u Unit) Amount {
 	return Amount{Number: b[u], Unit: u}
