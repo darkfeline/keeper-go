@@ -17,55 +17,32 @@ package account
 
 import (
 	"fmt"
-	"io"
-	"strings"
 
-	"github.com/pelletier/go-toml"
 	"go.felesatra.moe/keeper/journal"
 )
 
-type Classifier struct {
-	// Prefix for matching cash accounts.
-	CashPrefix []string `toml:"cash_prefix"`
-}
-
-func LoadClassifier(c *Classifier, r io.Reader) error {
-	d := toml.NewDecoder(r)
-	if err := d.Decode(c); err != nil {
-		return fmt.Errorf("load account classifier: %s", err)
-	}
-	return nil
-}
-
-func (c *Classifier) IsIncome(a journal.Account) bool {
-	return a.Under("Income")
-}
-
-func (c *Classifier) IsExpenses(a journal.Account) bool {
-	return a.Under("Expenses")
-}
-
-func (c *Classifier) IsAssets(a journal.Account) bool {
-	return a.Under("Assets")
-}
-
-func (c *Classifier) IsLiabilities(a journal.Account) bool {
-	return a.Under("Liabilities")
-}
-
-func (c *Classifier) IsEquity(a journal.Account) bool {
-	return a.Under("Equity")
-}
-
-func (c *Classifier) IsTrading(a journal.Account) bool {
-	return a.Under("Trading")
-}
-
-func (c *Classifier) IsCash(a journal.Account) bool {
-	for _, p := range c.CashPrefix {
-		if strings.HasPrefix(string(a), p) {
-			return true
+func FilterEntries(e []journal.Entry, a journal.Account) []journal.Entry {
+	var e2 []journal.Entry
+	for _, e := range e {
+		switch e := e.(type) {
+		case *journal.Transaction:
+			for _, s := range e.Splits {
+				if s.Account == a {
+					e2 = append(e2, e)
+					break
+				}
+			}
+		case *journal.BalanceAssert:
+			if e.Account == a {
+				e2 = append(e2, e)
+			}
+		case *journal.DisableAccount:
+			if e.Account == a {
+				e2 = append(e2, e)
+			}
+		default:
+			panic(fmt.Sprintf("unknown entry %T", e))
 		}
 	}
-	return false
+	return e2
 }

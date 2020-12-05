@@ -211,16 +211,16 @@ func getQueryMonth(req *http.Request) civil.Date {
 }
 
 func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
-	account := getQueryAccount(req)
+	a := getQueryAccount(req)
 	j, err := h.compile()
 	if err != nil {
 		h.writeError(w, err)
 		return
 	}
-	d := templates.LedgerData{Account: account}
+	d := templates.LedgerData{Account: a}
 	b := make(journal.Balance)
-	for _, e := range accountEntries(j.Entries, account) {
-		d.Rows = append(d.Rows, makeLedgerRows(b, e, account)...)
+	for _, e := range account.FilterEntries(j.Entries, a) {
+		d.Rows = append(d.Rows, makeLedgerRows(b, e, a)...)
 	}
 	h.execute(w, templates.Ledger, d)
 }
