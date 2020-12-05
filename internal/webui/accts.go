@@ -51,13 +51,3 @@ func filterEntries(e []journal.Entry, f func(journal.Account) bool) []journal.En
 	}
 	return e2
 }
-
-func filter(a []journal.Account, f func(a journal.Account) bool) []journal.Account {
-	var new []journal.Account
-	for _, a := range a {
-		if f(a) {
-			new = append(new, a)
-		}
-	}
-	return new
-}
