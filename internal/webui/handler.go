@@ -397,6 +397,7 @@ func convertTransaction(b journal.Balance, a journal.Account, e *journal.Transac
 	return entries
 }
 
+// A stmt helps construct StmtData and add rows.
 type stmt struct {
 	*templates.StmtData
 }
