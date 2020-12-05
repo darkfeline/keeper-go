@@ -24,8 +24,6 @@ import (
 	"go.felesatra.moe/keeper/journal"
 )
 
-type Account = journal.Account
-
 type Classifier struct {
 	// Prefix for matching cash accounts.
 	CashPrefix []string `toml:"cash_prefix"`
@@ -39,31 +37,31 @@ func LoadClassifier(c *Classifier, r io.Reader) error {
 	return nil
 }
 
-func (c *Classifier) IsIncome(a Account) bool {
+func (c *Classifier) IsIncome(a journal.Account) bool {
 	return a.Under("Income")
 }
 
-func (c *Classifier) IsExpenses(a Account) bool {
+func (c *Classifier) IsExpenses(a journal.Account) bool {
 	return a.Under("Expenses")
 }
 
-func (c *Classifier) IsAssets(a Account) bool {
+func (c *Classifier) IsAssets(a journal.Account) bool {
 	return a.Under("Assets")
 }
 
-func (c *Classifier) IsLiabilities(a Account) bool {
+func (c *Classifier) IsLiabilities(a journal.Account) bool {
 	return a.Under("Liabilities")
 }
 
-func (c *Classifier) IsEquity(a Account) bool {
+func (c *Classifier) IsEquity(a journal.Account) bool {
 	return a.Under("Equity")
 }
 
-func (c *Classifier) IsTrading(a Account) bool {
+func (c *Classifier) IsTrading(a journal.Account) bool {
 	return a.Under("Trading")
 }
 
-func (c *Classifier) IsCash(a Account) bool {
+func (c *Classifier) IsCash(a journal.Account) bool {
 	for _, p := range c.CashPrefix {
 		if strings.HasPrefix(string(a), p) {
 			return true
