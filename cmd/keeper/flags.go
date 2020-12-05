@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"os"
 
-	"go.felesatra.moe/keeper/chart"
+	"go.felesatra.moe/keeper/internal/chart"
 )
 
 // A configFlag is a flag.Value for loading a chart.Config via a flag.

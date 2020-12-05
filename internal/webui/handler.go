@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/civil"
-	"go.felesatra.moe/keeper/chart"
+	"go.felesatra.moe/keeper/internal/chart"
 	"go.felesatra.moe/keeper/internal/month"
 	"go.felesatra.moe/keeper/internal/webui/templates"
 	"go.felesatra.moe/keeper/journal"
