@@ -21,6 +21,7 @@ import (
 	"go.felesatra.moe/keeper/journal"
 )
 
+// Filter entries that relate to the given account.
 func FilterEntries(e []journal.Entry, a journal.Account) []journal.Entry {
 	var e2 []journal.Entry
 	for _, e := range e {
