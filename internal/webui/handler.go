@@ -197,7 +197,86 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
-	h.writeError(w, errors.New("not implemented"))
+	end := month.LastDay(getQueryMonth(req))
+	j, err := h.compile(journal.Ending(end))
+	if err != nil {
+		h.writeError(w, err)
+		return
+	}
+	c, err := h.config()
+	if err != nil {
+		h.writeError(w, err)
+		return
+	}
+
+	start := month.FirstDay(end)
+	a := cashAccounts(c, j.Accounts())
+	e := filterEntries(j.Entries, newAccountPred(a).match)
+	delta := make(journal.Balances)
+	for _, e := range e {
+		t, ok := e.(*journal.Transaction)
+		if !ok {
+			continue
+		}
+		if e.Date().Before(start) {
+			continue
+		}
+		for _, s := range t.Splits {
+			delta.Add(s.Account, s.Amount)
+		}
+	}
+	// We want to represent flow away from cash accounts.
+	delta.Neg()
+	type fl struct {
+		a  journal.Account
+		am journal.Amount
+	}
+	var infl, outfl []fl
+	for a, b := range delta {
+		if c.IsCash(a) {
+			continue
+		}
+		for _, am := range b.Amounts() {
+			if am.Number > 0 {
+				infl = append(infl, fl{a, am})
+			} else if am.Number < 0 {
+				outfl = append(outfl, fl{a, am})
+			}
+		}
+	}
+
+	s := stmt{
+		StmtData: &templates.StmtData{
+			Title: "Cash Flow",
+			Month: month.Format(end),
+		},
+	}
+	s.addSection("Starting Balances")
+	starting := j.BalancesEnding(start)
+	for _, a := range a {
+		s.addAccount(a, starting[a])
+	}
+	s.addTotal("Total Starting")
+
+	s.addSection("Inflow")
+	for _, v := range infl {
+		s.addAccountAmount(v.a, v.am)
+	}
+	s.addTotal("Total Inflow")
+
+	s.addSection("Outflow")
+	for _, v := range outfl {
+		s.addAccountAmount(v.a, v.am)
+	}
+	s.addTotal("Total Outflow")
+
+	s.addSection("Ending Balances")
+	for _, a := range a {
+		s.addAccount(a, j.Balances[a])
+	}
+	s.addTotal("Total Ending")
+
+	h.execute(w, templates.Stmt, s.StmtData)
 }
 
 func getQueryMonth(req *http.Request) civil.Date {
@@ -463,6 +542,19 @@ func (s *stmt) addAccount(a journal.Account, b journal.Balance) {
 	s.bal.AddBal(b)
 }
 
+// Like addAccount but with amount.
+func (s *stmt) addAccountAmount(a journal.Account, am journal.Amount) {
+	s.addRows(templates.StmtRow{
+		Description: string(a),
+		Amount:      am,
+		Account:     true,
+	})
+	if s.bal == nil {
+		s.bal = make(journal.Balance)
+	}
+	s.bal.Add(am)
+}
+
 // Add the current balance as a total.
 func (s *stmt) addTotal(desc string) {
 	if s.bal == nil {
@@ -474,22 +566,28 @@ func (s *stmt) addTotal(desc string) {
 
 // Filter entries related to the given account.
 func accountEntries(e []journal.Entry, a journal.Account) []journal.Entry {
+	return filterEntries(e, func(a2 journal.Account) bool {
+		return a2 == a
+	})
+}
+
+func filterEntries(e []journal.Entry, f func(journal.Account) bool) []journal.Entry {
 	var e2 []journal.Entry
 	for _, e := range e {
 		switch e := e.(type) {
 		case *journal.Transaction:
 			for _, s := range e.Splits {
-				if s.Account == a {
+				if f(s.Account) {
 					e2 = append(e2, e)
 					break
 				}
 			}
 		case *journal.BalanceAssert:
-			if e.Account == a {
+			if f(e.Account) {
 				e2 = append(e2, e)
 			}
 		case *journal.DisableAccount:
-			if e.Account == a {
+			if f(e.Account) {
 				e2 = append(e2, e)
 			}
 		default:
@@ -497,4 +595,30 @@ func accountEntries(e []journal.Entry, a journal.Account) []journal.Entry {
 		}
 	}
 	return e2
+}
+
+// An accountPred can be used in filterEntries to match entries
+// matching any listed account.
+type accountPred map[journal.Account]bool
+
+func newAccountPred(a []journal.Account) accountPred {
+	p := make(accountPred)
+	for _, a := range a {
+		p[a] = true
+	}
+	return p
+}
+
+func (p accountPred) match(a journal.Account) bool {
+	return p[a]
+}
+
+func cashAccounts(c *config.Config, a []journal.Account) []journal.Account {
+	var new []journal.Account
+	for _, a := range a {
+		if c.IsCash(a) {
+			new = append(new, a)
+		}
+	}
+	return new
 }

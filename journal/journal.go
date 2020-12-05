@@ -20,6 +20,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sort"
+
+	"cloud.google.com/go/civil"
 )
 
 // A Journal represents accounting information compiled from keeper file source.
@@ -57,6 +59,25 @@ func (j *Journal) Accounts() []Account {
 	}
 	sort.Slice(a, func(i, j int) bool { return a[i] < a[j] })
 	return a
+}
+
+// BalancesEnding returns the balances of all accounts at the close of
+// the given date.
+func (j *Journal) BalancesEnding(d civil.Date) Balances {
+	b := make(Balances)
+	for _, e := range j.Entries {
+		t, ok := e.(*Transaction)
+		if !ok {
+			continue
+		}
+		if e.Date().After(d) {
+			break
+		}
+		for _, s := range t.Splits {
+			b.Add(s.Account, s.Amount)
+		}
+	}
+	return b
 }
 
 // Compile compiles keeper file source into a Journal.
