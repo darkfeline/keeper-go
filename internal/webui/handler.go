@@ -16,6 +16,7 @@ package webui
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -133,7 +134,7 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleCapital(w http.ResponseWriter, req *http.Request) {
-	panic("Not implemented")
+	h.writeError(w, errors.New("not implemented"))
 }
 
 func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
@@ -196,7 +197,7 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
-	panic("Not implemented")
+	h.writeError(w, errors.New("not implemented"))
 }
 
 func getQueryMonth(req *http.Request) civil.Date {
