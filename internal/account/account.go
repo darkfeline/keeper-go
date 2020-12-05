@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package chart is not stable.
-package chart
+// Package account contains account related utilities.
+package account
 
 import (
 	"fmt"
@@ -26,44 +26,45 @@ import (
 
 type Account = journal.Account
 
-type Config struct {
-	CashAcctPrefix []string `toml:"cash_account_prefix"`
+type Classifier struct {
+	// Prefix for matching cash accounts.
+	CashPrefix []string `toml:"cash_prefix"`
 }
 
-func LoadConfig(c *Config, r io.Reader) error {
+func LoadClassifier(c *Classifier, r io.Reader) error {
 	d := toml.NewDecoder(r)
 	if err := d.Decode(c); err != nil {
-		return fmt.Errorf("load chart config: %s", err)
+		return fmt.Errorf("load account classifier: %s", err)
 	}
 	return nil
 }
 
-func (c *Config) IsIncome(a Account) bool {
+func (c *Classifier) IsIncome(a Account) bool {
 	return a.Under("Income")
 }
 
-func (c *Config) IsExpenses(a Account) bool {
+func (c *Classifier) IsExpenses(a Account) bool {
 	return a.Under("Expenses")
 }
 
-func (c *Config) IsAssets(a Account) bool {
+func (c *Classifier) IsAssets(a Account) bool {
 	return a.Under("Assets")
 }
 
-func (c *Config) IsLiabilities(a Account) bool {
+func (c *Classifier) IsLiabilities(a Account) bool {
 	return a.Under("Liabilities")
 }
 
-func (c *Config) IsEquity(a Account) bool {
+func (c *Classifier) IsEquity(a Account) bool {
 	return a.Under("Equity")
 }
 
-func (c *Config) IsTrading(a Account) bool {
+func (c *Classifier) IsTrading(a Account) bool {
 	return a.Under("Trading")
 }
 
-func (c *Config) IsCash(a Account) bool {
-	for _, p := range c.CashAcctPrefix {
+func (c *Classifier) IsCash(a Account) bool {
+	for _, p := range c.CashPrefix {
 		if strings.HasPrefix(string(a), p) {
 			return true
 		}

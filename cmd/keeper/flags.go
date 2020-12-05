@@ -19,13 +19,13 @@ import (
 	"fmt"
 	"os"
 
-	"go.felesatra.moe/keeper/internal/chart"
+	"go.felesatra.moe/keeper/internal/account"
 )
 
-// A configFlag is a flag.Value for loading a chart.Config via a flag.
+// A configFlag is a flag.Value for loading a account.Config via a flag.
 type configFlag struct {
 	path string
-	c    *chart.Config
+	c    *account.Classifier
 }
 
 func (f *configFlag) Set(s string) error {
@@ -34,7 +34,7 @@ func (f *configFlag) Set(s string) error {
 	if err != nil {
 		return fmt.Errorf("set config flag: %s", err)
 	}
-	if err := chart.LoadConfig(f.c, fi); err != nil {
+	if err := account.LoadClassifier(f.c, fi); err != nil {
 		return fmt.Errorf("set config flag: %s", err)
 	}
 	return nil
@@ -44,12 +44,12 @@ func (f *configFlag) String() string {
 	return f.path
 }
 
-// configPath adds a flag for the path to a chart config file and
-// returns a chart.Config that is modified when flags are parse.
-func configPath(fs *flag.FlagSet) *chart.Config {
+// configPath adds a flag for the path to a account config file and
+// returns a account.Config that is modified when flags are parse.
+func configPath(fs *flag.FlagSet) *account.Classifier {
 	v := &configFlag{
-		c: &chart.Config{},
+		c: &account.Classifier{},
 	}
-	fs.Var(v, "config", "Path to chart config file")
+	fs.Var(v, "config", "Path to account config file")
 	return v.c
 }

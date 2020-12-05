@@ -24,13 +24,13 @@ import (
 	"time"
 
 	"cloud.google.com/go/civil"
-	"go.felesatra.moe/keeper/internal/chart"
+	"go.felesatra.moe/keeper/internal/account"
 	"go.felesatra.moe/keeper/internal/month"
 	"go.felesatra.moe/keeper/internal/webui/templates"
 	"go.felesatra.moe/keeper/journal"
 )
 
-func NewHandler(c *chart.Config, o []journal.Option) http.Handler {
+func NewHandler(c *account.Classifier, o []journal.Option) http.Handler {
 	h := handler{
 		c: c,
 		o: o,
@@ -48,7 +48,7 @@ func NewHandler(c *chart.Config, o []journal.Option) http.Handler {
 }
 
 type handler struct {
-	c *chart.Config
+	c *account.Classifier
 	o []journal.Option
 }
 
@@ -87,7 +87,7 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	c, err := h.chartConfig()
+	c, err := h.classifier()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -136,7 +136,7 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	c, err := h.chartConfig()
+	c, err := h.classifier()
 	if err != nil {
 		h.writeError(w, err)
 		return
@@ -225,7 +225,7 @@ func (h handler) compile(o ...journal.Option) (*journal.Journal, error) {
 	return journal.Compile(o2...)
 }
 
-func (h handler) chartConfig() (*chart.Config, error) {
+func (h handler) classifier() (*account.Classifier, error) {
 	return h.c, nil
 }
 
