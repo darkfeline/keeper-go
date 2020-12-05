@@ -28,7 +28,7 @@ var serveCmd = &command{
 	usageLine: "serve [-addr address] [-config path] [files]",
 	run: func(cmd *command, args []string) {
 		fs := cmd.flagSet()
-		c := configPath(fs)
+		c := fs.String("config", "", "Path to account config file")
 		addr := fs.String("addr", "localhost:8888", "Address to listen on")
 		fs.Parse(args)
 		var listener net.Listener
@@ -47,7 +47,7 @@ var serveCmd = &command{
 			log.Printf("listening on %s", *addr)
 		}
 		o := []journal.Option{journal.File(fs.Args()...)}
-		h := webui.NewHandler(c, o)
+		h := webui.NewHandler(*c, o)
 		log.Fatal(http.Serve(listener, h))
 	},
 }

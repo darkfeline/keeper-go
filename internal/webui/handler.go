@@ -19,21 +19,22 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 	"time"
 
 	"cloud.google.com/go/civil"
-	"go.felesatra.moe/keeper/internal/account"
+	"go.felesatra.moe/keeper/internal/config"
 	"go.felesatra.moe/keeper/internal/month"
 	"go.felesatra.moe/keeper/internal/webui/templates"
 	"go.felesatra.moe/keeper/journal"
 )
 
-func NewHandler(c *account.Classifier, o []journal.Option) http.Handler {
+func NewHandler(configPath string, o []journal.Option) http.Handler {
 	h := handler{
-		c: c,
-		o: o,
+		configPath: configPath,
+		o:          o,
 	}
 	m := http.NewServeMux()
 	m.HandleFunc("/", h.handleIndex)
@@ -48,8 +49,8 @@ func NewHandler(c *account.Classifier, o []journal.Option) http.Handler {
 }
 
 type handler struct {
-	c *account.Classifier
-	o []journal.Option
+	configPath string
+	o          []journal.Option
 }
 
 func (h handler) handleIndex(w http.ResponseWriter, req *http.Request) {
@@ -219,7 +220,7 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 	}
 	d := templates.LedgerData{Account: a}
 	b := make(journal.Balance)
-	for _, e := range account.FilterEntries(j.Entries, a) {
+	for _, e := range accountEntries(j.Entries, a) {
 		d.Rows = append(d.Rows, makeLedgerRows(b, e, a)...)
 	}
 	h.execute(w, templates.Ledger, d)
@@ -232,8 +233,18 @@ func (h handler) compile(o ...journal.Option) (*journal.Journal, error) {
 	return journal.Compile(o2...)
 }
 
-func (h handler) classifier() (*account.Classifier, error) {
-	return h.c, nil
+func (h handler) classifier() (*config.Config, error) {
+	c := &config.Config{}
+	if h.configPath == "" {
+		return c, nil
+	}
+	f, err := os.Open(h.configPath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	err = config.Load(c, f)
+	return c, err
 }
 
 func (h handler) writeError(w http.ResponseWriter, err error) {
@@ -458,4 +469,31 @@ func (s *stmt) addTotal(desc string) {
 	}
 	s.addBalanceRow(templates.StmtRow{Description: desc}, s.bal)
 	s.bal.Clear()
+}
+
+// Filter entries that relate to the given account.
+func accountEntries(e []journal.Entry, a journal.Account) []journal.Entry {
+	var e2 []journal.Entry
+	for _, e := range e {
+		switch e := e.(type) {
+		case *journal.Transaction:
+			for _, s := range e.Splits {
+				if s.Account == a {
+					e2 = append(e2, e)
+					break
+				}
+			}
+		case *journal.BalanceAssert:
+			if e.Account == a {
+				e2 = append(e2, e)
+			}
+		case *journal.DisableAccount:
+			if e.Account == a {
+				e2 = append(e2, e)
+			}
+		default:
+			panic(fmt.Sprintf("unknown entry %T", e))
+		}
+	}
+	return e2
 }

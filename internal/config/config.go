@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package account
+package config
 
 import (
 	"fmt"
@@ -23,12 +23,16 @@ import (
 	"go.felesatra.moe/keeper/journal"
 )
 
-type Classifier struct {
+type Config struct {
+	Account `toml:"account"`
+}
+
+type Account struct {
 	// Prefix for matching cash accounts.
 	CashPrefix []string `toml:"cash_prefix"`
 }
 
-func LoadClassifier(c *Classifier, r io.Reader) error {
+func Load(c *Config, r io.Reader) error {
 	d := toml.NewDecoder(r)
 	if err := d.Decode(c); err != nil {
 		return fmt.Errorf("load account classifier: %s", err)
@@ -36,31 +40,31 @@ func LoadClassifier(c *Classifier, r io.Reader) error {
 	return nil
 }
 
-func (c *Classifier) IsIncome(a journal.Account) bool {
+func (*Account) IsIncome(a journal.Account) bool {
 	return a.Under("Income")
 }
 
-func (c *Classifier) IsExpenses(a journal.Account) bool {
+func (*Account) IsExpenses(a journal.Account) bool {
 	return a.Under("Expenses")
 }
 
-func (c *Classifier) IsAssets(a journal.Account) bool {
+func (*Account) IsAssets(a journal.Account) bool {
 	return a.Under("Assets")
 }
 
-func (c *Classifier) IsLiabilities(a journal.Account) bool {
+func (*Account) IsLiabilities(a journal.Account) bool {
 	return a.Under("Liabilities")
 }
 
-func (c *Classifier) IsEquity(a journal.Account) bool {
+func (*Account) IsEquity(a journal.Account) bool {
 	return a.Under("Equity")
 }
 
-func (c *Classifier) IsTrading(a journal.Account) bool {
+func (*Account) IsTrading(a journal.Account) bool {
 	return a.Under("Trading")
 }
 
-func (c *Classifier) IsCash(a journal.Account) bool {
+func (c *Account) IsCash(a journal.Account) bool {
 	for _, p := range c.CashPrefix {
 		if strings.HasPrefix(string(a), p) {
 			return true
