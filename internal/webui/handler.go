@@ -88,6 +88,7 @@ func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
 	for a := range j.Disabled {
 		disabled = append(disabled, a)
 	}
+	sort.Slice(disabled, func(i, j int) bool { return disabled[i] < disabled[j] })
 	d := templates.AccountsData{
 		Accounts: a2,
 		Disabled: disabled,
