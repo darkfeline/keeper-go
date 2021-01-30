@@ -40,6 +40,7 @@ func NewHandler(configPath string, o []journal.Option) http.Handler {
 	m := http.NewServeMux()
 	m.HandleFunc("/", h.handleIndex)
 	m.HandleFunc("/style.css", h.handleStyle)
+	m.HandleFunc("/accounts", h.handleAccounts)
 	m.HandleFunc("/trial", h.handleTrial)
 	m.HandleFunc("/income", h.handleIncome)
 	m.HandleFunc("/capital", h.handleCapital)
@@ -68,6 +69,30 @@ func (h handler) handleIndex(w http.ResponseWriter, req *http.Request) {
 
 func (h handler) handleStyle(w http.ResponseWriter, req *http.Request) {
 	http.ServeContent(w, req, "style.css", time.Time{}, strings.NewReader(templates.StyleText))
+}
+
+func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
+	j, err := h.compile()
+	if err != nil {
+		h.writeError(w, err)
+		return
+	}
+	a := j.Accounts()
+	var a2 []journal.Account
+	for _, a := range a {
+		if j.Disabled[a] == nil {
+			a2 = append(a2, a)
+		}
+	}
+	var disabled []journal.Account
+	for a := range j.Disabled {
+		disabled = append(disabled, a)
+	}
+	d := templates.AccountsData{
+		Accounts: a2,
+		Disabled: disabled,
+	}
+	h.execute(w, templates.Accounts, d)
 }
 
 func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {

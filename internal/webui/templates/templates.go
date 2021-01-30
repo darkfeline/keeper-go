@@ -43,6 +43,17 @@ type IndexData struct {
 
 func (IndexData) Title() string { return "" }
 
+//go:generate binpack -name accountsText accounts.html
+
+var Accounts = template.Must(clone(Base).Parse(accountsText))
+
+type AccountsData struct {
+	Accounts []journal.Account
+	Disabled []journal.Account
+}
+
+func (AccountsData) Title() string { return "" }
+
 //go:generate binpack -name trialText trial.html
 
 var Trial = template.Must(clone(Base).Parse(trialText))

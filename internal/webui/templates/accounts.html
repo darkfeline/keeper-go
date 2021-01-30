@@ -1,0 +1,14 @@
+{{- define "body" -}}
+<h1>Accounts</h1>
+<ul>
+  {{- range .Accounts}}
+  <li><a href="/ledger?account={{.}}">{{.}}</a></li>
+  {{- end}}
+</ul>
+<h1>Closed accounts</h1>
+<ul>
+  {{- range .Disabled}}
+  <li><a href="/ledger?account={{.}}">{{.}}</a></li>
+  {{- end}}
+</ul>
+{{- end}}
