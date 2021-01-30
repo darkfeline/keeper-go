@@ -48,7 +48,10 @@ func (IndexData) Title() string { return "" }
 var Accounts = template.Must(clone(Base).Parse(accountsText))
 
 type AccountsData struct {
-	Accounts []journal.Account
+	Accounts []struct {
+		Account journal.Account
+		Empty   bool
+	}
 	Disabled []journal.Account
 }
 

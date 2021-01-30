@@ -2,10 +2,10 @@
 <h1>Accounts</h1>
 <ul>
   {{- range .Accounts}}
-  <li><a href="/ledger?account={{.}}">{{.}}</a></li>
+  <li><a href="/ledger?account={{.Account}}">{{.Account}}</a>{{if .Empty}} (<b>empty</b>){{end}}</li>
   {{- end}}
 </ul>
-<h1>Closed accounts</h1>
+<h1>Disabled accounts</h1>
 <ul>
   {{- range .Disabled}}
   <li><a href="/ledger?account={{.}}">{{.}}</a></li>

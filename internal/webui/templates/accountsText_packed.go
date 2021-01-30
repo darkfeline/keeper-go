@@ -2,4 +2,4 @@
 
 package templates
 
-const accountsText = "{{- define \"body\" -}}\n<h1>Accounts</h1>\n<ul>\n  {{- range .Accounts}}\n  <li><a href=\"/ledger?account={{.}}\">{{.}}</a></li>\n  {{- end}}\n</ul>\n<h1>Closed accounts</h1>\n<ul>\n  {{- range .Disabled}}\n  <li><a href=\"/ledger?account={{.}}\">{{.}}</a></li>\n  {{- end}}\n</ul>\n{{- end}}\n"
+const accountsText = "{{- define \"body\" -}}\n<h1>Accounts</h1>\n<ul>\n  {{- range .Accounts}}\n  <li><a href=\"/ledger?account={{.Account}}\">{{.Account}}</a>{{if .Empty}} (<b>empty</b>){{end}}</li>\n  {{- end}}\n</ul>\n<h1>Disabled accounts</h1>\n<ul>\n  {{- range .Disabled}}\n  <li><a href=\"/ledger?account={{.}}\">{{.}}</a></li>\n  {{- end}}\n</ul>\n{{- end}}\n"

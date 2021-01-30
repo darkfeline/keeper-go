@@ -78,10 +78,17 @@ func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	a := j.Accounts()
-	var a2 []journal.Account
+	type t = struct {
+		Account journal.Account
+		Empty   bool
+	}
+	var a2 []t
 	for _, a := range a {
 		if j.Disabled[a] == nil {
-			a2 = append(a2, a)
+			a2 = append(a2, t{
+				Account: a,
+				Empty:   j.Balances[a].Empty(),
+			})
 		}
 	}
 	var disabled []journal.Account
