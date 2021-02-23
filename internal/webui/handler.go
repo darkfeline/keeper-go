@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"os"
 	"sort"
-	"strings"
 	"time"
 
 	"cloud.google.com/go/civil"
@@ -68,7 +67,7 @@ func (h handler) handleIndex(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleStyle(w http.ResponseWriter, req *http.Request) {
-	http.ServeContent(w, req, "style.css", time.Time{}, strings.NewReader(templates.StyleText))
+	http.ServeContent(w, req, "style.css", time.Time{}, bytes.NewReader(templates.StyleText))
 }
 
 func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {

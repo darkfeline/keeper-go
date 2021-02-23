@@ -19,23 +19,28 @@ import (
 	"fmt"
 	"html/template"
 
+	_ "embed"
+
 	"go.felesatra.moe/keeper/journal"
 )
 
-//go:generate binpack -name StyleText style.css
+//go:embed style.css
+var StyleText []byte
 
-//go:generate binpack -name baseText base.html
+//go:embed base.html
+var baseText []byte
 
-var Base = template.Must(template.New("base").Parse(baseText))
+var Base = template.Must(template.New("base").Parse(string(baseText)))
 
 type BaseData struct {
 	Title string
 	Body  template.HTML
 }
 
-//go:generate binpack -name indexText index.html
+//go:embed index.html
+var indexText []byte
 
-var Index = template.Must(clone(Base).Parse(indexText))
+var Index = extendBase(indexText)
 
 type IndexData struct {
 	BalanceErrors []*journal.BalanceAssert
@@ -43,9 +48,14 @@ type IndexData struct {
 
 func (IndexData) Title() string { return "" }
 
-//go:generate binpack -name accountsText accounts.html
+//go:embed accounts.html
+var accountsText []byte
 
-var Accounts = template.Must(clone(Base).Parse(accountsText))
+func extendBase(text []byte) *template.Template {
+	return template.Must(clone(Base).Parse(string(text)))
+}
+
+var Accounts = extendBase(accountsText)
 
 type AccountsData struct {
 	Accounts []struct {
@@ -57,9 +67,10 @@ type AccountsData struct {
 
 func (AccountsData) Title() string { return "" }
 
-//go:generate binpack -name trialText trial.html
+//go:embed trial.html
+var trialText []byte
 
-var Trial = template.Must(clone(Base).Parse(trialText))
+var Trial = extendBase(trialText)
 
 type TrialData struct {
 	Rows []TrialRow
@@ -73,9 +84,10 @@ type TrialRow struct {
 	CreditBal journal.Amount
 }
 
-//go:generate binpack -name stmtText stmt.html
+//go:embed stmt.html
+var stmtText []byte
 
-var Stmt = template.Must(clone(Base).Parse(stmtText))
+var Stmt = extendBase(stmtText)
 
 type StmtData struct {
 	Title string
@@ -93,9 +105,10 @@ type StmtRow struct {
 	Amount  journal.Amount
 }
 
-//go:generate binpack -name ledgerText ledger.html
+//go:embed ledger.html
+var ledgerText []byte
 
-var Ledger = template.Must(clone(Base).Parse(ledgerText))
+var Ledger = extendBase(ledgerText)
 
 type LedgerData struct {
 	Account journal.Account
