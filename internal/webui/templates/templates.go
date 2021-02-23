@@ -16,6 +16,7 @@
 package templates
 
 import (
+	"embed"
 	"fmt"
 	"html/template"
 
@@ -27,20 +28,21 @@ import (
 //go:embed style.css
 var StyleText []byte
 
-//go:embed base.html
-var baseText []byte
+//go:embed *.html
+var f embed.FS
 
-var Base = template.Must(template.New("base").Parse(string(baseText)))
+var Base = template.Must(template.ParseFS(f, "base.html"))
 
 type BaseData struct {
 	Title string
 	Body  template.HTML
 }
 
-//go:embed index.html
-var indexText []byte
+func extendBase(file string) *template.Template {
+	return template.Must(clone(Base).ParseFS(f, file))
+}
 
-var Index = extendBase(indexText)
+var Index = extendBase("index.html")
 
 type IndexData struct {
 	BalanceErrors []*journal.BalanceAssert
@@ -48,14 +50,7 @@ type IndexData struct {
 
 func (IndexData) Title() string { return "" }
 
-//go:embed accounts.html
-var accountsText []byte
-
-func extendBase(text []byte) *template.Template {
-	return template.Must(clone(Base).Parse(string(text)))
-}
-
-var Accounts = extendBase(accountsText)
+var Accounts = extendBase("accounts.html")
 
 type AccountsData struct {
 	Accounts []struct {
@@ -67,10 +62,7 @@ type AccountsData struct {
 
 func (AccountsData) Title() string { return "" }
 
-//go:embed trial.html
-var trialText []byte
-
-var Trial = extendBase(trialText)
+var Trial = extendBase("trial.html")
 
 type TrialData struct {
 	Rows []TrialRow
@@ -84,10 +76,7 @@ type TrialRow struct {
 	CreditBal journal.Amount
 }
 
-//go:embed stmt.html
-var stmtText []byte
-
-var Stmt = extendBase(stmtText)
+var Stmt = extendBase("stmt.html")
 
 type StmtData struct {
 	Title string
@@ -105,10 +94,7 @@ type StmtRow struct {
 	Amount  journal.Amount
 }
 
-//go:embed ledger.html
-var ledgerText []byte
-
-var Ledger = extendBase(ledgerText)
+var Ledger = extendBase("ledger.html")
 
 type LedgerData struct {
 	Account journal.Account
