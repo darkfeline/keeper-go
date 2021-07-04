@@ -218,27 +218,3 @@ func TestBalance_Amounts(t *testing.T) {
 		t.Errorf("Amounts() mismatch (-want +got):\n%s", diff)
 	}
 }
-
-func ExampleSummary_Add() {
-	s := make(Summary)
-	s.Add("Assets:Cash", Amount{
-		Number: 100,
-		Unit:   Unit{Symbol: "USD", Scale: 100},
-	})
-	s.Add("Assets:Capital", Amount{
-		Number: 500,
-		Unit:   Unit{Symbol: "USD", Scale: 100},
-	})
-	s.Add("Assets:Capital:Depreciation", Amount{
-		Number: -300,
-		Unit:   Unit{Symbol: "USD", Scale: 100},
-	})
-	for a, v := range s {
-		fmt.Println(a, v)
-	}
-	// Unordered output:
-	// Assets 3.00 USD
-	// Assets:Cash 1.00 USD
-	// Assets:Capital 2.00 USD
-	// Assets:Capital:Depreciation -3.00 USD
-}
