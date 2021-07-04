@@ -83,7 +83,7 @@ func (b *BalanceHeader) End() token.Pos {
 // A UnitDecl node represents a unit declaration entry node.
 type UnitDecl struct {
 	TokPos token.Pos
-	Unit   *BasicValue // IDENT
+	Unit   *BasicValue // USYMBOL
 	Scale  *BasicValue // DECIMAL
 }
 

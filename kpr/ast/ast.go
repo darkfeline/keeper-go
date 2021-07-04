@@ -42,7 +42,7 @@ func (d *End) End() token.Pos {
 // An Amount node represents an amount.
 type Amount struct {
 	Decimal *BasicValue // DECIMAL
-	Unit    *BasicValue // IDENT
+	Unit    *BasicValue // USYMBOL
 }
 
 func (a *Amount) Pos() token.Pos {
