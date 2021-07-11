@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/*
-Package parser implements a parser for kpr files. Input may be
-provided in a variety of forms (see the various Parse* functions); the
-output is an abstract syntax tree (AST). The parser is invoked through
-one of the Parse* functions.
-*/
+// Package parser implements a parser for kpr files. Input may be
+// provided in a variety of forms (see the various Parse* functions);
+// the output is an abstract syntax tree (AST). The parser is invoked
+// through one of the Parse* functions.
 package parser
 
 import (
@@ -33,22 +31,20 @@ import (
 // source code parsed and other optional parser functionality.
 type Mode uint
 
-/*
-ParseBytes parses the contents of a keeper file and
-returns the corresponding ast.Entry nodes.
-
-ParseBytes parses the source from src and the filename
-is only used when recording position information.
-
-The mode parameter controls the amount of source text parsed and other
-optional parser functionality. Position information is recorded in the
-file set fset, which must not be nil.
-
-If syntax errors were found, the result is a partial AST (with
-ast.Bad* nodes representing the fragments of erroneous source
-code). Multiple errors are returned via a scanner.ErrorList which is
-sorted by file position.
-*/
+// ParseBytes parses the contents of a keeper file and returns the
+// corresponding ast.Entry nodes.
+//
+// ParseBytes parses the source from src and the filename is only used
+// when recording position information.
+//
+// The mode parameter controls the amount of source text parsed and
+// other optional parser functionality. Position information is
+// recorded in the file set fset, which must not be nil.
+//
+// If syntax errors were found, the result is a partial AST (with
+// ast.Bad* nodes representing the fragments of erroneous source
+// code). Multiple errors are returned via a scanner.ErrorList which
+// is sorted by file position.
 func ParseBytes(fset *token.FileSet, filename string, src []byte, mode Mode) ([]ast.Entry, error) {
 	p := &parser{
 		f: fset.AddFile(filename, -1, len(src)),
