@@ -132,3 +132,21 @@ func (c *DisableAccount) End() token.Pos {
 }
 
 func (*DisableAccount) entry() {}
+
+// A DeclareAccount node represents a declare account entry node.
+type DeclareAccount struct {
+	TokPos   token.Pos
+	Account  *BasicValue // ACCTNAME
+	Metadata []LineNode
+	EndTok   *End
+}
+
+func (c *DeclareAccount) Pos() token.Pos {
+	return c.TokPos
+}
+
+func (c *DeclareAccount) End() token.Pos {
+	return c.EndTok.End()
+}
+
+func (*DeclareAccount) entry() {}

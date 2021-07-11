@@ -43,4 +43,5 @@ const (
 	BALANCE
 	UNIT
 	DISABLE
+	ACCOUNT
 )

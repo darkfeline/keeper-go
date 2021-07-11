@@ -37,6 +37,9 @@ Some:account 123.45 USD
 Some:account -123.45 USD
 end
 balance 2001-02-03 Some:account 123.45 USD
+account Some:account
+"foo" "bar"
+end
 `,
 			want: []result{
 				{1, token.UNIT, `unit`},
@@ -63,6 +66,14 @@ balance 2001-02-03 Some:account 123.45 USD
 				{132, token.DECIMAL, `123.45`},
 				{139, token.USYMBOL, `USD`},
 				{142, token.NEWLINE, "\n"},
+				{143, token.ACCOUNT, "account"},
+				{151, token.ACCTNAME, "Some:account"},
+				{163, token.NEWLINE, "\n"},
+				{164, token.STRING, `"foo"`},
+				{170, token.STRING, `"bar"`},
+				{175, token.NEWLINE, "\n"},
+				{176, token.END, "end"},
+				{179, token.NEWLINE, "\n"},
 			},
 		},
 		{
@@ -176,6 +187,23 @@ end
 				{1, token.DISABLE, "disable"},
 				{9, token.DATE, "2001-02-03"},
 				{20, token.ACCTNAME, "Some:account"},
+			},
+		},
+		{
+			desc: "account",
+			text: `account Some:account
+"foo" "bar"
+end
+`,
+			want: []result{
+				{1, token.ACCOUNT, "account"},
+				{9, token.ACCTNAME, "Some:account"},
+				{21, token.NEWLINE, "\n"},
+				{22, token.STRING, `"foo"`},
+				{28, token.STRING, `"bar"`},
+				{33, token.NEWLINE, "\n"},
+				{34, token.END, "end"},
+				{37, token.NEWLINE, "\n"},
 			},
 		},
 	}

@@ -125,7 +125,7 @@ func (p *parser) scanUntilEntry() token.Pos {
 
 func isEntryKeyword(tok token.Token) bool {
 	switch tok {
-	case token.TX, token.BALANCE, token.UNIT, token.DISABLE:
+	case token.TX, token.BALANCE, token.UNIT, token.DISABLE, token.ACCOUNT:
 		return true
 	default:
 		return false
@@ -180,6 +180,8 @@ func (p *parser) parseEntry(pos token.Pos, tok token.Token, lit string) ast.Entr
 		return p.parseBalance(pos)
 	case token.DISABLE:
 		return p.parseDisableAccount(pos)
+	case token.ACCOUNT:
+		return p.parseDeclareAccount(pos)
 	default:
 		p.errorf(pos, "bad entry keyword %s", lit)
 		return p.scanUntilEntryAsBad(pos)
@@ -462,4 +464,88 @@ func (p *parser) parseDisableAccount(pos token.Pos) ast.Entry {
 	}
 
 	return e
+}
+
+func (p *parser) parseDeclareAccount(pos token.Pos) ast.Entry {
+	e := &ast.DeclareAccount{
+		TokPos: pos,
+	}
+
+	pos, tok, lit := p.scan()
+	if tok != token.ACCTNAME {
+		p.errorf(pos, "in declare account expected ACCTNAME not %s %s", tok, lit)
+		p.unread(pos, tok, lit)
+		return p.scanLineAsBadEntry(e.Pos())
+	}
+	e.Account = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+
+	var err error
+	e.Metadata, err = p.parseMetadataLines()
+	if err != nil {
+		// parseMetadata already reported the error.
+		return p.scanUntilEntryAsBad(e.Pos())
+	}
+
+	pos, tok, lit = p.scan()
+	if tok != token.END {
+		panic("unexpected token")
+	}
+	e.EndTok = &ast.End{TokPos: pos}
+
+	pos, tok, lit = p.scan()
+	if tok != token.NEWLINE {
+		p.errorf(pos, "after end bad token %s %s", tok, lit)
+		_ = p.scanLine()
+	}
+
+	return e
+}
+
+func (p *parser) parseMetadataLines() ([]ast.LineNode, error) {
+	var lines []ast.LineNode
+	for {
+		switch pos, tok, lit := p.scan(); tok {
+		case token.STRING:
+			p.unread(pos, tok, lit)
+			s := p.parseMetadata()
+			lines = append(lines, s)
+		case token.NEWLINE:
+			continue
+		case token.END:
+			p.unread(pos, tok, lit)
+			return lines, nil
+		case token.EOF:
+			p.unread(pos, tok, lit)
+			p.errorf(pos, "EOF in declare account")
+			return nil, errors.New("EOF in declare account")
+		default:
+			p.errorf(pos, "in metadata bad token %s %s", tok, lit)
+			n := p.scanLineAsBad(pos)
+			lines = append(lines, n)
+		}
+	}
+}
+
+func (p *parser) parseMetadata() ast.LineNode {
+	m := &ast.MetadataLine{}
+
+	pos, tok, lit := p.scan()
+	if tok != token.STRING {
+		panic(fmt.Sprintf("unexpected %s %s in metadata", tok, lit))
+	}
+	m.Key = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+
+	pos, tok, lit = p.scan()
+	if tok != token.STRING {
+		p.errorf(pos, "in metadata bad token %s %s", tok, lit)
+		return p.scanLineAsBad(m.Pos())
+	}
+	m.Val = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+
+	pos, tok, lit = p.scan()
+	if tok != token.NEWLINE {
+		p.errorf(pos, "in metadata bad token %s %s", tok, lit)
+		return p.scanLineAsBad(m.Pos())
+	}
+	return m
 }

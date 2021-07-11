@@ -353,6 +353,9 @@ func lexLower(s *Scanner) stateFn {
 	case "disable":
 		s.emit(token.DISABLE)
 		return lexExprEnd
+	case "account":
+		s.emit(token.ACCOUNT)
+		return lexExprEnd
 	}
 	if s.accept(digits + ":_") {
 		return lexAccountName

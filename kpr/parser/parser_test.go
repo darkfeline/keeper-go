@@ -296,6 +296,59 @@ func TestParseBytes_disable(t *testing.T) {
 	}
 }
 
+func TestParseBytes_account(t *testing.T) {
+	t.Parallel()
+	const input = `account Some:account
+"foo" "bar"
+end
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []ast.Entry{
+		&ast.DeclareAccount{
+			TokPos:  1,
+			Account: val(9, token.ACCTNAME, "Some:account"),
+			Metadata: []ast.LineNode{
+				&ast.MetadataLine{
+					Key: val(22, token.STRING, `"foo"`),
+					Val: val(28, token.STRING, `"bar"`),
+				},
+			},
+			EndTok: &ast.End{TokPos: 34},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestParseBytes_account_bad_metadata(t *testing.T) {
+	t.Parallel()
+	const input = `account Some:account
+"foo" "bar" "baz"
+end
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err == nil {
+		t.Errorf("Expected error")
+	}
+	want := []ast.Entry{
+		&ast.DeclareAccount{
+			TokPos:  1,
+			Account: val(9, token.ACCTNAME, "Some:account"),
+			Metadata: []ast.LineNode{
+				&ast.BadLine{From: 22, To: 39},
+			},
+			EndTok: &ast.End{TokPos: 40},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func val(pos token.Pos, tok token.Token, lit string) *ast.BasicValue {
 	return &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 }
