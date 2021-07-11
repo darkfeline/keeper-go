@@ -459,16 +459,20 @@ func makeLedgerRows(b journal.Balance, e journal.Entry, a journal.Account) []tem
 func convertBalance(e *journal.BalanceAssert) []templates.LedgerRow {
 	units := balanceUnits(e.Actual, e.Declared, e.Diff)
 	var entries []templates.LedgerRow
+	n := "balance"
+	if e.Tree {
+		n = "tree balance"
+	}
 	for _, u := range units {
 		le := templates.LedgerRow{
 			Entry:   e,
 			Balance: e.Actual.Amount(u),
 		}
 		if e.Diff[u] == 0 {
-			le.Description = "(balance)"
+			le.Description = "(" + n + ")"
 		} else {
-			le.Description = fmt.Sprintf("(balance error, declared %s, diff %s)",
-				e.Declared.Amount(u), e.Diff.Amount(u))
+			le.Description = fmt.Sprintf("(%s error, declared %s, diff %s)",
+				n, e.Declared.Amount(u), e.Diff.Amount(u))
 		}
 		entries = append(entries, le)
 	}
