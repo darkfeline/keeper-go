@@ -90,6 +90,14 @@ multi line for accounts that contain multiple unit types.
  10 BTC
  end
 
+Tree balance assertions are like normal balance assertions:
+
+ treebal 2020-01-01 Some:account 5 USD
+ treebal 2020-01-01 Some:account
+ 5 USD
+ 10 BTC
+ end
+
 Disable account entries disable an account for use:
 
  disable 2020-01-01 Some:account

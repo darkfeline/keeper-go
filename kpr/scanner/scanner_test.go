@@ -206,6 +206,19 @@ end
 				{37, token.NEWLINE, "\n"},
 			},
 		},
+		{
+			desc: "treebal",
+			text: `treebal 2020-01-01 Some:account 1 USD
+`,
+			want: []result{
+				{1, token.TREEBAL, "treebal"},
+				{9, token.DATE, "2020-01-01"},
+				{20, token.ACCTNAME, "Some:account"},
+				{33, token.DECIMAL, "1"},
+				{35, token.USYMBOL, "USD"},
+				{38, token.NEWLINE, "\n"},
+			},
+		},
 	}
 	for _, c := range cases {
 		c := c

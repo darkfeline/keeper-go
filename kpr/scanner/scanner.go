@@ -347,6 +347,9 @@ func lexLower(s *Scanner) stateFn {
 	case "balance":
 		s.emit(token.BALANCE)
 		return lexExprEnd
+	case "treebal":
+		s.emit(token.TREEBAL)
+		return lexExprEnd
 	case "unit":
 		s.emit(token.UNIT)
 		return lexExprEnd

@@ -44,6 +44,7 @@ end
 		&ast.SingleBalance{
 			BalanceHeader: ast.BalanceHeader{
 				TokPos:  1,
+				Token:   token.BALANCE,
 				Date:    val(9, token.DATE, "2001-02-03"),
 				Account: val(20, token.ACCTNAME, "Some:account"),
 			},
@@ -55,6 +56,7 @@ end
 		&ast.MultiBalance{
 			BalanceHeader: ast.BalanceHeader{
 				TokPos:  44,
+				Token:   token.BALANCE,
 				Date:    val(52, token.DATE, "2001-02-05"),
 				Account: val(63, token.ACCTNAME, "Some:account"),
 			},
@@ -145,6 +147,7 @@ end
 		&ast.MultiBalance{
 			BalanceHeader: ast.BalanceHeader{
 				TokPos:  2,
+				Token:   token.BALANCE,
 				Date:    val(10, token.DATE, "2001-02-05"),
 				Account: val(21, token.ACCTNAME, "Some:account"),
 			},
@@ -342,6 +345,56 @@ end
 				&ast.BadLine{From: 22, To: 39},
 			},
 			EndTok: &ast.End{TokPos: 40},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestParseBytes_treebal(t *testing.T) {
+	t.Parallel()
+	const input = `treebal 2001-02-03 Some:account 123.45 USD
+treebal 2001-02-05 Some:account
+123.45 USD
+56700 JPY
+end
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []ast.Entry{
+		&ast.SingleBalance{
+			BalanceHeader: ast.BalanceHeader{
+				TokPos:  1,
+				Token:   token.TREEBAL,
+				Date:    val(9, token.DATE, "2001-02-03"),
+				Account: val(20, token.ACCTNAME, "Some:account"),
+			},
+			Amount: &ast.Amount{
+				Decimal: val(33, token.DECIMAL, "123.45"),
+				Unit:    val(40, token.USYMBOL, "USD"),
+			},
+		},
+		&ast.MultiBalance{
+			BalanceHeader: ast.BalanceHeader{
+				TokPos:  44,
+				Token:   token.TREEBAL,
+				Date:    val(52, token.DATE, "2001-02-05"),
+				Account: val(63, token.ACCTNAME, "Some:account"),
+			},
+			Amounts: []ast.LineNode{
+				&ast.AmountLine{Amount: &ast.Amount{
+					Decimal: val(76, token.DECIMAL, "123.45"),
+					Unit:    val(83, token.USYMBOL, "USD"),
+				}},
+				&ast.AmountLine{Amount: &ast.Amount{
+					Decimal: val(87, token.DECIMAL, "56700"),
+					Unit:    val(93, token.USYMBOL, "JPY"),
+				}},
+			},
+			EndTok: &ast.End{TokPos: 97},
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
