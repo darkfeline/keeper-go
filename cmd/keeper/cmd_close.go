@@ -20,6 +20,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
 
 	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/internal/month"
@@ -61,7 +62,7 @@ var closeCmd = &command{
 		checkBalanceErrsAndExit(j)
 		var a []journal.Account
 		var equity journal.Account
-		for _, ac := range j.Accounts() {
+		for ac := range j.Accounts {
 			switch {
 			case c.IsIncome(ac), c.IsExpenses(ac):
 				a = append(a, ac)
@@ -71,6 +72,7 @@ var closeCmd = &command{
 				equity = ac
 			}
 		}
+		sort.Slice(a, func(i, j int) bool { return a[i] < a[j] })
 		_ = printClosingTx(os.Stdout, j, month.Next(d), equity, a)
 	},
 }

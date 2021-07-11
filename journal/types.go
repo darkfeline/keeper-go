@@ -225,3 +225,11 @@ func (b Balances) Accounts() []Account {
 	sort.Slice(new, func(i, j int) bool { return new[i] < new[j] })
 	return new
 }
+
+// An AccountInfo holds account information.
+type AccountInfo struct {
+	// If the account is disabled, points to the entry that
+	// disabled the account.  Otherwise this is nil.
+	Disabled *DisableAccount
+	Metadata map[string]string
+}

@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"sort"
 
 	"cloud.google.com/go/civil"
 )
@@ -28,37 +27,12 @@ import (
 type Journal struct {
 	// Entries are all of the entries, sorted chronologically.
 	Entries []Entry
-	// Disabled contains disabled accounts.
-	Disabled map[Account]*DisableAccount
+	// Accounts contains all accounts and the associated account information.
+	Accounts map[Account]*AccountInfo
 	// Balances is the final balance for all accounts.
 	Balances Balances
 	// BalanceErrors contains the balance assertion entries that failed.
 	BalanceErrors []*BalanceAssert
-}
-
-// Accounts returns all accounts referenced in the journal's entries.
-func (j *Journal) Accounts() []Account {
-	seen := make(map[Account]bool)
-	for _, e := range j.Entries {
-		switch e := e.(type) {
-		case *Transaction:
-			for _, s := range e.Splits {
-				seen[s.Account] = true
-			}
-		case *BalanceAssert:
-			seen[e.Account] = true
-		case *DisableAccount:
-			seen[e.Account] = true
-		default:
-			panic(fmt.Sprintf("unknown entry %T", e))
-		}
-	}
-	var a []Account
-	for acc := range seen {
-		a = append(a, acc)
-	}
-	sort.Slice(a, func(i, j int) bool { return a[i] < a[j] })
-	return a
 }
 
 // BalancesEnding returns the balances of all accounts at the close of
@@ -128,7 +102,7 @@ func openInputFiles(inputs []input) ([]inputBytes, error) {
 // Entries should be sorted.
 func compile(e []Entry) (*Journal, error) {
 	j := &Journal{
-		Disabled: make(map[Account]*DisableAccount),
+		Accounts: make(map[Account]*AccountInfo),
 		Balances: make(Balances),
 	}
 	for _, e := range e {
@@ -154,6 +128,7 @@ func (j *Journal) addEntry(e Entry) error {
 
 func (j *Journal) addTransaction(e *Transaction) error {
 	for _, s := range e.Splits {
+		j.ensureAccount(s.Account)
 		if err := j.checkAccountDisabled(s.Account); err != nil {
 			return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 		}
@@ -164,6 +139,7 @@ func (j *Journal) addTransaction(e *Transaction) error {
 }
 
 func (j *Journal) addBalanceAssert(e *BalanceAssert) error {
+	j.ensureAccount(e.Account)
 	if err := j.checkAccountDisabled(e.Account); err != nil {
 		return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 	}
@@ -185,6 +161,7 @@ func (j *Journal) addBalanceAssert(e *BalanceAssert) error {
 }
 
 func (j *Journal) addDisableAccount(e *DisableAccount) error {
+	j.ensureAccount(e.Account)
 	if err := j.checkAccountDisabled(e.Account); err != nil {
 		return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 	}
@@ -198,16 +175,23 @@ func (j *Journal) addDisableAccount(e *DisableAccount) error {
 			Diff:      bal,
 		})
 	}
-	j.Disabled[e.Account] = e
+	j.Accounts[e.Account].Disabled = e
 	j.Entries = append(j.Entries, e)
 	return nil
 }
 
 func (j *Journal) checkAccountDisabled(a Account) error {
-	if e, ok := j.Disabled[a]; ok {
+	if e := j.Accounts[a].Disabled; e != nil {
 		return fmt.Errorf("account %s is disabled by entry %s", a, e)
 	}
 	return nil
+}
+
+// Ensure account is present in accounts map.
+func (j *Journal) ensureAccount(a Account) {
+	if j.Accounts[a] == nil {
+		j.Accounts[a] = &AccountInfo{}
+	}
 }
 
 func balanceDiff(x, y Balance) Balance {

@@ -76,25 +76,22 @@ func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	a := j.Accounts()
 	type t = struct {
 		Account journal.Account
 		Empty   bool
 	}
 	var a2 []t
-	for _, a := range a {
-		if j.Disabled[a] == nil {
+	var disabled []journal.Account
+	for _, a := range sortedAccounts(j) {
+		if j.Accounts[a].Disabled == nil {
 			a2 = append(a2, t{
 				Account: a,
 				Empty:   j.Balances[a].Empty(),
 			})
+		} else {
+			disabled = append(disabled, a)
 		}
 	}
-	var disabled []journal.Account
-	for a := range j.Disabled {
-		disabled = append(disabled, a)
-	}
-	sort.Slice(disabled, func(i, j int) bool { return disabled[i] < disabled[j] })
 	d := templates.AccountsData{
 		Accounts: a2,
 		Disabled: disabled,
@@ -108,7 +105,7 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	r, t := makeTrialRows(j.Accounts(), j.Balances)
+	r, t := makeTrialRows(sortedAccounts(j), j.Balances)
 	r = append(r, t.Rows("Total")...)
 	d := templates.TrialData{Rows: r}
 	h.execute(w, templates.Trial, d)
@@ -127,7 +124,7 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	a := j.Accounts()
+	a := sortedAccounts(j)
 	b := j.Balances
 	s := stmt{
 		StmtData: &templates.StmtData{
@@ -182,7 +179,7 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	a := j.Accounts()
+	a := sortedAccounts(j)
 	b := j.Balances
 	s := stmt{
 		StmtData: &templates.StmtData{
@@ -242,7 +239,7 @@ func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
 	}
 
 	start := month.FirstDay(end)
-	a := cashAccounts(c, j.Accounts())
+	a := cashAccounts(c, sortedAccounts(j))
 	e := filterEntries(j.Entries, newAccountPred(a).match)
 	delta := make(journal.Balances)
 	for _, e := range e {
@@ -652,5 +649,14 @@ func cashAccounts(c *config.Config, a []journal.Account) []journal.Account {
 			new = append(new, a)
 		}
 	}
+	return new
+}
+
+func sortedAccounts(j *journal.Journal) []journal.Account {
+	var new []journal.Account
+	for a := range j.Accounts {
+		new = append(new, a)
+	}
+	sort.Slice(new, func(i, j int) bool { return new[i] < new[j] })
 	return new
 }

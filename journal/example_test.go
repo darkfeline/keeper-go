@@ -16,6 +16,7 @@ package journal_test
 
 import (
 	"fmt"
+	"sort"
 
 	"go.felesatra.moe/keeper/journal"
 )
@@ -31,7 +32,12 @@ end
 	if err != nil {
 		panic(err)
 	}
-	for _, a := range j.Accounts() {
+	var as []journal.Account
+	for a := range j.Accounts {
+		as = append(as, a)
+	}
+	sort.Slice(as, func(i, j int) bool { return as[i] < as[j] })
+	for _, a := range as {
 		fmt.Println(a)
 	}
 	// Output:
