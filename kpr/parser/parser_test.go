@@ -23,7 +23,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestParseBytes(t *testing.T) {
+func TestParseBytes_full_example(t *testing.T) {
 	t.Parallel()
 	const input = `balance 2001-02-03 Some:account 123.45 USD
 balance 2001-02-05 Some:account

@@ -30,7 +30,7 @@ func TestScanner(t *testing.T) {
 		want []result
 	}{
 		{
-			desc: "simple",
+			desc: "full example",
 			text: `unit USD 100
 tx 2001-02-03 "Some description"
 Some:account 123.45 USD
