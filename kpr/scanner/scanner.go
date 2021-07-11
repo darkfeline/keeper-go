@@ -320,13 +320,13 @@ func lexUpper(s *Scanner) stateFn {
 		switch r := s.next(); {
 		case unicode.IsUpper(r):
 		case unicode.IsDigit(r):
-			return lexAccount
+			return lexAccountName
 		case unicode.IsLower(r):
-			return lexAccount
+			return lexAccountName
 		case r == '_':
-			return lexAccount
+			return lexAccountName
 		case r == ':':
-			return lexAccount
+			return lexAccountName
 		default:
 			s.unread()
 			s.emit(token.USYMBOL)
@@ -355,7 +355,7 @@ func lexLower(s *Scanner) stateFn {
 		return lexExprEnd
 	}
 	if s.accept(digits + ":_") {
-		return lexAccount
+		return lexAccountName
 	}
 	s.errorf(s.start, "invalid token")
 	s.emit(token.ILLEGAL)
@@ -375,7 +375,7 @@ func lexLetter(s *Scanner) stateFn {
 		s.emit(token.UNIT)
 		return lexExprEnd
 	case s.accept(digits + ":_"):
-		return lexAccount
+		return lexAccountName
 	case isUpper(pending):
 		s.emit(token.USYMBOL)
 		return lexExprEnd
@@ -395,7 +395,7 @@ func isUpper(s string) bool {
 	return true
 }
 
-func lexAccount(s *Scanner) stateFn {
+func lexAccountName(s *Scanner) stateFn {
 	s.acceptRun(letters + digits + ":_")
 	if pending := string(s.pending); !strings.Contains(pending, ":") {
 		s.errorf(s.start, "invalid token")
