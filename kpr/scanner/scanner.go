@@ -365,30 +365,6 @@ func lexLower(s *Scanner) stateFn {
 	return lexExprEnd
 }
 
-func lexLetter(s *Scanner) stateFn {
-	s.acceptRun(letters)
-	switch pending := string(s.pending); {
-	case pending == "tx":
-		s.emit(token.TX)
-		return lexExprEnd
-	case pending == "balance":
-		s.emit(token.BALANCE)
-		return lexExprEnd
-	case pending == "unit":
-		s.emit(token.UNIT)
-		return lexExprEnd
-	case s.accept(digits + ":_"):
-		return lexAccountName
-	case isUpper(pending):
-		s.emit(token.USYMBOL)
-		return lexExprEnd
-	default:
-		s.errorf(s.start, "invalid token")
-		s.emit(token.ILLEGAL)
-		return lexExprEnd
-	}
-}
-
 func isUpper(s string) bool {
 	for _, r := range s {
 		if !unicode.IsUpper(r) {
