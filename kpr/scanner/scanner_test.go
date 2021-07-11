@@ -223,21 +223,6 @@ end
 	}
 }
 
-func TestScanner_errors(t *testing.T) {
-	t.Parallel()
-	const src = `unit USD 100
-tx 2001-02-03 "Buy stuff"
-Some:account -1.2 USD
-Expenses:Stuff 1.2 USD
-.
-`
-	s, got, _ := scanString(src, 0)
-	if s.ErrorCount == 0 {
-		t.Errorf("Expected errors")
-		t.Logf("Got tokens: %+v", got)
-	}
-}
-
 func TestScanner_bad_token(t *testing.T) {
 	t.Parallel()
 	const src = `.`
