@@ -12,7 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package journal implements the processing of bookkeeping journals from kpr files.
+/*
+Package journal implements the processing of bookkeeping journals from
+keeper files.
+
+File format
+
+See the documentation for the kpr package for keeper file syntax.
+This section describes some additional semantics for keeper files as
+implemented by this package.
+
+Unit declarations must come before any use of that unit.  Otherwise,
+the order of entries in keeper files is not significant.
+
+The total of all splits in a transaction must balance.  Only one split
+in a transaction can omit the amount, which will be inferred as the
+remaining amount needed to balance the transaction.  This inference
+does not work if more than one unit is unbalanced.
+
+Balance assertions apply at the end of the day, to match how balances
+are handled in practice.
+
+Disabled accounts prevent transactions from posting to that account.
+Disable account entries also assert that the account balance is zero.
+*/
 package journal
 
 import (
