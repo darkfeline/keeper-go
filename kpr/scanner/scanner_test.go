@@ -162,6 +162,14 @@ end
 			},
 		},
 		{
+			desc: "string escape",
+			text: `"\"\\" USD`,
+			want: []result{
+				{1, token.STRING, `"\"\\"`},
+				{8, token.USYMBOL, `USD`},
+			},
+		},
+		{
 			desc: "disable",
 			text: `disable 2001-02-03 Some:account`,
 			want: []result{
