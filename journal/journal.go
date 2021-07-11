@@ -166,14 +166,7 @@ func (j *Journal) addBalanceAssert(e *BalanceAssert) error {
 	if err := j.checkAccountDisabled(e.Account); err != nil {
 		return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 	}
-	bal, ok := j.Balances[e.Account]
-	switch ok {
-	case true:
-		bal = bal.Copy()
-	case false:
-		bal = make(Balance)
-	}
-	e.Actual = bal
+	e.Actual = j.Balances[e.Account].Copy()
 	e.Diff = balanceDiff(e.Actual, e.Declared)
 
 	j.Entries = append(j.Entries, e)

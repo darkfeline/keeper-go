@@ -218,3 +218,12 @@ func TestBalance_Amounts(t *testing.T) {
 		t.Errorf("Amounts() mismatch (-want +got):\n%s", diff)
 	}
 }
+
+func TestBalance_Copy_nil(t *testing.T) {
+	t.Parallel()
+	var b Balance
+	got := b.Copy()
+	if got == nil {
+		t.Errorf("Got nil Balance copy")
+	}
+}

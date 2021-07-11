@@ -170,6 +170,7 @@ func (b Balance) Equal(b2 Balance) bool {
 }
 
 // Copy returns a copy of the balance.
+// If called with a nil receiver, returns an empty initialized Balance.
 func (b Balance) Copy() Balance {
 	new := make(Balance)
 	for u, n := range b {
