@@ -156,6 +156,58 @@ func TestCompile_balances(t *testing.T) {
 	})
 }
 
+func TestCompile_treebal(t *testing.T) {
+	t.Parallel()
+	u := Unit{Symbol: "USD", Scale: 100}
+	e := []Entry{
+		&Transaction{
+			EntryDate:   civil.Date{2000, 1, 2},
+			Description: "initial",
+			Splits: []Split{
+				split("Equity:Capital", 540, u),
+				split("Assets:Foo", 120, u),
+				split("Assets:Bar", 150, u),
+				split("Assets:Bar:Eriko", 130, u),
+				split("Assets:Bar:Shizuru", 140, u),
+			},
+		},
+		&BalanceAssert{
+			EntryDate: civil.Date{2000, 1, 2},
+			Account:   "Assets:Bar",
+			Tree:      true,
+			Declared:  Balance{u: 410},
+		},
+	}
+	got, err := compile(e)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []Entry{
+		&Transaction{
+			EntryDate:   civil.Date{2000, 1, 2},
+			Description: "initial",
+			Splits: []Split{
+				split("Equity:Capital", 540, u),
+				split("Assets:Foo", 120, u),
+				split("Assets:Bar", 150, u),
+				split("Assets:Bar:Eriko", 130, u),
+				split("Assets:Bar:Shizuru", 140, u),
+			},
+		},
+		&BalanceAssert{
+			EntryDate: civil.Date{2000, 1, 2},
+			Account:   "Assets:Bar",
+			Tree:      true,
+			Declared:  Balance{u: 410},
+			Actual:    Balance{u: 420},
+			Diff:      Balance{u: 10},
+		},
+	}
+	if diff := cmp.Diff(want, got.Entries); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestCompile_tx_after_disable(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
@@ -210,6 +262,22 @@ func TestCompile_disable_nonempty_account(t *testing.T) {
 	}
 	if diff := cmp.Diff(got.BalanceErrors, want); diff != "" {
 		t.Errorf("balance errors mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestTreeBalance(t *testing.T) {
+	t.Parallel()
+	u := Unit{Symbol: "USD", Scale: 100}
+	b := Balances{
+		"Assets:Foo":         {u: 120},
+		"Assets:Bar":         {u: 150},
+		"Assets:Bar:Eriko":   {u: 130},
+		"Assets:Bar:Shizuru": {u: 140},
+	}
+	got := treeBalance(b, "Assets:Bar")
+	want := Balance{u: 420}
+	if !got.Equal(want) {
+		t.Errorf("treeBalance() = %s; want %s", got, want)
 	}
 }
 

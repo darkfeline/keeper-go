@@ -146,6 +146,13 @@ func (b *builder) buildBalanceHeader(n *ast.BalanceHeader) (*BalanceAssert, erro
 		// to the Journal, so we don't have to initialize them
 		// now.
 	}
+	switch n.Token {
+	case token.BALANCE:
+	case token.TREEBAL:
+		a.Tree = true
+	default:
+		panic(fmt.Sprintf("unexpected token %s", n.Token))
+	}
 	var err error
 	a.EntryDate, err = civil.ParseDate(n.Date.Value)
 	if err != nil {

@@ -36,9 +36,11 @@ type BalanceAssert struct {
 	EntryPos  token.Position
 	EntryDate civil.Date
 	Account   Account
-	Declared  Balance
-	Actual    Balance
-	Diff      Balance // Actual - Declared
+	// Whether this is a balance assertion for the account tree.
+	Tree     bool
+	Declared Balance
+	Actual   Balance
+	Diff     Balance // Actual - Declared
 }
 
 func (b *BalanceAssert) Position() token.Position {

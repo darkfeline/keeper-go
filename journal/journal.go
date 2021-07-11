@@ -33,6 +33,8 @@ does not work if more than one unit is unbalanced.
 Balance assertions apply at the end of the day, to match how balances
 are handled in practice.
 
+Total balance assertions apply to a tree of accounts.
+
 Disabled accounts prevent transactions from posting to that account.
 Disable account entries also assert that the account balance is zero.
 */
@@ -166,7 +168,11 @@ func (j *Journal) addBalanceAssert(e *BalanceAssert) error {
 	if err := j.checkAccountDisabled(e.Account); err != nil {
 		return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 	}
-	e.Actual = j.Balances[e.Account].Copy()
+	if e.Tree {
+		e.Actual = treeBalance(j.Balances, e.Account)
+	} else {
+		e.Actual = j.Balances[e.Account].Copy()
+	}
 	e.Diff = balanceDiff(e.Actual, e.Declared)
 
 	j.Entries = append(j.Entries, e)
@@ -208,6 +214,17 @@ func (j *Journal) ensureAccount(a Account) {
 	if j.Accounts[a] == nil {
 		j.Accounts[a] = &AccountInfo{}
 	}
+}
+
+// Return total balance for account tree.
+func treeBalance(b Balances, a Account) Balance {
+	bal := b[a].Copy()
+	for a2, b2 := range b {
+		if a2.Under(a) {
+			bal.AddBal(b2)
+		}
+	}
+	return bal
 }
 
 func balanceDiff(x, y Balance) Balance {
