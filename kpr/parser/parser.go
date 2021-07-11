@@ -241,7 +241,7 @@ func (p *parser) parseSplits() ([]ast.LineNode, error) {
 	var splits []ast.LineNode
 	for {
 		switch pos, tok, lit := p.scan(); tok {
-		case token.ACCOUNT:
+		case token.ACCTNAME:
 			p.unread(pos, tok, lit)
 			s := p.parseSplit()
 			splits = append(splits, s)
@@ -265,7 +265,7 @@ func (p *parser) parseSplits() ([]ast.LineNode, error) {
 func (p *parser) parseSplit() ast.LineNode {
 	s := &ast.SplitLine{}
 	pos, tok, lit := p.scan()
-	if tok != token.ACCOUNT {
+	if tok != token.ACCTNAME {
 		panic(fmt.Sprintf("unexpected %s %s in split", tok, lit))
 	}
 	s.Account = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
@@ -359,8 +359,8 @@ func (p *parser) parseBalance(pos token.Pos) ast.Entry {
 	h.Date = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
-	if tok != token.ACCOUNT {
-		p.errorf(pos, "in balance expected ACCOUNT not %s %s", tok, lit)
+	if tok != token.ACCTNAME {
+		p.errorf(pos, "in balance expected ACCTNAME not %s %s", tok, lit)
 		p.unread(pos, tok, lit)
 		return p.scanLineAsBadEntry(h.Pos())
 	}
@@ -452,8 +452,8 @@ func (p *parser) parseDisableAccount(pos token.Pos) ast.Entry {
 	e.Date = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
 	pos, tok, lit = p.scan()
-	if tok != token.ACCOUNT {
-		p.errorf(pos, "in disable account expected ACCOUNT not %s %s", tok, lit)
+	if tok != token.ACCTNAME {
+		p.errorf(pos, "in disable account expected ACCTNAME not %s %s", tok, lit)
 		p.unread(pos, tok, lit)
 		return p.scanLineAsBadEntry(e.Pos())
 	}

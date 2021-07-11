@@ -56,7 +56,7 @@ func (a *Amount) End() token.Pos {
 // A BasicValue node represents a basic single token value.
 type BasicValue struct {
 	ValuePos token.Pos
-	Kind     token.Token // STRING, USYMBOL, ACCOUNT, DECIMAL, DATE
+	Kind     token.Token // STRING, USYMBOL, ACCTNAME, DECIMAL, DATE
 	Value    string
 }
 

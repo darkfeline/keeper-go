@@ -402,7 +402,7 @@ func lexAccount(s *Scanner) stateFn {
 		s.emit(token.ILLEGAL)
 		return lexExprEnd
 	}
-	s.emit(token.ACCOUNT)
+	s.emit(token.ACCTNAME)
 	return lexExprEnd
 }
 

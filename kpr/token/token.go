@@ -31,11 +31,11 @@ const (
 	NEWLINE
 
 	// Values
-	STRING  // "foo"
-	USYMBOL // USD
-	ACCOUNT // Assets:Cash
-	DECIMAL // -1,234.56
-	DATE    // 2000-01-31
+	STRING   // "foo"
+	USYMBOL  // USD
+	ACCTNAME // Assets:Cash
+	DECIMAL  // -1,234.56
+	DATE     // 2000-01-31
 
 	// Keywords
 	TX

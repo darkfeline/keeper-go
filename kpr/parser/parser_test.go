@@ -45,7 +45,7 @@ end
 			BalanceHeader: ast.BalanceHeader{
 				TokPos:  1,
 				Date:    val(9, token.DATE, "2001-02-03"),
-				Account: val(20, token.ACCOUNT, "Some:account"),
+				Account: val(20, token.ACCTNAME, "Some:account"),
 			},
 			Amount: &ast.Amount{
 				Decimal: val(33, token.DECIMAL, "123.45"),
@@ -56,7 +56,7 @@ end
 			BalanceHeader: ast.BalanceHeader{
 				TokPos:  44,
 				Date:    val(52, token.DATE, "2001-02-05"),
-				Account: val(63, token.ACCOUNT, "Some:account"),
+				Account: val(63, token.ACCTNAME, "Some:account"),
 			},
 			Amounts: []ast.LineNode{
 				&ast.AmountLine{Amount: &ast.Amount{
@@ -81,14 +81,14 @@ end
 			Description: val(128, token.STRING, `"Buy stuff"`),
 			Splits: []ast.LineNode{
 				&ast.SplitLine{
-					Account: val(140, token.ACCOUNT, "Some:account"),
+					Account: val(140, token.ACCTNAME, "Some:account"),
 					Amount: &ast.Amount{
 						Decimal: val(153, token.DECIMAL, "1.2"),
 						Unit:    val(157, token.USYMBOL, "USD"),
 					},
 				},
 				&ast.SplitLine{
-					Account: val(161, token.ACCOUNT, "Expenses:Stuff"),
+					Account: val(161, token.ACCTNAME, "Expenses:Stuff"),
 					Amount: &ast.Amount{
 						Decimal: val(176, token.DECIMAL, "-1.2"),
 						Unit:    val(181, token.USYMBOL, "USD"),
@@ -146,7 +146,7 @@ end
 			BalanceHeader: ast.BalanceHeader{
 				TokPos:  2,
 				Date:    val(10, token.DATE, "2001-02-05"),
-				Account: val(21, token.ACCOUNT, "Some:account"),
+				Account: val(21, token.ACCTNAME, "Some:account"),
 			},
 			Amounts: []ast.LineNode{
 				&ast.AmountLine{Amount: &ast.Amount{
@@ -171,14 +171,14 @@ end
 			Description: val(116, token.STRING, `"Buy stuff"`),
 			Splits: []ast.LineNode{
 				&ast.SplitLine{
-					Account: val(128, token.ACCOUNT, "Some:account"),
+					Account: val(128, token.ACCTNAME, "Some:account"),
 					Amount: &ast.Amount{
 						Decimal: val(141, token.DECIMAL, "1.2"),
 						Unit:    val(145, token.USYMBOL, "USD"),
 					},
 				},
 				&ast.SplitLine{
-					Account: val(164, token.ACCOUNT, "Expenses:Stuff"),
+					Account: val(164, token.ACCTNAME, "Expenses:Stuff"),
 					Amount: &ast.Amount{
 						Decimal: val(179, token.DECIMAL, "-1.2"),
 						Unit:    val(184, token.USYMBOL, "USD"),
@@ -211,14 +211,14 @@ end
 			Description: val(15, token.STRING, `"Buy stuff"`),
 			Splits: []ast.LineNode{
 				&ast.SplitLine{
-					Account: val(27, token.ACCOUNT, "Some:account"),
+					Account: val(27, token.ACCTNAME, "Some:account"),
 					Amount: &ast.Amount{
 						Decimal: val(40, token.DECIMAL, "1.2"),
 						Unit:    val(44, token.USYMBOL, "USD"),
 					},
 				},
 				&ast.SplitLine{
-					Account: val(48, token.ACCOUNT, "Expenses:Stuff"),
+					Account: val(48, token.ACCTNAME, "Expenses:Stuff"),
 				},
 			},
 			EndTok: &ast.End{TokPos: 63},
@@ -288,7 +288,7 @@ func TestParseBytes_disable(t *testing.T) {
 		&ast.DisableAccount{
 			TokPos:  1,
 			Date:    val(9, token.DATE, "2001-02-03"),
-			Account: val(20, token.ACCOUNT, "Some:account"),
+			Account: val(20, token.ACCTNAME, "Some:account"),
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {

@@ -69,7 +69,7 @@ func (*MultiBalance) entry() {}
 type BalanceHeader struct {
 	TokPos  token.Pos
 	Date    *BasicValue // DATE
-	Account *BasicValue // ACCOUNT
+	Account *BasicValue // ACCTNAME
 }
 
 func (b *BalanceHeader) Pos() token.Pos {
@@ -120,7 +120,7 @@ func (*Transaction) entry() {}
 type DisableAccount struct {
 	TokPos  token.Pos
 	Date    *BasicValue // DATE
-	Account *BasicValue // ACCOUNT
+	Account *BasicValue // ACCTNAME
 }
 
 func (c *DisableAccount) Pos() token.Pos {

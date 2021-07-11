@@ -136,7 +136,7 @@ func (b *builder) buildMultiBalance(n *ast.MultiBalance) (*BalanceAssert, error)
 
 func (b *builder) buildBalanceHeader(n *ast.BalanceHeader) (*BalanceAssert, error) {
 	assertKind(n.Date, token.DATE)
-	assertKind(n.Account, token.ACCOUNT)
+	assertKind(n.Account, token.ACCTNAME)
 
 	a := &BalanceAssert{
 		EntryPos: b.nodePos(n),
@@ -176,7 +176,7 @@ func (b *builder) buildTransaction(n *ast.Transaction) (*Transaction, error) {
 	t.Splits = make([]Split, len(n.Splits))
 	for i, n := range n.Splits {
 		n := n.(*ast.SplitLine)
-		assertKind(n.Account, token.ACCOUNT)
+		assertKind(n.Account, token.ACCTNAME)
 		s := &t.Splits[i]
 		s.Account = Account(n.Account.Value)
 		if n.Amount == nil {
@@ -243,7 +243,7 @@ func (b *builder) buildAmount(n *ast.Amount) (Amount, error) {
 
 func (b *builder) buildDisableAccount(n *ast.DisableAccount) (*DisableAccount, error) {
 	assertKind(n.Date, token.DATE)
-	assertKind(n.Account, token.ACCOUNT)
+	assertKind(n.Account, token.ACCTNAME)
 	e := &DisableAccount{
 		EntryPos: b.nodePos(n),
 		Account:  Account(n.Account.Value),
