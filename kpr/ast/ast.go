@@ -36,7 +36,7 @@ func (d *End) Pos() token.Pos {
 }
 
 func (d *End) End() token.Pos {
-	return token.Pos(int(d.TokPos) + 3)
+	return token.Pos(int(d.TokPos) + len("end"))
 }
 
 // An Amount node represents an amount.
