@@ -20,6 +20,12 @@ import (
 	"go.felesatra.moe/keeper/kpr/token"
 )
 
+// A File represents a source file.
+type File struct {
+	Entries  []Entry
+	Comments []*CommentGroup
+}
+
 // All node types implement the Node interface.
 type Node interface {
 	Pos() token.Pos // position of first character belonging to the node
