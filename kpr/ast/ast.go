@@ -67,3 +67,33 @@ func (v *BasicValue) Pos() token.Pos {
 func (v *BasicValue) End() token.Pos {
 	return token.Pos(int(v.ValuePos) + len(v.Value))
 }
+
+// A Comment node represents a comment.
+type Comment struct {
+	// Position of starting #
+	TokPos token.Pos
+	// Comment text, including # and excluding trailing newline.
+	Text string
+}
+
+func (c *Comment) Pos() token.Pos {
+	return c.TokPos
+}
+
+func (c *Comment) End() token.Pos {
+	return token.Pos(int(c.TokPos) + len(c.Text))
+}
+
+// A CommentGroup represents consecutive comments.
+type CommentGroup struct {
+	// Must be non-empty
+	List []*Comment
+}
+
+func (c *CommentGroup) Pos() token.Pos {
+	return c.List[0].Pos()
+}
+
+func (c *CommentGroup) End() token.Pos {
+	return c.List[len(c.List)-1].End()
+}
