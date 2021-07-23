@@ -45,13 +45,16 @@ type Mode uint
 // ast.Bad* nodes representing the fragments of erroneous source
 // code). Multiple errors are returned via a scanner.ErrorList which
 // is sorted by file position.
-func ParseBytes(fset *token.FileSet, filename string, src []byte, mode Mode) ([]ast.Entry, error) {
+func ParseBytes(fset *token.FileSet, filename string, src []byte, mode Mode) (*ast.File, error) {
 	p := &parser{
 		f: fset.AddFile(filename, -1, len(src)),
 	}
 	p.s.Init(p.f, src, p.errs.Add, 0)
 	entries := p.parse()
-	return entries, p.errs.Err()
+	// TODO(ayatane): comments aren't parsed yet
+	return &ast.File{
+		Entries: entries,
+	}, p.errs.Err()
 }
 
 type parser struct {

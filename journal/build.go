@@ -34,11 +34,11 @@ func buildEntries(inputs ...inputBytes) ([]Entry, error) {
 	b := newBuilder(fset)
 	var entries []Entry
 	for _, i := range inputs {
-		t, err := parser.ParseBytes(fset, i.filename, i.src, 0)
+		f, err := parser.ParseBytes(fset, i.filename, i.src, 0)
 		if err != nil {
 			return nil, fmt.Errorf("build entries: %s", err)
 		}
-		e, err := b.build(t)
+		e, err := b.build(f.Entries)
 		if err != nil {
 			return entries, fmt.Errorf("build entries: %s", err)
 		}

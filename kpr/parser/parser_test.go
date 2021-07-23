@@ -100,7 +100,7 @@ end
 			EndTok: &ast.End{TokPos: 185},
 		},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmp.Diff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -118,7 +118,7 @@ func TestParseBytes_invalid_token(t *testing.T) {
 			To:   2,
 		},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmp.Diff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -191,7 +191,7 @@ end
 			EndTok: &ast.End{TokPos: 188},
 		},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmp.Diff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -227,7 +227,7 @@ end
 			EndTok: &ast.End{TokPos: 63},
 		},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmp.Diff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -251,7 +251,7 @@ Expenses:Stuff 1.2 USD
 		},
 		&ast.BadEntry{From: 14, To: 85},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmp.Diff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -274,7 +274,7 @@ Some:account
 		},
 		&ast.BadEntry{From: 14, To: 53},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmp.Diff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -294,7 +294,7 @@ func TestParseBytes_disable(t *testing.T) {
 			Account: val(20, token.ACCTNAME, "Some:account"),
 		},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmp.Diff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -322,7 +322,7 @@ end
 			EndTok: &ast.End{TokPos: 34},
 		},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmp.Diff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -347,7 +347,7 @@ end
 			EndTok: &ast.End{TokPos: 40},
 		},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmp.Diff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -397,7 +397,7 @@ end
 			EndTok: &ast.End{TokPos: 97},
 		},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmp.Diff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
