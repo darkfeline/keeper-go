@@ -166,6 +166,8 @@ func (p *parser) parse() {
 		case tok == token.EOF:
 			return
 		case tok == token.NEWLINE:
+		case tok == token.COMMENT:
+			p.parseComment(pos, lit)
 		case isEntryKeyword(tok):
 			e := p.parseEntry(pos, tok, lit)
 			p.entries = append(p.entries, e)
@@ -175,6 +177,16 @@ func (p *parser) parse() {
 			p.entries = append(p.entries, e)
 		}
 	}
+}
+
+func (p *parser) parseComment(pos token.Pos, lit string) {
+	// TODO(ayatane): Need to group adjacent comments.
+	p.comments = append(p.comments, &ast.CommentGroup{
+		List: []*ast.Comment{{
+			TokPos: pos,
+			Text:   lit,
+		}},
+	})
 }
 
 func (p *parser) parseEntry(pos token.Pos, tok token.Token, lit string) ast.Entry {
