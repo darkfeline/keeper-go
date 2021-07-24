@@ -263,7 +263,8 @@ func (p *parser) parseSplits() ([]ast.LineNode, error) {
 			s := p.parseSplit()
 			splits = append(splits, s)
 		case token.NEWLINE:
-			continue
+		case token.COMMENT:
+			p.parseComment(pos, lit)
 		case token.END:
 			p.unread(pos, tok, lit)
 			return splits, nil
@@ -435,7 +436,8 @@ func (p *parser) parseBalanceMultipleAmounts(h ast.BalanceHeader) ast.Entry {
 			}
 			b.Amounts = append(b.Amounts, &ast.AmountLine{Amount: a})
 		case token.NEWLINE:
-			continue
+		case token.COMMENT:
+			p.parseComment(pos, lit)
 		case token.END:
 			b.EndTok = &ast.End{TokPos: pos}
 			pos, tok, lit = p.scan()
@@ -530,7 +532,8 @@ func (p *parser) parseMetadataLines() ([]ast.LineNode, error) {
 			s := p.parseMetadata()
 			lines = append(lines, s)
 		case token.NEWLINE:
-			continue
+		case token.COMMENT:
+			p.parseComment(pos, lit)
 		case token.END:
 			p.unread(pos, tok, lit)
 			return lines, nil
