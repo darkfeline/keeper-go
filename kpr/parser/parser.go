@@ -50,10 +50,10 @@ func ParseBytes(fset *token.FileSet, filename string, src []byte, mode Mode) (*a
 		f: fset.AddFile(filename, -1, len(src)),
 	}
 	p.s.Init(p.f, src, p.errs.Add, 0)
-	entries := p.parse()
+	p.parse()
 	// TODO(ayatane): comments aren't parsed yet
 	return &ast.File{
-		Entries: entries,
+		Entries: p.entries,
 	}, p.errs.Err()
 }
 
@@ -62,6 +62,9 @@ type parser struct {
 	s           scanner.Scanner
 	errs        scanner.ErrorList
 	tokenBuffer []tokenInfo
+
+	entries  []ast.Entry
+	comments []*ast.CommentGroup
 }
 
 type tokenInfo struct {
@@ -157,20 +160,19 @@ func (p *parser) errorf(pos token.Pos, format string, v ...interface{}) {
 
 // Parsing methods
 
-func (p *parser) parse() []ast.Entry {
-	var entries []ast.Entry
+func (p *parser) parse() {
 	for {
 		switch pos, tok, lit := p.scan(); {
 		case tok == token.EOF:
-			return entries
+			return
 		case tok == token.NEWLINE:
 		case isEntryKeyword(tok):
 			e := p.parseEntry(pos, tok, lit)
-			entries = append(entries, e)
+			p.entries = append(p.entries, e)
 		default:
 			p.errorf(pos, "bad token %s %s", tok, lit)
 			e := p.scanUntilEntryAsBad(pos)
-			entries = append(entries, e)
+			p.entries = append(p.entries, e)
 		}
 	}
 }
