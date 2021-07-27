@@ -60,7 +60,7 @@ func ParseBytes(fset *token.FileSet, filename string, src []byte, mode Mode) (*a
 	}
 	p.s.Init(p.f, src, p.errs.Add, m)
 	p.parse()
-	// TODO(ayatane): comments aren't parsed yet
+	// BUG(ayatane): end of line comment support not implemented
 	return &ast.File{
 		Entries:  p.entries,
 		Comments: p.comments,
