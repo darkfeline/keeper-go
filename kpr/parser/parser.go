@@ -135,6 +135,8 @@ func (p *parser) scanUntilEntry() token.Pos {
 		case tok == token.EOF:
 			p.unread(pos, tok, lit)
 			return startPos
+		case tok == token.COMMENT:
+			return startPos
 		case isEntryKeyword(tok):
 			return startPos
 		}
