@@ -179,7 +179,7 @@ func (p *parser) parse() {
 			return
 		case tok == token.NEWLINE:
 		case tok == token.COMMENT:
-			p.parseComment(pos, lit)
+			p.parseCommentGroup(pos, lit)
 		case isEntryKeyword(tok):
 			e := p.parseEntry(pos, tok, lit)
 			p.entries = append(p.entries, e)
@@ -191,7 +191,7 @@ func (p *parser) parse() {
 	}
 }
 
-func (p *parser) parseComment(pos token.Pos, lit string) {
+func (p *parser) parseCommentGroup(pos token.Pos, lit string) {
 	if !p.parseComments {
 		return
 	}
@@ -279,7 +279,7 @@ func (p *parser) parseSplits() ([]ast.LineNode, error) {
 			splits = append(splits, s)
 		case token.NEWLINE:
 		case token.COMMENT:
-			p.parseComment(pos, lit)
+			p.parseCommentGroup(pos, lit)
 		case token.END:
 			p.unread(pos, tok, lit)
 			return splits, nil
@@ -452,7 +452,7 @@ func (p *parser) parseBalanceMultipleAmounts(h ast.BalanceHeader) ast.Entry {
 			b.Amounts = append(b.Amounts, &ast.AmountLine{Amount: a})
 		case token.NEWLINE:
 		case token.COMMENT:
-			p.parseComment(pos, lit)
+			p.parseCommentGroup(pos, lit)
 		case token.END:
 			b.EndTok = &ast.End{TokPos: pos}
 			pos, tok, lit = p.scan()
@@ -548,7 +548,7 @@ func (p *parser) parseMetadataLines() ([]ast.LineNode, error) {
 			lines = append(lines, s)
 		case token.NEWLINE:
 		case token.COMMENT:
-			p.parseComment(pos, lit)
+			p.parseCommentGroup(pos, lit)
 		case token.END:
 			p.unread(pos, tok, lit)
 			return lines, nil
