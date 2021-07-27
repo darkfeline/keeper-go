@@ -402,6 +402,45 @@ end
 	}
 }
 
+func TestParseBytes_ignore_comment_mode(t *testing.T) {
+	t.Parallel()
+	const input = `# kyaru
+treebal 2001-02-05 Some:account
+# is
+end
+tx 2001-02-05 "blah"
+# so cute
+# aaaaaa
+end
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := &ast.File{
+		Entries: []ast.Entry{
+			&ast.MultiBalance{
+				BalanceHeader: ast.BalanceHeader{
+					TokPos:  9,
+					Token:   token.TREEBAL,
+					Date:    val(17, token.DATE, "2001-02-05"),
+					Account: val(28, token.ACCTNAME, "Some:account"),
+				},
+				EndTok: &ast.End{TokPos: 46},
+			},
+			&ast.Transaction{
+				TokPos:      50,
+				Date:        val(53, token.DATE, "2001-02-05"),
+				Description: val(64, token.STRING, `"blah"`),
+				EndTok:      &ast.End{TokPos: 90},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func val(pos token.Pos, tok token.Token, lit string) *ast.BasicValue {
 	return &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 }
