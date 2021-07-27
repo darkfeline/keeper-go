@@ -195,13 +195,31 @@ func (p *parser) parseCommentGroup(pos token.Pos, lit string) {
 	if !p.parseComments {
 		return
 	}
-	// TODO(ayatane): Need to group adjacent comments.
-	p.comments = append(p.comments, &ast.CommentGroup{
-		List: []*ast.Comment{{
+	c := &ast.CommentGroup{}
+	var tok token.Token
+parseComment:
+	for {
+		c.List = append(c.List, &ast.Comment{
 			TokPos: pos,
 			Text:   lit,
-		}},
-	})
+		})
+
+		switch pos, tok, lit = p.scan(); tok {
+		case token.NEWLINE:
+		case token.EOF:
+			break parseComment
+		default:
+			panic(fmt.Sprintf("unexpected token %s after comment at %v",
+				tok, pos))
+		}
+
+		pos, tok, lit = p.scan()
+		if tok != token.COMMENT {
+			p.unread(pos, tok, lit)
+			break parseComment
+		}
+	}
+	p.comments = append(p.comments, c)
 }
 
 func (p *parser) parseEntry(pos token.Pos, tok token.Token, lit string) ast.Entry {
