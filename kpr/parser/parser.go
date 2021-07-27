@@ -31,6 +31,10 @@ import (
 // source code parsed and other optional parser functionality.
 type Mode uint
 
+const (
+	ParseComments Mode = 1 << iota
+)
+
 // ParseBytes parses the contents of a keeper file and returns the
 // corresponding ast.Entry nodes.
 //
@@ -47,18 +51,26 @@ type Mode uint
 // is sorted by file position.
 func ParseBytes(fset *token.FileSet, filename string, src []byte, mode Mode) (*ast.File, error) {
 	p := &parser{
-		f: fset.AddFile(filename, -1, len(src)),
+		f:             fset.AddFile(filename, -1, len(src)),
+		parseComments: mode&ParseComments != 0,
 	}
-	p.s.Init(p.f, src, p.errs.Add, 0)
+	var m scanner.Mode
+	if p.parseComments {
+		m |= scanner.ScanComments
+	}
+	p.s.Init(p.f, src, p.errs.Add, m)
 	p.parse()
 	// TODO(ayatane): comments aren't parsed yet
 	return &ast.File{
-		Entries: p.entries,
+		Entries:  p.entries,
+		Comments: p.comments,
 	}, p.errs.Err()
 }
 
 type parser struct {
-	f           *token.File
+	f             *token.File
+	parseComments bool
+
 	s           scanner.Scanner
 	errs        scanner.ErrorList
 	tokenBuffer []tokenInfo
@@ -180,6 +192,9 @@ func (p *parser) parse() {
 }
 
 func (p *parser) parseComment(pos token.Pos, lit string) {
+	if !p.parseComments {
+		return
+	}
 	// TODO(ayatane): Need to group adjacent comments.
 	p.comments = append(p.comments, &ast.CommentGroup{
 		List: []*ast.Comment{{
