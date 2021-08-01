@@ -79,12 +79,6 @@ type parser struct {
 	comments []*ast.CommentGroup
 }
 
-type tokenInfo struct {
-	pos token.Pos
-	tok token.Token
-	lit string
-}
-
 // Helper methods
 
 // scan calls Scan on the underlying scanner.
