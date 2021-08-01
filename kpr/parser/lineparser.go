@@ -24,22 +24,18 @@ import (
 
 // A lineParser parses lines in a keeper file.
 type lineParser struct {
-	f    *token.File
-	s    scanner.Scanner
-	errs scanner.ErrorList
+	s scanner.Scanner
 }
 
-func newLineParser(fset *token.FileSet, filename string, src []byte, m scanner.Mode) *lineParser {
-	p := &lineParser{
-		f: fset.AddFile(filename, -1, len(src)),
-	}
-	p.s.Init(p.f, src, p.errs.Add, m)
+func newLineParser(f *token.File, src []byte, err scanner.ErrorHandler, m scanner.Mode) *lineParser {
+	p := &lineParser{}
+	p.s.Init(f, src, err, m)
 	return p
 }
 
 // Parse all lines.
-func (p *lineParser) parseLines() []line {
-	var lines []line
+func (p *lineParser) parseLines() []*line {
+	var lines []*line
 	for {
 		l := p.parseLine()
 		lines = append(lines, l)
@@ -50,8 +46,8 @@ func (p *lineParser) parseLines() []line {
 }
 
 // Parse a single line.
-func (p *lineParser) parseLine() line {
-	l := line{
+func (p *lineParser) parseLine() *line {
+	l := &line{
 		tokens: make([]tokenInfo, 0, 4),
 	}
 	for {
@@ -80,6 +76,29 @@ type line struct {
 	comment *ast.Comment
 	// Token that ends the line, either NEWLINE or EOF.
 	eol tokenInfo
+}
+
+func (l *line) Pos() token.Pos {
+	if len(l.tokens) > 0 {
+		return l.tokens[0].pos
+	}
+	if l.comment != nil {
+		return l.comment.Pos()
+	}
+	return l.eol.pos
+}
+
+func (l *line) End() token.Pos {
+	return token.Pos(int(l.eol.pos) + len(l.eol.lit))
+}
+
+// if line is empty of tokens
+func (l *line) Empty() bool {
+	return len(l.tokens) == 0
+}
+
+func (l *line) EOF() bool {
+	return l.eol.tok == token.EOF
 }
 
 type tokenInfo struct {

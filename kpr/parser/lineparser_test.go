@@ -29,14 +29,14 @@ func TestLineParser(t *testing.T) {
 		desc  string
 		input string
 		mode  scanner.Mode
-		want  []line
+		want  []*line
 	}{
 		{
 			desc: "lines",
 			input: `tx 2020-01-02 "blah"
 end
 `,
-			want: []line{
+			want: []*line{
 				{
 					tokens: []tokenInfo{
 						{1, token.TX, "tx"},
@@ -61,7 +61,7 @@ end
 			desc:  "comment only",
 			input: `# blah`,
 			mode:  scanner.ScanComments,
-			want: []line{
+			want: []*line{
 				{
 					tokens:  []tokenInfo{},
 					comment: &ast.Comment{TokPos: 1, Text: "# blah"},
@@ -72,7 +72,7 @@ end
 		{
 			desc:  "skip comment",
 			input: `# blah`,
-			want: []line{
+			want: []*line{
 				{
 					tokens: []tokenInfo{},
 					eol:    tokenInfo{7, token.EOF, ""},
@@ -85,7 +85,10 @@ end
 		c := c
 		t.Run(c.desc, func(t *testing.T) {
 			t.Parallel()
-			got := parseTestLines([]byte(c.input), c.mode)
+			got, err := parseTestLines([]byte(c.input), c.mode)
+			if err != nil {
+				t.Fatal(err)
+			}
 			if diff := cmp.Diff(c.want, got, o); diff != "" {
 				t.Errorf("lines mismatch (-want +got):\n%s", diff)
 			}
@@ -93,7 +96,10 @@ end
 	}
 }
 
-func parseTestLines(b []byte, m scanner.Mode) []line {
-	p := newLineParser(token.NewFileSet(), "", b, m)
-	return p.parseLines()
+func parseTestLines(b []byte, m scanner.Mode) ([]*line, error) {
+	fset := token.NewFileSet()
+	f := fset.AddFile("", -1, len(b))
+	var errs scanner.ErrorList
+	p := newLineParser(f, b, errs.Add, m)
+	return p.parseLines(), errs.Err()
 }
