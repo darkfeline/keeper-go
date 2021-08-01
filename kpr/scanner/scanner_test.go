@@ -219,6 +219,19 @@ end
 				{38, token.NEWLINE, "\n"},
 			},
 		},
+		{
+			desc: "empty",
+			text: ``,
+			want: nil,
+		},
+		{
+			desc: "ending comment",
+			text: `# blah`,
+			mode: ScanComments,
+			want: []result{
+				{1, token.COMMENT, `# blah`},
+			},
+		},
 	}
 	for _, c := range cases {
 		c := c

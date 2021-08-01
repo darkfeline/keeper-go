@@ -274,7 +274,7 @@ func lexIllegal(s *Scanner) stateFn {
 func lexComment(s *Scanner) stateFn {
 	for {
 		r := s.next()
-		if r != '\n' {
+		if r != '\n' && r != eof {
 			continue
 		}
 		s.unread()
