@@ -138,7 +138,7 @@ func (*DisableAccount) entry() {}
 type DeclareAccount struct {
 	TokPos   token.Pos
 	Account  *BasicValue // ACCTNAME
-	Metadata []LineNode
+	Metadata []LineNode  // MetadataLine, BadLine
 	EndTok   *End
 }
 
