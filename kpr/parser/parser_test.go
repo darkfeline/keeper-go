@@ -48,10 +48,7 @@ end
 				Date:    val(9, token.DATE, "2001-02-03"),
 				Account: val(20, token.ACCTNAME, "Some:account"),
 			},
-			Amount: &ast.Amount{
-				Decimal: val(33, token.DECIMAL, "123.45"),
-				Unit:    val(40, token.USYMBOL, "USD"),
-			},
+			Amount: amount(33, "123.45", 40, "USD"),
 		},
 		&ast.MultiBalance{
 			BalanceHeader: ast.BalanceHeader{
@@ -61,14 +58,8 @@ end
 				Account: val(63, token.ACCTNAME, "Some:account"),
 			},
 			Amounts: []ast.LineNode{
-				&ast.AmountLine{Amount: &ast.Amount{
-					Decimal: val(76, token.DECIMAL, "123.45"),
-					Unit:    val(83, token.USYMBOL, "USD"),
-				}},
-				&ast.AmountLine{Amount: &ast.Amount{
-					Decimal: val(87, token.DECIMAL, "56700"),
-					Unit:    val(93, token.USYMBOL, "JPY"),
-				}},
+				&ast.AmountLine{Amount: amount(76, "123.45", 83, "USD")},
+				&ast.AmountLine{Amount: amount(87, "56700", 93, "JPY")},
 			},
 			EndTok: &ast.End{TokPos: 97},
 		},
@@ -84,17 +75,11 @@ end
 			Splits: []ast.LineNode{
 				&ast.SplitLine{
 					Account: val(140, token.ACCTNAME, "Some:account"),
-					Amount: &ast.Amount{
-						Decimal: val(153, token.DECIMAL, "1.2"),
-						Unit:    val(157, token.USYMBOL, "USD"),
-					},
+					Amount:  amount(153, "1.2", 157, "USD"),
 				},
 				&ast.SplitLine{
 					Account: val(161, token.ACCTNAME, "Expenses:Stuff"),
-					Amount: &ast.Amount{
-						Decimal: val(176, token.DECIMAL, "-1.2"),
-						Unit:    val(181, token.USYMBOL, "USD"),
-					},
+					Amount:  amount(176, "-1.2", 181, "USD"),
 				},
 			},
 			EndTok: &ast.End{TokPos: 185},
@@ -152,14 +137,8 @@ end
 				Account: val(21, token.ACCTNAME, "Some:account"),
 			},
 			Amounts: []ast.LineNode{
-				&ast.AmountLine{Amount: &ast.Amount{
-					Decimal: val(34, token.DECIMAL, "123.45"),
-					Unit:    val(41, token.USYMBOL, "USD"),
-				}},
-				&ast.AmountLine{Amount: &ast.Amount{
-					Decimal: val(60, token.DECIMAL, "56700"),
-					Unit:    val(66, token.USYMBOL, "JPY"),
-				}},
+				&ast.AmountLine{Amount: amount(34, "123.45", 41, "USD")},
+				&ast.AmountLine{Amount: amount(60, "56700", 66, "JPY")},
 			},
 			EndTok: &ast.End{TokPos: 70},
 		},
@@ -175,17 +154,11 @@ end
 			Splits: []ast.LineNode{
 				&ast.SplitLine{
 					Account: val(128, token.ACCTNAME, "Some:account"),
-					Amount: &ast.Amount{
-						Decimal: val(141, token.DECIMAL, "1.2"),
-						Unit:    val(145, token.USYMBOL, "USD"),
-					},
+					Amount:  amount(141, "1.2", 145, "USD"),
 				},
 				&ast.SplitLine{
 					Account: val(164, token.ACCTNAME, "Expenses:Stuff"),
-					Amount: &ast.Amount{
-						Decimal: val(179, token.DECIMAL, "-1.2"),
-						Unit:    val(184, token.USYMBOL, "USD"),
-					},
+					Amount:  amount(179, "-1.2", 184, "USD"),
 				},
 			},
 			EndTok: &ast.End{TokPos: 188},
@@ -215,10 +188,7 @@ end
 			Splits: []ast.LineNode{
 				&ast.SplitLine{
 					Account: val(27, token.ACCTNAME, "Some:account"),
-					Amount: &ast.Amount{
-						Decimal: val(40, token.DECIMAL, "1.2"),
-						Unit:    val(44, token.USYMBOL, "USD"),
-					},
+					Amount:  amount(40, "1.2", 44, "USD"),
 				},
 				&ast.SplitLine{
 					Account: val(48, token.ACCTNAME, "Expenses:Stuff"),
@@ -249,7 +219,21 @@ Expenses:Stuff 1.2 USD
 			Unit:   val(6, token.USYMBOL, "USD"),
 			Scale:  val(10, token.DECIMAL, "100"),
 		},
-		&ast.BadEntry{From: 14, To: 85},
+		&ast.Transaction{
+			TokPos:      14,
+			Date:        val(17, token.DATE, "2001-02-03"),
+			Description: val(28, token.STRING, `"Buy stuff"`),
+			Splits: []ast.LineNode{
+				&ast.SplitLine{
+					Account: val(40, token.ACCTNAME, "Some:account"),
+					Amount:  amount(53, "-1.2", 58, "USD"),
+				},
+				&ast.SplitLine{
+					Account: val(62, token.ACCTNAME, "Expenses:Stuff"),
+					Amount:  amount(77, "1.2", 81, "USD"),
+				},
+			},
+		},
 	}
 	if diff := cmp.Diff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
@@ -272,7 +256,16 @@ Some:account
 			Unit:   val(6, token.USYMBOL, "USD"),
 			Scale:  val(10, token.DECIMAL, "100"),
 		},
-		&ast.BadEntry{From: 14, To: 53},
+		&ast.Transaction{
+			TokPos:      14,
+			Date:        val(17, token.DATE, "2001-02-03"),
+			Description: val(28, token.STRING, `"Buy stuff"`),
+			Splits: []ast.LineNode{
+				&ast.SplitLine{
+					Account: val(40, token.ACCTNAME, "Some:account"),
+				},
+			},
+		},
 	}
 	if diff := cmp.Diff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
@@ -342,7 +335,7 @@ end
 			TokPos:  1,
 			Account: val(9, token.ACCTNAME, "Some:account"),
 			Metadata: []ast.LineNode{
-				&ast.BadLine{From: 22, To: 39},
+				&ast.BadLine{From: 22, To: 40},
 			},
 			EndTok: &ast.End{TokPos: 40},
 		},
@@ -372,10 +365,7 @@ end
 				Date:    val(9, token.DATE, "2001-02-03"),
 				Account: val(20, token.ACCTNAME, "Some:account"),
 			},
-			Amount: &ast.Amount{
-				Decimal: val(33, token.DECIMAL, "123.45"),
-				Unit:    val(40, token.USYMBOL, "USD"),
-			},
+			Amount: amount(33, "123.45", 40, "USD"),
 		},
 		&ast.MultiBalance{
 			BalanceHeader: ast.BalanceHeader{
@@ -385,14 +375,8 @@ end
 				Account: val(63, token.ACCTNAME, "Some:account"),
 			},
 			Amounts: []ast.LineNode{
-				&ast.AmountLine{Amount: &ast.Amount{
-					Decimal: val(76, token.DECIMAL, "123.45"),
-					Unit:    val(83, token.USYMBOL, "USD"),
-				}},
-				&ast.AmountLine{Amount: &ast.Amount{
-					Decimal: val(87, token.DECIMAL, "56700"),
-					Unit:    val(93, token.USYMBOL, "JPY"),
-				}},
+				&ast.AmountLine{Amount: amount(76, "123.45", 83, "USD")},
+				&ast.AmountLine{Amount: amount(87, "56700", 93, "JPY")},
 			},
 			EndTok: &ast.End{TokPos: 97},
 		},
@@ -485,6 +469,13 @@ end
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func amount(pos1 token.Pos, lit1 string, pos2 token.Pos, lit2 string) *ast.Amount {
+	return &ast.Amount{
+		Decimal: val(pos1, token.DECIMAL, lit1),
+		Unit:    val(pos2, token.USYMBOL, lit2),
 	}
 }
 

@@ -19,8 +19,8 @@
 package parser
 
 import (
-	"errors"
 	"fmt"
+	"strings"
 
 	"go.felesatra.moe/keeper/kpr/ast"
 	"go.felesatra.moe/keeper/kpr/scanner"
@@ -58,9 +58,8 @@ func ParseBytes(fset *token.FileSet, filename string, src []byte, mode Mode) (*a
 	if p.parseComments {
 		m |= scanner.ScanComments
 	}
-	p.s.Init(p.f, src, p.errs.Add, m)
+	p.lp = newLineParser(p.f, src, p.errs.Add, m)
 	p.parse()
-	// BUG(ayatane): end of line comment support not implemented
 	return &ast.File{
 		Entries:  p.entries,
 		Comments: p.comments,
@@ -70,534 +69,273 @@ func ParseBytes(fset *token.FileSet, filename string, src []byte, mode Mode) (*a
 type parser struct {
 	f             *token.File
 	parseComments bool
-
-	s           scanner.Scanner
-	errs        scanner.ErrorList
-	tokenBuffer []tokenInfo
+	lp            *lineParser
+	current       *line
+	curGroup      *ast.CommentGroup
 
 	entries  []ast.Entry
 	comments []*ast.CommentGroup
+	errs     scanner.ErrorList
 }
 
-// Helper methods
-
-// scan calls Scan on the underlying scanner.
-func (p *parser) scan() (token.Pos, token.Token, string) {
-	if len(p.tokenBuffer) > 0 {
-		t := p.tokenBuffer[len(p.tokenBuffer)-1]
-		p.tokenBuffer = p.tokenBuffer[:len(p.tokenBuffer)-1]
-		return t.pos, t.tok, t.lit
-	}
-	return p.s.Scan()
-}
-
-func (p *parser) unread(pos token.Pos, tok token.Token, lit string) {
-	p.tokenBuffer = append(p.tokenBuffer, tokenInfo{pos, tok, lit})
-}
-
-func (p *parser) peek() (token.Pos, token.Token, string) {
-	pos, tok, lit := p.scan()
-	p.unread(pos, tok, lit)
-	return pos, tok, lit
-}
-
-// scanLine scans up to and including the next newline
-// and returns the position of the newline (or EOF) token.
-func (p *parser) scanLine() token.Pos {
-	for {
-		pos, tok, lit := p.scan()
-		if tok == token.EOF {
-			p.unread(pos, tok, lit)
-			return pos
+func (p *parser) nextLine() *line {
+	l := p.lp.parseLine()
+	if p.parseComments {
+		if l.comment == nil || len(l.tokens) > 0 {
+			p.curGroup = nil
 		}
-		if tok != token.NEWLINE {
-			continue
-		}
-		return pos
-	}
-}
-
-// scanUntilEntry scans until before the beginning of the next
-// potential entry (or EOF) and returns the position of the preceding
-// newline token.
-func (p *parser) scanUntilEntry() token.Pos {
-	for {
-		startPos := p.scanLine()
-		switch pos, tok, lit := p.peek(); {
-		default:
-			continue
-		case tok == token.EOF:
-			p.unread(pos, tok, lit)
-			return startPos
-		case tok == token.COMMENT:
-			return startPos
-		case isEntryKeyword(tok):
-			return startPos
+		if l.comment != nil {
+			if p.curGroup == nil {
+				p.curGroup = &ast.CommentGroup{}
+				p.comments = append(p.comments, p.curGroup)
+			}
+			c := p.curGroup
+			c.List = append(c.List, l.comment)
 		}
 	}
-}
-
-func isEntryKeyword(tok token.Token) bool {
-	switch tok {
-	case token.TX, token.BALANCE, token.TREEBAL:
-		fallthrough
-	case token.UNIT, token.DISABLE, token.ACCOUNT:
-		return true
-	default:
-		return false
-	}
-}
-
-func (p *parser) scanLineAsBad(from token.Pos) *ast.BadLine {
-	return &ast.BadLine{From: from, To: p.scanLine()}
-}
-
-func (p *parser) scanLineAsBadEntry(from token.Pos) *ast.BadEntry {
-	return &ast.BadEntry{From: from, To: p.scanLine()}
-}
-
-// scanUntilEntryAsBad scans until the next entry and returns a BadEntry for
-// the intervening tokens.
-func (p *parser) scanUntilEntryAsBad(from token.Pos) *ast.BadEntry {
-	return &ast.BadEntry{From: from, To: p.scanUntilEntry()}
+	p.current = l
+	return l
 }
 
 func (p *parser) errorf(pos token.Pos, format string, v ...interface{}) {
 	p.errs.Add(p.f.Position(pos), fmt.Sprintf(format, v...))
 }
 
-// Parsing methods
-
 func (p *parser) parse() {
 	for {
-		switch pos, tok, lit := p.scan(); {
-		case tok == token.EOF:
+		if p.current != nil && p.current.EOF() {
 			return
-		case tok == token.NEWLINE:
-		case tok == token.COMMENT:
-			p.parseCommentGroup(pos, lit)
-		case isEntryKeyword(tok):
-			e := p.parseEntry(pos, tok, lit)
-			p.entries = append(p.entries, e)
-		default:
-			p.errorf(pos, "bad token %s %s", tok, lit)
-			e := p.scanUntilEntryAsBad(pos)
-			p.entries = append(p.entries, e)
 		}
+		l := p.nextLine()
+		if l.Empty() {
+			continue
+		}
+		e := p.parseEntry(l)
+		p.entries = append(p.entries, e)
 	}
 }
 
-func (p *parser) parseCommentGroup(pos token.Pos, lit string) {
-	if !p.parseComments {
-		return
-	}
-	c := &ast.CommentGroup{}
-	var tok token.Token
-parseComment:
-	for {
-		c.List = append(c.List, &ast.Comment{
-			TokPos: pos,
-			Text:   lit,
-		})
-
-		switch pos, tok, lit = p.scan(); tok {
-		case token.NEWLINE:
-		case token.EOF:
-			break parseComment
-		default:
-			panic(fmt.Sprintf("unexpected token %s after comment at %v",
-				tok, pos))
-		}
-
-		pos, tok, lit = p.scan()
-		if tok != token.COMMENT {
-			p.unread(pos, tok, lit)
-			break parseComment
-		}
-	}
-	p.comments = append(p.comments, c)
-}
-
-func (p *parser) parseEntry(pos token.Pos, tok token.Token, lit string) ast.Entry {
-	switch tok {
-	case token.TX:
-		return p.parseTransaction(pos)
+func (p *parser) parseEntry(l *line) ast.Entry {
+	switch l.tokens[0].tok {
 	case token.UNIT:
-		return p.parseUnitDecl(pos)
+		return p.parseUnitDecl(l)
+	case token.TX:
+		return p.parseTransaction(l)
 	case token.BALANCE, token.TREEBAL:
-		return p.parseBalance(pos, tok)
+		return p.parseBalance(l)
 	case token.DISABLE:
-		return p.parseDisableAccount(pos)
+		return p.parseDisableAccount(l)
 	case token.ACCOUNT:
-		return p.parseDeclareAccount(pos)
+		return p.parseDeclareAccount(l)
 	default:
-		p.errorf(pos, "bad entry keyword %s", lit)
-		return p.scanUntilEntryAsBad(pos)
+		p.errorf(l.Pos(), "bad entry starting with %s", l.tokens[0].lit)
+		return &ast.BadEntry{From: l.Pos(), To: l.End()}
 	}
 }
 
-func (p *parser) parseTransaction(pos token.Pos) ast.Entry {
-	t := &ast.Transaction{
-		TokPos: pos,
+func (p *parser) parseUnitDecl(l *line) ast.Entry {
+	if err := matchTokens(l.tokens, token.UNIT, token.USYMBOL, token.DECIMAL); err != nil {
+		p.errorf(l.Pos(), "%s", err)
+		return &ast.BadEntry{From: l.Pos(), To: l.End()}
 	}
-
-	pos, tok, lit := p.scan()
-	if tok != token.DATE {
-		p.errorf(pos, "in transaction expected DATE not %s %s", tok, lit)
-		return p.scanUntilEntryAsBad(t.Pos())
-	}
-	t.Date = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
-
-	pos, tok, lit = p.scan()
-	if tok != token.STRING {
-		p.errorf(pos, "in transaction expected STRING not %s %s", tok, lit)
-		return p.scanUntilEntryAsBad(t.Pos())
-	}
-	t.Description = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
-
-	pos, tok, lit = p.scan()
-	if tok != token.NEWLINE {
-		p.errorf(pos, "in transaction expected NEWLINE not %s %s", tok, lit)
-		return p.scanUntilEntryAsBad(t.Pos())
-	}
-
-	var err error
-	t.Splits, err = p.parseSplits()
-	if err != nil {
-		// parseSplits already reported the error.
-		return p.scanUntilEntryAsBad(t.Pos())
-	}
-
-	pos, tok, lit = p.scan()
-	if tok != token.END {
-		panic("unexpected token")
-	}
-	t.EndTok = &ast.End{TokPos: pos}
-
-	pos, tok, lit = p.scan()
-	if tok != token.NEWLINE {
-		p.errorf(pos, "after end bad token %s %s", tok, lit)
-		_ = p.scanLine()
-	}
-
-	return t
-}
-
-func (p *parser) parseSplits() ([]ast.LineNode, error) {
-	var splits []ast.LineNode
-	for {
-		switch pos, tok, lit := p.scan(); tok {
-		case token.ACCTNAME:
-			p.unread(pos, tok, lit)
-			s := p.parseSplit()
-			splits = append(splits, s)
-		case token.NEWLINE:
-		case token.COMMENT:
-			p.parseCommentGroup(pos, lit)
-		case token.END:
-			p.unread(pos, tok, lit)
-			return splits, nil
-		case token.EOF:
-			p.unread(pos, tok, lit)
-			p.errorf(pos, "EOF in transaction")
-			return nil, errors.New("EOF in transaction")
-		default:
-			p.errorf(pos, "in split bad token %s %s", tok, lit)
-			n := p.scanLineAsBad(pos)
-			splits = append(splits, n)
-		}
-	}
-}
-
-func (p *parser) parseSplit() ast.LineNode {
-	s := &ast.SplitLine{}
-	pos, tok, lit := p.scan()
-	if tok != token.ACCTNAME {
-		panic(fmt.Sprintf("unexpected %s %s in split", tok, lit))
-	}
-	s.Account = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
-
-	pos, tok, lit = p.scan()
-	switch tok {
-	case token.NEWLINE:
-		return s
-	case token.DECIMAL:
-	default:
-		p.errorf(pos, "in split bad token %s %s", tok, lit)
-		return p.scanLineAsBad(s.Pos())
-	}
-	p.unread(pos, tok, lit)
-	a, err := p.parseAmount()
-	if err != nil {
-		return p.scanLineAsBad(s.Pos())
-	}
-	s.Amount = a
-	pos, tok, lit = p.scan()
-	if tok != token.NEWLINE {
-		p.errorf(pos, "in split bad token %s %s", tok, lit)
-		return p.scanLineAsBad(s.Pos())
-	}
-	return s
-}
-
-// parseAmount parses an amount.  If parsing fails, the scanning state
-// is returned to just before the offending token.
-// The error is reported via errorf.
-func (p *parser) parseAmount() (*ast.Amount, error) {
-	a := &ast.Amount{}
-	pos, tok, lit := p.scan()
-	if tok != token.DECIMAL {
-		p.unread(pos, tok, lit)
-		p.errorf(pos, "in amount expected DECIMAL not %s %s", tok, lit)
-		return nil, fmt.Errorf("bad token %s", tok)
-	}
-	a.Decimal = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
-
-	pos, tok, lit = p.scan()
-	if tok != token.USYMBOL {
-		p.unread(pos, tok, lit)
-		p.errorf(pos, "in amount expected USYMBOL not %s %s", tok, lit)
-		return nil, fmt.Errorf("bad token %s", tok)
-	}
-	a.Unit = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
-	return a, nil
-}
-
-func (p *parser) parseUnitDecl(pos token.Pos) ast.Entry {
 	u := &ast.UnitDecl{
-		TokPos: pos,
-	}
-
-	pos, tok, lit := p.scan()
-	if tok != token.USYMBOL {
-		p.errorf(pos, "in unit decl expected USYMBOL not %s %s", tok, lit)
-		p.unread(pos, tok, lit)
-		return p.scanLineAsBadEntry(u.Pos())
-	}
-	u.Unit = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
-
-	pos, tok, lit = p.scan()
-	if tok != token.DECIMAL {
-		p.errorf(pos, "in unit decl expected DECIMAL not %s %s", tok, lit)
-		p.unread(pos, tok, lit)
-		return p.scanLineAsBadEntry(u.Pos())
-	}
-	u.Scale = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
-
-	pos, tok, lit = p.scan()
-	if tok != token.NEWLINE {
-		p.errorf(pos, "in unit decl expected NEWLINE not %s %s", tok, lit)
-		return p.scanLineAsBadEntry(u.Pos())
+		TokPos: l.Pos(),
+		Unit:   tokVal(l.tokens[1]),
+		Scale:  tokVal(l.tokens[2]),
 	}
 	return u
 }
 
-func (p *parser) parseBalance(pos token.Pos, tok token.Token) ast.Entry {
+func (p *parser) parseTransaction(l *line) ast.Entry {
+	if err := matchTokens(l.tokens, token.TX, token.DATE, token.STRING); err != nil {
+		p.errorf(l.Pos(), "%s", err)
+		return &ast.BadEntry{From: l.Pos(), To: l.End()}
+	}
+	e := &ast.Transaction{
+		TokPos:      l.Pos(),
+		Date:        tokVal(l.tokens[1]),
+		Description: tokVal(l.tokens[2]),
+	}
+	for {
+		if p.current.EOF() {
+			p.errorf(l.End(), "unexpected EOF")
+			return e
+		}
+		l := p.nextLine()
+		if l.Empty() {
+			continue
+		}
+		if err := matchTokens(l.tokens, token.END); err == nil {
+			e.EndTok = &ast.End{TokPos: l.Pos()}
+			return e
+		}
+		e.Splits = append(e.Splits, p.parseSplit(l))
+	}
+}
+
+func (p *parser) parseSplit(l *line) ast.LineNode {
+	if err := matchTokens(l.tokens[:1], token.ACCTNAME); err != nil {
+		p.errorf(l.Pos(), "%s", err)
+		return &ast.BadLine{From: l.Pos(), To: l.End()}
+	}
+	s := &ast.SplitLine{
+		Account: tokVal(l.tokens[0]),
+	}
+	if len(l.tokens) == 1 {
+		return s
+	}
+	if err := matchTokens(l.tokens, token.ACCTNAME, token.DECIMAL, token.USYMBOL); err != nil {
+		p.errorf(l.Pos(), "%s", err)
+		return &ast.BadLine{From: l.Pos(), To: l.End()}
+	}
+	s.Amount = tokAmount(l.tokens[1:])
+	return s
+}
+
+func (p *parser) parseBalance(l *line) ast.Entry {
+	if len(l.tokens) < 3 {
+		p.errorf(l.Pos(), "invalid tokens for balance")
+		return &ast.BadEntry{From: l.Pos(), To: l.End()}
+	}
+	if err := matchTokens(l.tokens[1:3], token.DATE, token.ACCTNAME); err != nil {
+		p.errorf(l.Pos(), "%s", err)
+		return &ast.BadEntry{From: l.Pos(), To: l.End()}
+	}
 	h := ast.BalanceHeader{
-		TokPos: pos,
-		Token:  tok,
+		TokPos:  l.tokens[0].pos,
+		Token:   l.tokens[0].tok,
+		Date:    tokVal(l.tokens[1]),
+		Account: tokVal(l.tokens[2]),
 	}
 
-	pos, tok, lit := p.scan()
-	if tok != token.DATE {
-		p.errorf(pos, "in balance expected DATE not %s %s", tok, lit)
-		p.unread(pos, tok, lit)
-		return p.scanLineAsBadEntry(h.Pos())
+	if err := matchTokens(l.tokens[3:], token.DECIMAL, token.USYMBOL); err == nil {
+		return &ast.SingleBalance{
+			BalanceHeader: h,
+			Amount:        tokAmount(l.tokens[3:]),
+		}
 	}
-	h.Date = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
 
-	pos, tok, lit = p.scan()
-	if tok != token.ACCTNAME {
-		p.errorf(pos, "in balance expected ACCTNAME not %s %s", tok, lit)
-		p.unread(pos, tok, lit)
-		return p.scanLineAsBadEntry(h.Pos())
-	}
-	h.Account = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
-
-	pos, tok, lit = p.scan()
-	switch tok {
-	case token.DECIMAL:
-		p.unread(pos, tok, lit)
-		return p.parseBalanceSingleAmount(h)
-	case token.NEWLINE:
-		return p.parseBalanceMultipleAmounts(h)
-	default:
-		p.errorf(pos, "in balance unexpected %s %s", tok, lit)
-		p.unread(pos, tok, lit)
-		return p.scanUntilEntryAsBad(h.Pos())
-	}
-}
-
-// parseBalanceSingleAmount parses the remainder of a single amount balance.
-// If parsing fails, the scanning state is returned to just before the
-// offending token.
-func (p *parser) parseBalanceSingleAmount(h ast.BalanceHeader) ast.Entry {
-	b := &ast.SingleBalance{
-		BalanceHeader: h,
-	}
-	a, err := p.parseAmount()
-	if err != nil {
-		return p.scanLineAsBadEntry(b.Pos())
-	}
-	b.Amount = a
-
-	pos, tok, lit := p.scan()
-	if tok != token.NEWLINE {
-		p.errorf(pos, "in balance expected NEWLINE not %s %s", tok, lit)
-		return p.scanLineAsBadEntry(b.Pos())
-	}
-	return b
-}
-
-func (p *parser) parseBalanceMultipleAmounts(h ast.BalanceHeader) ast.Entry {
-	b := &ast.MultiBalance{
+	e := &ast.MultiBalance{
 		BalanceHeader: h,
 	}
 	for {
-		switch pos, tok, lit := p.scan(); tok {
-		case token.DECIMAL:
-			p.unread(pos, tok, lit)
-			a, err := p.parseAmount()
-			if err != nil {
-				a := p.scanLineAsBad(pos)
-				b.Amounts = append(b.Amounts, a)
-				continue
-			}
-			b.Amounts = append(b.Amounts, &ast.AmountLine{Amount: a})
-		case token.NEWLINE:
-		case token.COMMENT:
-			p.parseCommentGroup(pos, lit)
-		case token.END:
-			b.EndTok = &ast.End{TokPos: pos}
-			pos, tok, lit = p.scan()
-			if tok != token.NEWLINE {
-				p.errorf(pos, "after end bad token %s %s", tok, lit)
-				_ = p.scanLine()
-			}
-			return b
-		case token.EOF:
-			p.unread(pos, tok, lit)
-			p.errorf(pos, "EOF in multi-line balance")
-			return p.scanUntilEntryAsBad(h.Pos())
-		default:
-			p.errorf(pos, "in balance bad token %s %s", tok, lit)
-			a := p.scanLineAsBad(pos)
-			b.Amounts = append(b.Amounts, a)
+		if p.current.EOF() {
+			p.errorf(l.End(), "unexpected EOF")
+			return e
 		}
+		l := p.nextLine()
+		if l.Empty() {
+			continue
+		}
+		if err := matchTokens(l.tokens, token.END); err == nil {
+			e.EndTok = &ast.End{TokPos: l.Pos()}
+			return e
+		}
+		if err := matchTokens(l.tokens, token.DECIMAL, token.USYMBOL); err != nil {
+			p.errorf(l.Pos(), "%s", err)
+			n := &ast.BadLine{From: l.Pos(), To: l.End()}
+			e.Amounts = append(e.Amounts, n)
+			continue
+		}
+		n := &ast.AmountLine{Amount: tokAmount(l.tokens)}
+		e.Amounts = append(e.Amounts, n)
 	}
 }
 
-func (p *parser) parseDisableAccount(pos token.Pos) ast.Entry {
+func (p *parser) parseDisableAccount(l *line) ast.Entry {
+	if err := matchTokens(l.tokens, token.DISABLE, token.DATE, token.ACCTNAME); err != nil {
+		p.errorf(l.Pos(), "%s", err)
+		return &ast.BadEntry{From: l.Pos(), To: l.End()}
+	}
 	e := &ast.DisableAccount{
-		TokPos: pos,
+		TokPos:  l.Pos(),
+		Date:    tokVal(l.tokens[1]),
+		Account: tokVal(l.tokens[2]),
 	}
-
-	pos, tok, lit := p.scan()
-	if tok != token.DATE {
-		p.errorf(pos, "in disable account expected DATE not %s %s", tok, lit)
-		p.unread(pos, tok, lit)
-		return p.scanLineAsBadEntry(e.Pos())
-	}
-	e.Date = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
-
-	pos, tok, lit = p.scan()
-	if tok != token.ACCTNAME {
-		p.errorf(pos, "in disable account expected ACCTNAME not %s %s", tok, lit)
-		p.unread(pos, tok, lit)
-		return p.scanLineAsBadEntry(e.Pos())
-	}
-	e.Account = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
-
-	pos, tok, lit = p.scan()
-	if tok != token.NEWLINE {
-		p.errorf(pos, "in disable account expected NEWLINE not %s %s", tok, lit)
-		return p.scanLineAsBadEntry(e.Pos())
-	}
-
 	return e
 }
 
-func (p *parser) parseDeclareAccount(pos token.Pos) ast.Entry {
+func (p *parser) parseDeclareAccount(l *line) ast.Entry {
+	if err := matchTokens(l.tokens, token.ACCOUNT, token.ACCTNAME); err != nil {
+		p.errorf(l.Pos(), "%s", err)
+		return &ast.BadEntry{From: l.Pos(), To: l.End()}
+	}
 	e := &ast.DeclareAccount{
-		TokPos: pos,
+		TokPos:  l.Pos(),
+		Account: tokVal(l.tokens[1]),
 	}
-
-	pos, tok, lit := p.scan()
-	if tok != token.ACCTNAME {
-		p.errorf(pos, "in declare account expected ACCTNAME not %s %s", tok, lit)
-		p.unread(pos, tok, lit)
-		return p.scanLineAsBadEntry(e.Pos())
+	for {
+		if p.current.EOF() {
+			p.errorf(l.End(), "unexpected EOF")
+			return e
+		}
+		l := p.nextLine()
+		if l.Empty() {
+			continue
+		}
+		if err := matchTokens(l.tokens, token.END); err == nil {
+			e.EndTok = &ast.End{TokPos: l.Pos()}
+			return e
+		}
+		if err := matchTokens(l.tokens, token.STRING, token.STRING); err != nil {
+			p.errorf(l.Pos(), "%s", err)
+			n := &ast.BadLine{From: l.Pos(), To: l.End()}
+			e.Metadata = append(e.Metadata, n)
+			continue
+		}
+		n := &ast.MetadataLine{
+			Key: tokVal(l.tokens[0]),
+			Val: tokVal(l.tokens[1]),
+		}
+		e.Metadata = append(e.Metadata, n)
 	}
-	e.Account = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
-
-	var err error
-	e.Metadata, err = p.parseMetadataLines()
-	if err != nil {
-		// parseMetadata already reported the error.
-		return p.scanUntilEntryAsBad(e.Pos())
-	}
-
-	pos, tok, lit = p.scan()
-	if tok != token.END {
-		panic("unexpected token")
-	}
-	e.EndTok = &ast.End{TokPos: pos}
-
-	pos, tok, lit = p.scan()
-	if tok != token.NEWLINE {
-		p.errorf(pos, "after end bad token %s %s", tok, lit)
-		_ = p.scanLine()
-	}
-
-	return e
 }
 
-func (p *parser) parseMetadataLines() ([]ast.LineNode, error) {
-	var lines []ast.LineNode
-	for {
-		switch pos, tok, lit := p.scan(); tok {
-		case token.STRING:
-			p.unread(pos, tok, lit)
-			s := p.parseMetadata()
-			lines = append(lines, s)
-		case token.NEWLINE:
-		case token.COMMENT:
-			p.parseCommentGroup(pos, lit)
-		case token.END:
-			p.unread(pos, tok, lit)
-			return lines, nil
-		case token.EOF:
-			p.unread(pos, tok, lit)
-			p.errorf(pos, "EOF in declare account")
-			return nil, errors.New("EOF in declare account")
-		default:
-			p.errorf(pos, "in metadata bad token %s %s", tok, lit)
-			n := p.scanLineAsBad(pos)
-			lines = append(lines, n)
+// Input should start with DECIMAL USYMBOL tokens.
+// This function doesn't check the input.
+func tokAmount(t []tokenInfo) *ast.Amount {
+	if len(t) < 2 || matchTokens(t[:2], token.DECIMAL, token.USYMBOL) != nil {
+		panic(fmt.Sprintf("bad tokens %v", t))
+	}
+	return &ast.Amount{
+		Decimal: tokVal(t[0]),
+		Unit:    tokVal(t[1]),
+	}
+}
+
+func tokVal(t tokenInfo) *ast.BasicValue {
+	return &ast.BasicValue{ValuePos: t.pos, Kind: t.tok, Value: t.lit}
+}
+
+func matchTokens(t []tokenInfo, spec ...token.Token) error {
+	if len(t) != len(spec) {
+		return &matchError{t, spec}
+	}
+	for i := 0; i < len(spec); i++ {
+		if t[i].tok != spec[i] {
+			return &matchError{t, spec}
 		}
 	}
+	return nil
 }
 
-func (p *parser) parseMetadata() ast.LineNode {
-	m := &ast.MetadataLine{}
+// error type to delay string formatting
+type matchError struct {
+	t    []tokenInfo
+	spec []token.Token
+}
 
-	pos, tok, lit := p.scan()
-	if tok != token.STRING {
-		panic(fmt.Sprintf("unexpected %s %s in metadata", tok, lit))
-	}
-	m.Key = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
+func (e *matchError) Error() string {
+	return fmt.Sprintf("tokens %s do not match %s", formatTokens(e.t), e.spec)
+}
 
-	pos, tok, lit = p.scan()
-	if tok != token.STRING {
-		p.errorf(pos, "in metadata bad token %s %s", tok, lit)
-		return p.scanLineAsBad(m.Pos())
+func formatTokens(ti []tokenInfo) string {
+	var b strings.Builder
+	for i, t := range ti {
+		if i != 0 {
+			b.WriteString(" ")
+		}
+		b.WriteString(t.tok.String())
 	}
-	m.Val = &ast.BasicValue{ValuePos: pos, Kind: tok, Value: lit}
-
-	pos, tok, lit = p.scan()
-	if tok != token.NEWLINE {
-		p.errorf(pos, "in metadata bad token %s %s", tok, lit)
-		return p.scanLineAsBad(m.Pos())
-	}
-	return m
+	return b.String()
 }
