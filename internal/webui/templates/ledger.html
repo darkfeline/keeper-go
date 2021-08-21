@@ -20,15 +20,15 @@
       <td>{{.Date}}</td>
       <td>{{.Description}}</td>
       <td>{{.Position}}</td>
-      {{- if eq .Amount.Number 0}}
+      {{- if .Amount.Number.Zero}}
       <td></td>
       <td></td>
-      {{else if gt .Amount.Number 0}}
+      {{else if .Amount.Number.IsNeg}}
+      <td></td>
       <td class="amount">{{.Amount}}</td>
-      <td></td>
       {{else}}
-      <td></td>
       <td class="amount">{{.Amount}}</td>
+      <td></td>
       {{- end}}
       {{- if .Balance.Unit.Symbol}}
       <td class="amount">{{.Balance}}</td>

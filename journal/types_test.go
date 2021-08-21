@@ -58,7 +58,7 @@ func ExampleAccount_Under() {
 func ExampleBalance_Add() {
 	b := make(Balance)
 	b.Add(Amount{
-		Number: 500,
+		Number: Number{500, 0},
 		Unit:   Unit{Symbol: "USD", Scale: 100},
 	})
 	fmt.Println(b)
@@ -70,8 +70,8 @@ func TestBalance_Add_empty_balance(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
 	b := make(Balance)
-	b.Add(Amount{Number: 12345, Unit: u})
-	want := Balance{u: 12345}
+	b.Add(Amount{Number: Number{12345, 0}, Unit: u})
+	want := Balance{u: Number{12345, 0}}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
 	}
@@ -80,9 +80,9 @@ func TestBalance_Add_empty_balance(t *testing.T) {
 func TestBalance_Add_existing_balance(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
-	b := Balance{u: 10000}
-	b.Add(Amount{Number: 12345, Unit: u})
-	want := Balance{u: 22345}
+	b := Balance{u: Number{10000, 0}}
+	b.Add(Amount{Number: Number{12345, 0}, Unit: u})
+	want := Balance{u: Number{22345, 0}}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
 	}
@@ -93,11 +93,11 @@ func TestBalance_Add_zeroed_accounts(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	b := Balance{
-		u2: 3200,
-		u:  123,
+		u2: Number{3200, 0},
+		u:  Number{123, 0},
 	}
-	b.Add(Amount{Number: -123, Unit: u})
-	want := Balance{u2: 3200}
+	b.Add(Amount{Number: Number{-123, 0}, Unit: u})
+	want := Balance{u2: Number{3200, 0}}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
 	}
@@ -107,10 +107,10 @@ func TestBalance_Neg(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
 	b := Balance{
-		u: 12345,
+		u: Number{12345, 0},
 	}
 	b.Neg()
-	want := Balance{u: -12345}
+	want := Balance{u: Number{-12345, 0}}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
 	}
@@ -121,12 +121,12 @@ func TestBalance_Equal_ignores_order(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	a := Balance{
-		u:  123,
-		u2: 3200,
+		u:  Number{123, 0},
+		u2: Number{3200, 0},
 	}
 	b := Balance{
-		u:  123,
-		u2: 3200,
+		u:  Number{123, 0},
+		u2: Number{3200, 0},
 	}
 	if !a.Equal(b) {
 		t.Errorf("a.Equal(b) returned false")
@@ -138,11 +138,11 @@ func TestBalance_Equal_different_length(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	a := Balance{
-		u2: 3200,
+		u2: Number{3200, 0},
 	}
 	b := Balance{
-		u:  123,
-		u2: 3200,
+		u:  Number{123, 0},
+		u2: Number{3200, 0},
 	}
 	if a.Equal(b) {
 		t.Errorf("a.Equal(b) returned true")
@@ -157,12 +157,12 @@ func TestBalance_Equal_different_amount(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	a := Balance{
-		u2: 3200,
-		u:  123,
+		u2: Number{3200, 0},
+		u:  Number{123, 0},
 	}
 	b := Balance{
-		u:  123,
-		u2: 200,
+		u:  Number{123, 0},
+		u2: Number{200, 0},
 	}
 	if a.Equal(b) {
 		t.Errorf("a.Equal(b) returned true")
@@ -174,11 +174,11 @@ func TestBalance_Equal_ignore_zero(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	a := Balance{
-		u2: 3200,
-		u:  0,
+		u2: Number{3200, 0},
+		u:  Number{0, 0},
 	}
 	b := Balance{
-		u2: 3200,
+		u2: Number{3200, 0},
 	}
 	if !a.Equal(b) {
 		t.Errorf("a.Equal(b) returned false")
@@ -191,9 +191,9 @@ func TestBalance_Equal_ignore_zero(t *testing.T) {
 func TestBalance_String(t *testing.T) {
 	t.Parallel()
 	b := Balance{
-		Unit{Symbol: "AAA", Scale: 1000}: -123,
-		Unit{Symbol: "BBB", Scale: 1000}: -321,
-		Unit{Symbol: "CCC", Scale: 1000}: 0,
+		Unit{Symbol: "AAA", Scale: 1000}: Number{-123, 0},
+		Unit{Symbol: "BBB", Scale: 1000}: Number{-321, 0},
+		Unit{Symbol: "CCC", Scale: 1000}: Number{0, 0},
 	}
 	got := b.String()
 	want := "-0.123 AAA, -0.321 BBB"
@@ -205,14 +205,14 @@ func TestBalance_String(t *testing.T) {
 func TestBalance_Amounts(t *testing.T) {
 	t.Parallel()
 	b := Balance{
-		Unit{Symbol: "AAA", Scale: 1000}: -123,
-		Unit{Symbol: "BBB", Scale: 1000}: -321,
-		Unit{Symbol: "CCC", Scale: 1000}: 0,
+		Unit{Symbol: "AAA", Scale: 1000}: Number{-123, 0},
+		Unit{Symbol: "BBB", Scale: 1000}: Number{-321, 0},
+		Unit{Symbol: "CCC", Scale: 1000}: Number{0, 0},
 	}
 	got := b.Amounts()
 	want := []Amount{
-		Amount{Unit: Unit{Symbol: "AAA", Scale: 1000}, Number: -123},
-		Amount{Unit: Unit{Symbol: "BBB", Scale: 1000}, Number: -321},
+		Amount{Unit: Unit{Symbol: "AAA", Scale: 1000}, Number: Number{-123, 0}},
+		Amount{Unit: Unit{Symbol: "BBB", Scale: 1000}, Number: Number{-321, 0}},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("Amounts() mismatch (-want +got):\n%s", diff)

@@ -266,10 +266,12 @@ func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 		for _, am := range delta[a].Amounts() {
-			if am.Number > 0 {
-				infl = append(infl, fl{a, am})
-			} else if am.Number < 0 {
+			switch {
+			case am.Number.IsNeg():
 				outfl = append(outfl, fl{a, am})
+			case am.Number.Zero():
+			default:
+				infl = append(infl, fl{a, am})
 			}
 		}
 	}
@@ -407,12 +409,14 @@ func makeTrialRows(a []journal.Account, b journal.Balances) ([]templates.TrialRo
 	for _, a := range a {
 		for i, amt := range b[a].Amounts() {
 			e := templates.TrialRow{}
-			if amt.Number > 0 {
-				e.DebitBal = amt
-				t.Debit.Add(amt)
-			} else {
+			switch {
+			case amt.Number.IsNeg():
 				e.CreditBal = amt
 				t.Credit.Add(amt)
+			case amt.Number.Zero():
+			default:
+				e.DebitBal = amt
+				t.Debit.Add(amt)
 			}
 			if i == 0 {
 				e.Account = string(a)
@@ -468,7 +472,7 @@ func convertBalance(e *journal.BalanceAssert) []templates.LedgerRow {
 			Entry:   e,
 			Balance: e.Actual.Amount(u),
 		}
-		if e.Diff[u] == 0 {
+		if e.Diff[u].Zero() {
 			le.Description = "(" + n + ")"
 		} else {
 			le.Description = fmt.Sprintf("(%s error, declared %s, diff %s)",

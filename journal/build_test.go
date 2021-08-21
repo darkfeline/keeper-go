@@ -42,7 +42,7 @@ end
 			EntryDate: civil.Date{2001, 2, 3},
 			EntryPos:  token.Position{Offset: 13, Line: 2, Column: 1},
 			Account:   "Some:account",
-			Declared:  Balance{u: -120},
+			Declared:  Balance{u: Number{-120, 0}},
 		},
 		&Transaction{
 			EntryDate:   civil.Date{2001, 2, 3},
@@ -51,11 +51,11 @@ end
 			Splits: []Split{
 				{
 					Account: "Some:account",
-					Amount:  Amount{Number: -120, Unit: u},
+					Amount:  Amount{Number: Number{-120, 0}, Unit: u},
 				},
 				{
 					Account: "Expenses:Stuff",
-					Amount:  Amount{Number: 120, Unit: u},
+					Amount:  Amount{Number: Number{120, 0}, Unit: u},
 				},
 			},
 		},
@@ -118,36 +118,6 @@ func TestBuildEntries_disable(t *testing.T) {
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestCombineDecimalUnit(t *testing.T) {
-	t.Parallel()
-	cases := []struct {
-		d    decimal
-		u    Unit
-		want int64
-	}{
-		{decimal{5, 1000}, Unit{Symbol: "Foo", Scale: 1000}, 5},
-		{decimal{5, 10}, Unit{Symbol: "Foo", Scale: 1000}, 500},
-		{decimal{50, 10}, Unit{Symbol: "Foo", Scale: 1}, 5},
-	}
-	for _, c := range cases {
-		c := c
-		t.Run(fmt.Sprintf("%v %v", c.d, c.u), func(t *testing.T) {
-			t.Parallel()
-			got, err := combineDecimalUnit(c.d, c.u)
-			if err != nil {
-				t.Error(err)
-			}
-			want := Amount{
-				Number: c.want,
-				Unit:   c.u,
-			}
-			if diff := cmp.Diff(want, got); diff != "" {
-				t.Errorf("amount mismatch (-want +got):\n%s", diff)
-			}
-		})
 	}
 }
 

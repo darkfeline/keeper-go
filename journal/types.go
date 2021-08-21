@@ -15,8 +15,10 @@
 package journal
 
 import (
+	"math/big"
 	"sort"
 	"strings"
+	"sync"
 )
 
 // Account is a bookkeeping account.
@@ -57,15 +59,82 @@ func (a Account) Under(parent Account) bool {
 	return strings.HasPrefix(string(a), string(parent)+":")
 }
 
+// A Number is n[0] + n[1] * (1 << 63)
+type Number [2]int64
+
+const numWidth = 1 << 63
+
+// Neg returns the number with its sign negated.
+func (n Number) Neg() Number {
+	for i := range n {
+		n[i] = -n[i]
+	}
+	return n
+}
+
+// IsNeg returns true if the number is negative.
+func (n Number) IsNeg() bool {
+	for i := range n {
+		if n[i] < 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// Zero returns true if the number is zero.
+func (n Number) Zero() bool {
+	for i := range n {
+		if n[i] != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func (n Number) setRat(r *big.Rat) {
+	r2 := newRat()
+	defer ratPool.Put(r2)
+	r.SetInt64(n[1])
+	r.Mul(r, r2.SetUint64(numWidth))
+	r.Add(r, r2.SetInt64(n[0]))
+}
+
+var intPool = sync.Pool{
+	New: func() interface{} { return big.NewInt(0) },
+}
+
+func newInt() *big.Int {
+	r := intPool.Get().(*big.Int)
+	r.SetInt64(0)
+	return r
+}
+
+// modifies input
+func numberFromInt(i *big.Int) (Number, bool) {
+	i2 := newInt()
+	defer intPool.Put(i2)
+	i3 := newInt()
+	defer intPool.Put(i3)
+	i.QuoRem(i, i2.SetUint64(numWidth), i3)
+	if !i3.IsInt64() {
+		panic(i3)
+	}
+	if !i.IsInt64() {
+		return Number{}, false
+	}
+	return Number{i3.Int64(), i.Int64()}, true
+}
+
 // An Amount is an amount of a certain unit, e.g., currency or commodity.
 type Amount struct {
-	Number int64
+	Number Number
 	Unit   Unit
 }
 
 // Neg returns the amount with its sign negated.
 func (a Amount) Neg() Amount {
-	a.Number = -a.Number
+	a.Number = a.Number.Neg()
 	return a
 }
 
@@ -97,17 +166,24 @@ func (u Unit) String() string {
 }
 
 // A Balance represents a balance of amounts of various units.
-type Balance map[Unit]int64
+type Balance map[Unit]Number
 
 // Add adds an amount to the balance.
 func (b Balance) Add(a Amount) {
-	b[a.Unit] += a.Number
+	v := b[a.Unit]
+	for i := range v {
+		v[i] += a.Number[i]
+	}
+	b[a.Unit] = v
 }
 
 // AddBal adds the amounts of the argument balance.
 func (b Balance) AddBal(b2 Balance) {
 	for k, v := range b2 {
-		b[k] += v
+		b.Add(Amount{
+			Number: v,
+			Unit:   k,
+		})
 	}
 }
 
@@ -118,15 +194,15 @@ func (b Balance) Sub(a Amount) {
 
 // Neg negates the sign of the balance.
 func (b Balance) Neg() {
-	for u, n := range b {
-		b[u] = -n
+	for k, v := range b {
+		b[k] = v.Neg()
 	}
 }
 
 // Empty returns true if the balance is empty/zero.
 func (b Balance) Empty() bool {
-	for _, n := range b {
-		if n != 0 {
+	for _, v := range b {
+		if !v.Zero() {
 			return false
 		}
 	}
@@ -148,16 +224,16 @@ func (b Balance) Amount(u Unit) Amount {
 // Amounts returns the amounts in the balance.
 // The amounts are sorted by unit.
 func (b Balance) Amounts() []Amount {
-	var a []Amount
-	for u, n := range b {
-		if n != 0 {
-			a = append(a, Amount{Unit: u, Number: n})
+	var as []Amount
+	for k, v := range b {
+		if !v.Zero() {
+			as = append(as, Amount{Unit: k, Number: v})
 		}
 	}
-	sort.Slice(a, func(i, j int) bool {
-		return a[i].Unit.Symbol < a[j].Unit.Symbol
+	sort.Slice(as, func(i, j int) bool {
+		return as[i].Unit.Symbol < as[j].Unit.Symbol
 	})
-	return a
+	return as
 }
 
 // Equal returns true if the two balances are equal.
@@ -173,9 +249,9 @@ func (b Balance) Equal(b2 Balance) bool {
 // If called with a nil receiver, returns an empty initialized Balance.
 func (b Balance) Copy() Balance {
 	new := make(Balance)
-	for u, n := range b {
-		if n != 0 {
-			new[u] = n
+	for k, v := range b {
+		if !v.Zero() {
+			new[k] = v
 		}
 	}
 	return new

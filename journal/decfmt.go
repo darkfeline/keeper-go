@@ -15,33 +15,55 @@
 package journal
 
 import (
-	"fmt"
+	"math/big"
 	"strings"
+	"sync"
 )
+
+var ratPool = sync.Pool{
+	New: func() interface{} { return big.NewRat(0, 1) },
+}
+
+func newRat() *big.Rat {
+	r := ratPool.Get().(*big.Rat)
+	r.SetInt64(0)
+	return r
+}
 
 // decFormat does decimal formatting for n/scale.
 // scale must be a positive multiple of 10.
-func decFormat(n int64, scale int64) string {
-	var b strings.Builder
-	if n < 0 {
-		b.WriteRune('-')
-		n = -n
+func decFormat(n Number, scale int64) string {
+	r := newRat()
+	defer ratPool.Put(r)
+	r2 := newRat()
+	defer ratPool.Put(r2)
+	n.setRat(r)
+	r.Quo(r, r2.SetInt64(scale))
+
+	s := r.FloatString(log10(scale))
+	digits := 0
+count:
+	for _, r := range s {
+		switch r {
+		case '-':
+		case '.':
+			break count
+		default:
+			digits++
+		}
 	}
-	logScale := log10(scale)
-	d := fmt.Sprintf("%0*d", logScale+1, n)
-	split := len(d) - logScale
-	before, after := d[:split], d[split:]
-	for i, r := range before {
+	var b strings.Builder
+	for _, r := range s {
 		b.WriteRune(r)
-		if i := len(before) - i; i > 1 && i%3 == 1 {
+		// Don't need to print more commas at this point.
+		if digits < 3 {
+			continue
+		}
+		digits--
+		if digits%3 == 0 {
 			b.WriteRune(',')
 		}
 	}
-	if len(after) == 0 {
-		return b.String()
-	}
-	b.WriteRune('.')
-	b.WriteString(after)
 	return b.String()
 }
 

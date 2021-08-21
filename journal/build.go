@@ -225,9 +225,13 @@ func (b *builder) buildAmount(n *ast.Amount) (Amount, error) {
 	assertKind(n.Decimal, token.DECIMAL)
 	assertKind(n.Unit, token.USYMBOL)
 
-	d, err := parseDecimal(n.Decimal.Value)
+	s := n.Decimal.Value
+	s = strings.Replace(s, ",", "", -1)
+	r := newRat()
+	defer ratPool.Put(r)
+	_, err := fmt.Sscan(s, r)
 	if err != nil {
-		b.errorf(n.Decimal.Pos(), "%s", err)
+		b.errorf(n.Unit.Pos(), "%s", err)
 		return Amount{}, err
 	}
 
@@ -242,10 +246,22 @@ func (b *builder) buildAmount(n *ast.Amount) (Amount, error) {
 		return Amount{}, fmt.Errorf("undeclared unit %s", sym)
 	}
 
-	a, err := combineDecimalUnit(d, u)
-	if err != nil {
-		b.errorf(n.Pos(), "%s", err)
-		return Amount{}, err
+	r2 := newRat()
+	defer ratPool.Put(r2)
+	r.Mul(r, r2.SetInt64(u.Scale))
+	if !r.IsInt() {
+		b.errorf(n.Unit.Pos(), "scaled unit amount is fractional")
+		return Amount{}, fmt.Errorf("scaled unit amount is fractional")
+	}
+
+	num, ok := numberFromInt(r.Num())
+	if !ok {
+		b.errorf(n.Unit.Pos(), "%q too big", n.Decimal.Value)
+		return Amount{}, fmt.Errorf("%q too big", n.Decimal.Value)
+	}
+	a := Amount{
+		Number: num,
+		Unit:   u,
 	}
 	return a, nil
 }
@@ -314,22 +330,6 @@ func assertKind(n *ast.BasicValue, tok token.Token) {
 	if n.Kind != tok {
 		panic(fmt.Sprintf("token was %s not %s", n.Kind, tok))
 	}
-}
-
-// combineDecimalUnit combines a decimal magnitude and unit into an amount.
-func combineDecimalUnit(d decimal, u Unit) (Amount, error) {
-	if d.scale > u.Scale {
-		rescale := d.scale / u.Scale
-		if d.number%rescale != 0 {
-			return Amount{}, fmt.Errorf("%v fractions too small for unit %v", d, u)
-		}
-		d.number /= rescale
-		d.scale /= rescale
-	}
-	return Amount{
-		Number: d.number * u.Scale / d.scale,
-		Unit:   u,
-	}, nil
 }
 
 func parseString(src string) string {
