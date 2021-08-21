@@ -16,6 +16,8 @@ package journal
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"unicode"
 
 	"cloud.google.com/go/civil"
@@ -268,12 +270,9 @@ func (b *builder) addUnit(n *ast.UnitDecl) {
 	assertKind(n.Unit, token.USYMBOL)
 	assertKind(n.Scale, token.DECIMAL)
 
-	d, err := parseDecimal(n.Scale.Value)
-	if err != nil {
-		b.errorf(n.Scale.Pos(), "%s", err)
-		return
-	}
-	scale, err := decimalToInt64(d)
+	s := n.Scale.Value
+	s = strings.Replace(s, ",", "", -1)
+	scale, err := strconv.ParseInt(s, 10, 64)
 	switch {
 	case err != nil:
 		b.errorf(n.Scale.Pos(), "%s", err)
@@ -353,13 +352,6 @@ func parseString(src string) string {
 		out = append(out, r)
 	}
 	return string(out)
-}
-
-func decimalToInt64(d decimal) (int64, error) {
-	if d.number%d.scale != 0 {
-		return 0, fmt.Errorf("decimal to int64 %v: non-integer", d)
-	}
-	return d.number / d.scale, nil
 }
 
 func isPower10(n int64) bool {
