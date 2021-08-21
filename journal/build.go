@@ -234,7 +234,7 @@ func (b *builder) buildAmount(n *ast.Amount) (Amount, error) {
 	sym := n.Unit.Value
 	if !validateUnit(sym) {
 		b.errorf(n.Unit.Pos(), "bad unit %s", sym)
-		return Amount{}, err
+		return Amount{}, fmt.Errorf("bad unit %s", sym)
 	}
 	u, ok := b.units[sym]
 	if !ok {
