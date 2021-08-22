@@ -24,43 +24,45 @@ import (
 	"go.felesatra.moe/keeper/journal"
 )
 
-type DCPair struct {
+// A Pair is a Debit-Credit amount pair (one unit).
+type Pair struct {
 	Debit  journal.Amount
 	Credit journal.Amount
 }
 
-type DCBalance struct {
+// A PairBalance is a Debit-Credit balance pair (multiple units).
+type PairBalance struct {
 	Debit  journal.Balance
 	Credit journal.Balance
 }
 
-func NewDCBalance() DCBalance {
-	return DCBalance{
+func NewPairBalance() PairBalance {
+	return PairBalance{
 		Debit:  make(journal.Balance),
 		Credit: make(journal.Balance),
 	}
 }
 
-type TrialBalanceRow struct {
-	Account journal.Account
-	Pairs   []DCPair
-}
-
 type TrialBalance struct {
 	Rows  []TrialBalanceRow
-	Total DCBalance
+	Total PairBalance
+}
+
+type TrialBalanceRow struct {
+	Account journal.Account
+	Pairs   []Pair
 }
 
 func NewTrialBalance(j *journal.Journal) TrialBalance {
 	b := j.Balances
-	total := NewDCBalance()
+	total := NewPairBalance()
 	var r []TrialBalanceRow
 	for _, a := range sortedAccounts(j) {
 		e := TrialBalanceRow{
 			Account: a,
 		}
 		for _, amt := range b[a].Amounts() {
-			p := DCPair{}
+			p := Pair{}
 			switch {
 			case amt.Number.IsNeg():
 				p.Credit = amt
