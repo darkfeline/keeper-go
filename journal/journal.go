@@ -48,7 +48,7 @@ import (
 	"cloud.google.com/go/civil"
 )
 
-// A Journal represents accounting information compiled from keeper file source.
+// A Journal represents bookkeeping information compiled from keeper file source.
 type Journal struct {
 	// Entries are all of the entries, sorted chronologically.
 	Entries []Entry
