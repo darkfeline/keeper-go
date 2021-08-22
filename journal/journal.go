@@ -33,7 +33,7 @@ does not work if more than one unit is unbalanced.
 Balance assertions apply at the end of the day, to match how balances
 are handled in practice.
 
-Total balance assertions apply to a tree of accounts.
+Tree balance assertions apply to a tree of accounts.
 
 Disabled accounts prevent transactions from posting to that account.
 Disable account entries also assert that the account balance is zero.
