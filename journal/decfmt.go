@@ -55,8 +55,7 @@ count:
 	var b strings.Builder
 	for _, r := range s {
 		b.WriteRune(r)
-		// Don't need to print more commas at this point.
-		if digits < 3 {
+		if r == '-' || digits < 3 {
 			continue
 		}
 		digits--
