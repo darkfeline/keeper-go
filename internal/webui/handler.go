@@ -100,8 +100,7 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	r := makeTrialRows(reports.NewTrialBalance(j))
-	d := templates.TrialData{Rows: r}
+	d := makeTrialData(reports.NewTrialBalance(j))
 	h.execute(w, templates.Trial, d)
 }
 
@@ -374,7 +373,7 @@ func getQueryAccount(req *http.Request) journal.Account {
 	return journal.Account(v[0])
 }
 
-func makeTrialRows(t reports.TrialBalance) []templates.TrialRow {
+func makeTrialData(t reports.TrialBalance) templates.TrialData {
 	var rs []templates.TrialRow
 	for _, tr := range t.Rows {
 		r := templates.TrialRow{Account: string(tr.Account)}
@@ -392,7 +391,7 @@ func makeTrialRows(t reports.TrialBalance) []templates.TrialRow {
 		rs = append(rs, r)
 		r = templates.TrialRow{}
 	}
-	return rs
+	return templates.TrialData{Rows: rs}
 }
 
 func makeStmtRows(a []journal.Account, b journal.Balances) ([]templates.StmtRow, journal.Balance) {
