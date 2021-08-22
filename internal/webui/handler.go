@@ -77,14 +77,13 @@ func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	type t = struct {
-		Account journal.Account
-		Empty   bool
-	}
 	var d templates.AccountsData
 	for _, a := range sortedAccounts(j) {
 		if j.Accounts[a].Disabled == nil {
-			d.Accounts = append(d.Accounts, t{
+			d.Accounts = append(d.Accounts, struct {
+				Account journal.Account
+				Empty   bool
+			}{
 				Account: a,
 				Empty:   j.Balances[a].Empty(),
 			})
