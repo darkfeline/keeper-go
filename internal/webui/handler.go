@@ -380,32 +380,10 @@ func getQueryAccount(req *http.Request) journal.Account {
 	return journal.Account(v[0])
 }
 
-type totalBalance struct {
-	Debit  journal.Balance
-	Credit journal.Balance
-}
-
-func (t totalBalance) Rows(desc string) []templates.TrialRow {
-	var r []templates.TrialRow
-	for i, u := range balanceUnits(t.Debit, t.Credit) {
-		e := templates.TrialRow{
-			DebitBal:  t.Debit.Amount(u),
-			CreditBal: t.Credit.Amount(u),
-		}
-		if i == 0 {
-			e.Account = desc
-		}
-		r = append(r, e)
-	}
-	return r
-}
-
 func makeTrialRows(t reports.TrialBalance) []templates.TrialRow {
 	var rs []templates.TrialRow
 	for _, tr := range t.Rows {
-		r := templates.TrialRow{
-			Account: string(tr.Account),
-		}
+		r := templates.TrialRow{Account: string(tr.Account)}
 		for _, p := range tr.Pairs {
 			r.DebitBal = p.Debit
 			r.CreditBal = p.Credit
@@ -413,9 +391,7 @@ func makeTrialRows(t reports.TrialBalance) []templates.TrialRow {
 			r = templates.TrialRow{}
 		}
 	}
-	r := templates.TrialRow{
-		Account: "Total",
-	}
+	r := templates.TrialRow{Account: "Total"}
 	for _, u := range balanceUnits(t.Total.Debit, t.Total.Credit) {
 		r.DebitBal = t.Total.Debit.Amount(u)
 		r.CreditBal = t.Total.Credit.Amount(u)
