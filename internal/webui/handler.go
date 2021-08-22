@@ -29,6 +29,7 @@ import (
 	"go.felesatra.moe/keeper/internal/month"
 	"go.felesatra.moe/keeper/internal/webui/templates"
 	"go.felesatra.moe/keeper/journal"
+	"go.felesatra.moe/keeper/reports"
 )
 
 func NewHandler(configPath string, o []journal.Option) http.Handler {
@@ -105,8 +106,7 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	r, t := makeTrialRows(sortedAccounts(j), j.Balances)
-	r = append(r, t.Rows("Total")...)
+	r := makeTrialRows(reports.NewTrialBalance(j))
 	d := templates.TrialData{Rows: r}
 	h.execute(w, templates.Trial, d)
 }
@@ -400,31 +400,29 @@ func (t totalBalance) Rows(desc string) []templates.TrialRow {
 	return r
 }
 
-func makeTrialRows(a []journal.Account, b journal.Balances) ([]templates.TrialRow, totalBalance) {
-	t := totalBalance{
-		Debit:  make(journal.Balance),
-		Credit: make(journal.Balance),
-	}
-	var r []templates.TrialRow
-	for _, a := range a {
-		for i, amt := range b[a].Amounts() {
-			e := templates.TrialRow{}
-			switch {
-			case amt.Number.IsNeg():
-				e.CreditBal = amt
-				t.Credit.Add(amt)
-			case amt.Number.Zero():
-			default:
-				e.DebitBal = amt
-				t.Debit.Add(amt)
-			}
-			if i == 0 {
-				e.Account = string(a)
-			}
-			r = append(r, e)
+func makeTrialRows(t reports.TrialBalance) []templates.TrialRow {
+	var rs []templates.TrialRow
+	for _, tr := range t.Rows {
+		r := templates.TrialRow{
+			Account: string(tr.Account),
+		}
+		for _, p := range tr.Pairs {
+			r.DebitBal = p.Debit
+			r.CreditBal = p.Credit
+			rs = append(rs, r)
+			r = templates.TrialRow{}
 		}
 	}
-	return r, t
+	r := templates.TrialRow{
+		Account: "Total",
+	}
+	for _, u := range balanceUnits(t.Total.Debit, t.Total.Credit) {
+		r.DebitBal = t.Total.Debit.Amount(u)
+		r.CreditBal = t.Total.Credit.Amount(u)
+		rs = append(rs, r)
+		r = templates.TrialRow{}
+	}
+	return rs
 }
 
 func makeStmtRows(a []journal.Account, b journal.Balances) ([]templates.StmtRow, journal.Balance) {
