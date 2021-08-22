@@ -35,19 +35,18 @@ const (
 	ParseComments Mode = 1 << iota
 )
 
-// ParseBytes parses the contents of a keeper file and returns the
-// corresponding ast.Entry nodes.
+// ParseBytes parses the contents of a keeper file.
 //
 // ParseBytes parses the source from src and the filename is only used
 // when recording position information.
 //
 // The mode parameter controls the amount of source text parsed and
-// other optional parser functionality. Position information is
+// other optional parser functionality.  Position information is
 // recorded in the file set fset, which must not be nil.
 //
 // If syntax errors were found, the result is a partial AST (with
 // ast.Bad* nodes representing the fragments of erroneous source
-// code). Multiple errors are returned via a scanner.ErrorList which
+// code).  Multiple errors are returned via a scanner.ErrorList which
 // is sorted by file position.
 func ParseBytes(fset *token.FileSet, filename string, src []byte, mode Mode) (*ast.File, error) {
 	p := &parser{
