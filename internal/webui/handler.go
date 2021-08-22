@@ -81,21 +81,16 @@ func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
 		Account journal.Account
 		Empty   bool
 	}
-	var a2 []t
-	var disabled []journal.Account
+	var d templates.AccountsData
 	for _, a := range sortedAccounts(j) {
 		if j.Accounts[a].Disabled == nil {
-			a2 = append(a2, t{
+			d.Accounts = append(d.Accounts, t{
 				Account: a,
 				Empty:   j.Balances[a].Empty(),
 			})
 		} else {
-			disabled = append(disabled, a)
+			d.Disabled = append(d.Disabled, a)
 		}
-	}
-	d := templates.AccountsData{
-		Accounts: a2,
-		Disabled: disabled,
 	}
 	h.execute(w, templates.Accounts, d)
 }
