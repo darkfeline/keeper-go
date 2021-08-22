@@ -53,7 +53,7 @@ type TrialBalanceRow struct {
 	Pairs   []Pair
 }
 
-func NewTrialBalance(j *journal.Journal) TrialBalance {
+func NewTrialBalance(j *journal.Journal) *TrialBalance {
 	b := j.Balances
 	total := NewPairBalance()
 	var r []TrialBalanceRow
@@ -76,7 +76,7 @@ func NewTrialBalance(j *journal.Journal) TrialBalance {
 		}
 		r = append(r, e)
 	}
-	return TrialBalance{
+	return &TrialBalance{
 		Rows:  r,
 		Total: total,
 	}
