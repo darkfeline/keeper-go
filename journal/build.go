@@ -249,7 +249,7 @@ func (b *builder) buildAmount(n *ast.Amount) (*Amount, error) {
 
 	r2 := newRat()
 	defer ratPool.Put(r2)
-	r.Mul(r, r2.SetInt64(u.Scale))
+	r.Mul(r, r2.SetUint64(u.Scale))
 	if !r.IsInt() {
 		b.errorf(n.Unit.Pos(), "scaled unit amount is fractional")
 		return nil, fmt.Errorf("scaled unit amount is fractional")
@@ -284,7 +284,7 @@ func (b *builder) addUnit(n *ast.UnitDecl) {
 
 	s := n.Scale.Value
 	s = strings.Replace(s, ",", "", -1)
-	scale, err := strconv.ParseInt(s, 10, 64)
+	scale, err := strconv.ParseUint(s, 10, 64)
 	switch {
 	case err != nil:
 		b.errorf(n.Scale.Pos(), "%s", err)
@@ -350,14 +350,14 @@ func parseString(src string) string {
 	return string(out)
 }
 
-func isPower10(n int64) bool {
+func isPower10(n uint64) bool {
 	if n < 0 {
 		n = -n
 	}
 	if n == 1 {
 		return true
 	}
-	for x := int64(10); x <= n; x *= 10 {
+	for x := uint64(10); x <= n; x *= 10 {
 		if x == n {
 			return true
 		}

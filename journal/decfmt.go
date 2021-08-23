@@ -21,12 +21,12 @@ import (
 
 // decFormat does decimal formatting for n/scale.
 // scale must be a positive multiple of 10.
-func decFormat(n *big.Int, scale int64) string {
+func decFormat(n *big.Int, scale uint64) string {
 	r := newRat()
 	defer ratPool.Put(r)
 	r2 := newRat()
 	defer ratPool.Put(r2)
-	r.Quo(r.SetInt(n), r2.SetInt64(scale))
+	r.Quo(r.SetInt(n), r2.SetUint64(scale))
 
 	s := r.FloatString(log10(scale))
 	digits := 0
@@ -54,7 +54,7 @@ count:
 	return b.String()
 }
 
-func log10(scale int64) int {
+func log10(scale uint64) int {
 	n := 0
 	for ; scale > 1; scale /= 10 {
 		n++

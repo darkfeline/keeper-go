@@ -24,7 +24,7 @@ func TestDecFormat(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
 		n     *big.Int
-		scale int64
+		scale uint64
 		want  string
 	}{
 		{big.NewInt(1234), 1, "1,234"},

@@ -119,20 +119,15 @@ func TestBuildEntries_disable(t *testing.T) {
 func TestIsPower10(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		n    int64
+		n    uint64
 		want bool
 	}{
 		{0, false},
 		{11, false},
-		{-11, false},
 		{101, false},
-		{-101, false},
 		{1, true},
-		{-1, true},
 		{10, true},
 		{100, true},
-		{-10, true},
-		{-100, true},
 	}
 	for _, c := range cases {
 		c := c

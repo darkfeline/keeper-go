@@ -53,7 +53,7 @@ type Unit struct {
 	// Scale indicates the minimum fractional unit amount,
 	// e.g. 100 means 0.01 is the smallest amount.
 	// This should be a multiple of 10.
-	Scale int64
+	Scale uint64
 }
 
 func (u Unit) String() string {
