@@ -21,40 +21,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func ExampleAccount_Parts() {
-	fmt.Printf("%#v\n", Account("Assets:Cash").Parts())
-	fmt.Printf("%#v\n", Account("Assets").Parts())
-	// Output:
-	// []string{"Assets", "Cash"}
-	// []string{"Assets"}
-}
-
-func ExampleAccount_Parent() {
-	fmt.Printf("%#v\n", Account("Assets:Cash").Parent())
-	fmt.Printf("%#v\n", Account("Assets").Parent())
-	// Output:
-	// "Assets"
-	// ""
-}
-
-func ExampleAccount_Leaf() {
-	fmt.Printf("%#v\n", Account("Assets:Cash").Leaf())
-	fmt.Printf("%#v\n", Account("Assets").Leaf())
-	// Output:
-	// "Cash"
-	// "Assets"
-}
-
-func ExampleAccount_Under() {
-	fmt.Println(Account("Assets:Cash").Under("Assets"))
-	fmt.Println(Account("Assets:Cash:Wallet").Under("Assets"))
-	fmt.Println(Account("Assets:Cash").Under(""))
-	// Output:
-	// true
-	// true
-	// true
-}
-
 func ExampleBalance_Add() {
 	b := make(Balance)
 	b.Add(Amount{

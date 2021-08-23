@@ -21,44 +21,6 @@ import (
 	"sync"
 )
 
-// Account is a bookkeeping account.
-// Accounts are colon separated paths, like "Income:Salary".
-type Account string
-
-// Parts returns the parts of the account between the colons.
-func (a Account) Parts() []string {
-	if a == "" {
-		return nil
-	}
-	return strings.Split(string(a), ":")
-}
-
-// Parent returns the parent account.
-func (a Account) Parent() Account {
-	p := a.Parts()
-	if len(p) == 0 {
-		return ""
-	}
-	return Account(strings.Join(p[:len(p)-1], ":"))
-}
-
-// Leaf returns the leaf part of the Account (after the last colon).
-func (a Account) Leaf() string {
-	if a == "" {
-		return ""
-	}
-	p := a.Parts()
-	return p[len(p)-1]
-}
-
-// Under returns true if the Account is a child account of the argument.
-func (a Account) Under(parent Account) bool {
-	if parent == "" {
-		return true
-	}
-	return strings.HasPrefix(string(a), string(parent)+":")
-}
-
 // A Number is n[0] + n[1] * (1 << 63)
 type Number [2]int64
 
