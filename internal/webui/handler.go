@@ -251,7 +251,7 @@ func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
 	delta.Neg()
 	type fl struct {
 		a  journal.Account
-		am journal.Amount
+		am *journal.Amount
 	}
 	var infl, outfl []fl
 	for _, a := range delta.Accounts() {
@@ -259,11 +259,10 @@ func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 		for _, am := range delta[a].Amounts() {
-			switch {
-			case am.Number.IsNeg():
+			switch am.Number.Sign() {
+			case -1:
 				outfl = append(outfl, fl{a, am})
-			case am.Number.Zero():
-			default:
+			case 1:
 				infl = append(infl, fl{a, am})
 			}
 		}
@@ -373,7 +372,7 @@ func getQueryAccount(req *http.Request) journal.Account {
 	return journal.Account(v[0])
 }
 
-func makeTrialData(t reports.TrialBalance) templates.TrialData {
+func makeTrialData(t *reports.TrialBalance) templates.TrialData {
 	var rs []templates.TrialRow
 	for _, tr := range t.Rows {
 		r := templates.TrialRow{Account: string(tr.Account)}
@@ -439,7 +438,7 @@ func convertBalance(e *journal.BalanceAssert) []templates.LedgerRow {
 			Entry:   e,
 			Balance: e.Actual.Amount(u),
 		}
-		if e.Diff[u].Zero() {
+		if e.Diff.Has(u) {
 			le.Description = "(" + n + ")"
 		} else {
 			le.Description = fmt.Sprintf("(%s error, declared %s, diff %s)",
@@ -547,7 +546,7 @@ func (s *stmt) addAccount(a journal.Account, b journal.Balance) {
 }
 
 // Like addAccount but with amount.
-func (s *stmt) addAccountAmount(a journal.Account, am journal.Amount) {
+func (s *stmt) addAccountAmount(a journal.Account, am *journal.Amount) {
 	s.addRows(templates.StmtRow{
 		Description: string(a),
 		Amount:      am,

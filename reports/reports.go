@@ -26,8 +26,8 @@ import (
 
 // A Pair is a Debit-Credit amount pair (one unit).
 type Pair struct {
-	Debit  journal.Amount
-	Credit journal.Amount
+	Debit  *journal.Amount
+	Credit *journal.Amount
 }
 
 // A PairBalance is a Debit-Credit balance pair (multiple units).
@@ -63,12 +63,11 @@ func NewTrialBalance(j *journal.Journal) *TrialBalance {
 		}
 		for _, amt := range b[a].Amounts() {
 			p := Pair{}
-			switch {
-			case amt.Number.IsNeg():
+			switch amt.Number.Sign() {
+			case -1:
 				p.Credit = amt
 				total.Credit.Add(amt)
-			case amt.Number.Zero():
-			default:
+			case 1:
 				p.Debit = amt
 				total.Debit.Add(amt)
 			}

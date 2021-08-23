@@ -18,8 +18,8 @@
         <a href="/ledger?account={{.Account}}">{{.Account}}</a>
         {{- end -}}
       </td>
-      <td class="amount">{{if .DebitBal.Unit.Symbol}}{{.DebitBal}}{{end}}</td>
-      <td class="amount">{{if .CreditBal.Unit.Symbol}}{{.CreditBal}}{{end}}</td>
+      <td class="amount">{{if .DebitBal}}{{.DebitBal}}{{end}}</td>
+      <td class="amount">{{if .CreditBal}}{{.CreditBal}}{{end}}</td>
       <tr>
     {{- end}}
   </tbody>

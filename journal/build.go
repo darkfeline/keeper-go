@@ -215,13 +215,14 @@ func (b *builder) buildTransaction(n *ast.Transaction) (*Transaction, error) {
 			b.errorf(n.Pos(), "cannot infer missing split amount with balance %s", bal)
 			return t, fmt.Errorf("cannot infer missing split amount with balance %s", bal)
 		}
-		a := amounts[0].Neg()
+		a := amounts[0]
+		a.Neg()
 		empty.Amount = a
 	}
 	return t, nil
 }
 
-func (b *builder) buildAmount(n *ast.Amount) (Amount, error) {
+func (b *builder) buildAmount(n *ast.Amount) (*Amount, error) {
 	assertKind(n.Decimal, token.DECIMAL)
 	assertKind(n.Unit, token.USYMBOL)
 
@@ -232,18 +233,18 @@ func (b *builder) buildAmount(n *ast.Amount) (Amount, error) {
 	_, err := fmt.Sscan(s, r)
 	if err != nil {
 		b.errorf(n.Unit.Pos(), "%s", err)
-		return Amount{}, err
+		return nil, err
 	}
 
 	sym := n.Unit.Value
 	if !validateUnit(sym) {
 		b.errorf(n.Unit.Pos(), "bad unit %s", sym)
-		return Amount{}, fmt.Errorf("bad unit %s", sym)
+		return nil, fmt.Errorf("bad unit %s", sym)
 	}
 	u, ok := b.units[sym]
 	if !ok {
 		b.errorf(n.Unit.Pos(), "undeclared unit %s", sym)
-		return Amount{}, fmt.Errorf("undeclared unit %s", sym)
+		return nil, fmt.Errorf("undeclared unit %s", sym)
 	}
 
 	r2 := newRat()
@@ -251,18 +252,13 @@ func (b *builder) buildAmount(n *ast.Amount) (Amount, error) {
 	r.Mul(r, r2.SetInt64(u.Scale))
 	if !r.IsInt() {
 		b.errorf(n.Unit.Pos(), "scaled unit amount is fractional")
-		return Amount{}, fmt.Errorf("scaled unit amount is fractional")
+		return nil, fmt.Errorf("scaled unit amount is fractional")
 	}
 
-	num, ok := numberFromInt(r.Num())
-	if !ok {
-		b.errorf(n.Unit.Pos(), "%q too big", n.Decimal.Value)
-		return Amount{}, fmt.Errorf("%q too big", n.Decimal.Value)
+	a := &Amount{
+		Unit: u,
 	}
-	a := Amount{
-		Number: num,
-		Unit:   u,
-	}
+	a.Number.Set(r.Num())
 	return a, nil
 }
 

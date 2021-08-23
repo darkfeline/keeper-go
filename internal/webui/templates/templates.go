@@ -72,8 +72,8 @@ func (TrialData) Title() string { return "Trial Balance" }
 
 type TrialRow struct {
 	Account   string
-	DebitBal  journal.Amount
-	CreditBal journal.Amount
+	DebitBal  *journal.Amount
+	CreditBal *journal.Amount
 }
 
 var Stmt = extendBase("stmt.html")
@@ -91,7 +91,7 @@ type StmtRow struct {
 	// Indicates the description is an account name and makes it a
 	// link to the account's ledger page.
 	Account bool
-	Amount  journal.Amount
+	Amount  *journal.Amount
 }
 
 var Ledger = extendBase("ledger.html")
@@ -108,8 +108,8 @@ func (d LedgerData) Title() string {
 type LedgerRow struct {
 	Entry       journal.Entry
 	Description string
-	Amount      journal.Amount
-	Balance     journal.Amount
+	Amount      *journal.Amount
+	Balance     *journal.Amount
 }
 
 func (e LedgerRow) Position() string {

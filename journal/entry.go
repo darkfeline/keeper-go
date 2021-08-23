@@ -84,7 +84,7 @@ func (*Transaction) entry() {}
 // This describes a change in the amount of one unit for one account.
 type Split struct {
 	Account Account
-	Amount  Amount
+	Amount  *Amount
 }
 
 // A DisableAccount entry represents an account closing.

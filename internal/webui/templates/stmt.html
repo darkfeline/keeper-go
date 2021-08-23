@@ -18,7 +18,7 @@
     <tr class="section">
       <td colspan="2"><strong>{{.Description}}</strong></td>
     <tr>
-    {{else if and (not .Description) (not .Amount.Unit.Symbol) }}
+    {{else if and (not .Description) (not .Amount) }}
     <tr>
       <td colspan="2">&nbsp;</td>
     <tr>
@@ -31,7 +31,7 @@
         {{.Description}}
         {{- end -}}
       </td>
-      <td class="amount">{{if .Amount.Unit.Symbol}}{{.Amount}}{{end}}</td>
+      <td class="amount">{{if .Amount}}{{.Amount}}{{end}}</td>
     <tr>
     {{end}}
     {{- end}}

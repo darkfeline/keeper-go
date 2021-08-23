@@ -15,6 +15,7 @@
 package journal
 
 import (
+	"math/big"
 	"testing"
 
 	"cloud.google.com/go/civil"
@@ -36,7 +37,7 @@ func TestCompile(t *testing.T) {
 		&BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Cash",
-			Declared:  Balance{u: Number{-232, 0}},
+			Declared:  Balance{u: big.NewInt(-232)},
 		},
 	}
 	got, err := compile(e)
@@ -56,9 +57,9 @@ func TestCompile(t *testing.T) {
 			&BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 2},
 				Account:   "Assets:Cash",
-				Declared:  Balance{u: Number{-232, 0}},
-				Actual:    Balance{u: Number{-123, 0}},
-				Diff:      Balance{u: Number{109, 0}},
+				Declared:  Balance{u: big.NewInt(-232)},
+				Actual:    Balance{u: big.NewInt(-123)},
+				Diff:      Balance{u: big.NewInt(109)},
 			},
 		}
 		if diff := cmp.Diff(want, got.Entries); diff != "" {
@@ -67,8 +68,8 @@ func TestCompile(t *testing.T) {
 	})
 	t.Run("balance", func(t *testing.T) {
 		want := Balances{
-			"Assets:Cash":   Balance{u: Number{-123, 0}},
-			"Expenses:Food": Balance{u: Number{123, 0}},
+			"Assets:Cash":   Balance{u: big.NewInt(-123)},
+			"Expenses:Food": Balance{u: big.NewInt(123)},
 		}
 		compareBalances(t, want, got.Balances)
 	})
@@ -89,7 +90,7 @@ func TestCompile_balances(t *testing.T) {
 		&BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Cash",
-			Declared:  Balance{u: Number{-232, 0}},
+			Declared:  Balance{u: big.NewInt(-232)},
 		},
 		&Transaction{
 			EntryDate:   civil.Date{2000, 1, 3},
@@ -102,7 +103,7 @@ func TestCompile_balances(t *testing.T) {
 		&BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 3},
 			Account:   "Assets:Cash",
-			Declared:  Balance{u: Number{-232, 0}},
+			Declared:  Balance{u: big.NewInt(-232)},
 		},
 	}
 	got, err := compile(e)
@@ -122,9 +123,9 @@ func TestCompile_balances(t *testing.T) {
 			&BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 2},
 				Account:   "Assets:Cash",
-				Declared:  Balance{u: Number{-232, 0}},
-				Actual:    Balance{u: Number{-123, 0}},
-				Diff:      Balance{u: Number{109, 0}},
+				Declared:  Balance{u: big.NewInt(-232)},
+				Actual:    Balance{u: big.NewInt(-123)},
+				Diff:      Balance{u: big.NewInt(109)},
 			},
 			&Transaction{
 				EntryDate:   civil.Date{2000, 1, 3},
@@ -137,9 +138,9 @@ func TestCompile_balances(t *testing.T) {
 			&BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 3},
 				Account:   "Assets:Cash",
-				Declared:  Balance{u: Number{-232, 0}},
-				Actual:    Balance{u: Number{-246, 0}},
-				Diff:      Balance{u: Number{-14, 0}},
+				Declared:  Balance{u: big.NewInt(-232)},
+				Actual:    Balance{u: big.NewInt(-246)},
+				Diff:      Balance{u: big.NewInt(-14)},
 			},
 		}
 		if diff := cmp.Diff(want, got.Entries); diff != "" {
@@ -148,9 +149,9 @@ func TestCompile_balances(t *testing.T) {
 	})
 	t.Run("balance", func(t *testing.T) {
 		want := Balances{
-			"Assets:Cash":    Balance{u: Number{-246, 0}},
-			"Expenses:Food":  Balance{u: Number{123, 0}},
-			"Expenses:Drink": Balance{u: Number{123, 0}},
+			"Assets:Cash":    Balance{u: big.NewInt(-246)},
+			"Expenses:Food":  Balance{u: big.NewInt(123)},
+			"Expenses:Drink": Balance{u: big.NewInt(123)},
 		}
 		compareBalances(t, want, got.Balances)
 	})
@@ -175,7 +176,7 @@ func TestCompile_treebal(t *testing.T) {
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Bar",
 			Tree:      true,
-			Declared:  Balance{u: Number{410, 0}},
+			Declared:  Balance{u: big.NewInt(410)},
 		},
 	}
 	got, err := compile(e)
@@ -198,9 +199,9 @@ func TestCompile_treebal(t *testing.T) {
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Bar",
 			Tree:      true,
-			Declared:  Balance{u: Number{410, 0}},
-			Actual:    Balance{u: Number{420, 0}},
-			Diff:      Balance{u: Number{10, 0}},
+			Declared:  Balance{u: big.NewInt(410)},
+			Actual:    Balance{u: big.NewInt(420)},
+			Diff:      Balance{u: big.NewInt(10)},
 		},
 	}
 	if diff := cmp.Diff(want, got.Entries); diff != "" {
@@ -256,8 +257,8 @@ func TestCompile_disable_nonempty_account(t *testing.T) {
 		{
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Cash",
-			Actual:    Balance{u: Number{123, 0}},
-			Diff:      Balance{u: Number{123, 0}},
+			Actual:    Balance{u: big.NewInt(123)},
+			Diff:      Balance{u: big.NewInt(123)},
 		},
 	}
 	if diff := cmp.Diff(got.BalanceErrors, want); diff != "" {
@@ -269,13 +270,13 @@ func TestTreeBalance(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
 	b := Balances{
-		"Assets:Foo":         {u: Number{120, 0}},
-		"Assets:Bar":         {u: Number{150, 0}},
-		"Assets:Bar:Eriko":   {u: Number{130, 0}},
-		"Assets:Bar:Shizuru": {u: Number{140, 0}},
+		"Assets:Foo":         {u: big.NewInt(120)},
+		"Assets:Bar":         {u: big.NewInt(150)},
+		"Assets:Bar:Eriko":   {u: big.NewInt(130)},
+		"Assets:Bar:Shizuru": {u: big.NewInt(140)},
 	}
 	got := treeBalance(b, "Assets:Bar")
-	want := Balance{u: Number{420, 0}}
+	want := Balance{u: big.NewInt(420)}
 	if !got.Equal(want) {
 		t.Errorf("treeBalance() = %s; want %s", got, want)
 	}
@@ -287,9 +288,9 @@ func TestBalanceDiff(t *testing.T) {
 		t.Parallel()
 		u := Unit{Symbol: "USD", Scale: 100}
 		actual := Balance{}
-		declared := Balance{u: Number{-200, 0}}
+		declared := Balance{u: big.NewInt(-200)}
 		got := balanceDiff(actual, declared)
-		want := Balance{u: Number{200, 0}}
+		want := Balance{u: big.NewInt(200)}
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("balance mismatch (-want +got):\n%s", diff)
 		}
@@ -314,8 +315,8 @@ func compareBalances(t *testing.T, want, got map[Account]Balance) {
 }
 
 func split(a Account, n int64, u Unit) Split {
-	return Split{
-		Account: a,
-		Amount:  Amount{Number: Number{n, 0}, Unit: u},
-	}
+	s := Split{Amount: new(Amount), Account: a}
+	s.Amount.Number.SetInt64(n)
+	s.Amount.Unit = u
+	return s
 }

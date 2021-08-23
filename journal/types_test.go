@@ -16,6 +16,7 @@ package journal
 
 import (
 	"fmt"
+	"math/big"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -23,10 +24,7 @@ import (
 
 func ExampleBalance_Add() {
 	b := make(Balance)
-	b.Add(Amount{
-		Number: Number{500, 0},
-		Unit:   Unit{Symbol: "USD", Scale: 100},
-	})
+	b.Add(amnt(500, Unit{Symbol: "USD", Scale: 100}))
 	fmt.Println(b)
 	// Output:
 	// 5.00 USD
@@ -36,8 +34,8 @@ func TestBalance_Add_empty_balance(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
 	b := make(Balance)
-	b.Add(Amount{Number: Number{12345, 0}, Unit: u})
-	want := Balance{u: Number{12345, 0}}
+	b.Add(amnt(12345, u))
+	want := Balance{u: big.NewInt(12345)}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
 	}
@@ -46,9 +44,9 @@ func TestBalance_Add_empty_balance(t *testing.T) {
 func TestBalance_Add_existing_balance(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
-	b := Balance{u: Number{10000, 0}}
-	b.Add(Amount{Number: Number{12345, 0}, Unit: u})
-	want := Balance{u: Number{22345, 0}}
+	b := Balance{u: big.NewInt(10000)}
+	b.Add(amnt(12345, u))
+	want := Balance{u: big.NewInt(22345)}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
 	}
@@ -59,11 +57,11 @@ func TestBalance_Add_zeroed_accounts(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	b := Balance{
-		u2: Number{3200, 0},
-		u:  Number{123, 0},
+		u2: big.NewInt(3200),
+		u:  big.NewInt(123),
 	}
-	b.Add(Amount{Number: Number{-123, 0}, Unit: u})
-	want := Balance{u2: Number{3200, 0}}
+	b.Add(amnt(-123, u))
+	want := Balance{u2: big.NewInt(3200)}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
 	}
@@ -72,11 +70,9 @@ func TestBalance_Add_zeroed_accounts(t *testing.T) {
 func TestBalance_Neg(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
-	b := Balance{
-		u: Number{12345, 0},
-	}
+	b := Balance{u: big.NewInt(12345)}
 	b.Neg()
-	want := Balance{u: Number{-12345, 0}}
+	want := Balance{u: big.NewInt(-12345)}
 	if diff := cmp.Diff(want, b); diff != "" {
 		t.Errorf("balance mismatch (-want +got):\n%s", diff)
 	}
@@ -87,12 +83,12 @@ func TestBalance_Equal_ignores_order(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	a := Balance{
-		u:  Number{123, 0},
-		u2: Number{3200, 0},
+		u:  big.NewInt(123),
+		u2: big.NewInt(3200),
 	}
 	b := Balance{
-		u:  Number{123, 0},
-		u2: Number{3200, 0},
+		u:  big.NewInt(123),
+		u2: big.NewInt(3200),
 	}
 	if !a.Equal(b) {
 		t.Errorf("a.Equal(b) returned false")
@@ -104,11 +100,11 @@ func TestBalance_Equal_different_length(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	a := Balance{
-		u2: Number{3200, 0},
+		u2: big.NewInt(3200),
 	}
 	b := Balance{
-		u:  Number{123, 0},
-		u2: Number{3200, 0},
+		u:  big.NewInt(123),
+		u2: big.NewInt(3200),
 	}
 	if a.Equal(b) {
 		t.Errorf("a.Equal(b) returned true")
@@ -123,12 +119,12 @@ func TestBalance_Equal_different_amount(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	a := Balance{
-		u2: Number{3200, 0},
-		u:  Number{123, 0},
+		u2: big.NewInt(3200),
+		u:  big.NewInt(123),
 	}
 	b := Balance{
-		u:  Number{123, 0},
-		u2: Number{200, 0},
+		u:  big.NewInt(123),
+		u2: big.NewInt(200),
 	}
 	if a.Equal(b) {
 		t.Errorf("a.Equal(b) returned true")
@@ -140,11 +136,11 @@ func TestBalance_Equal_ignore_zero(t *testing.T) {
 	u := Unit{Symbol: "USD", Scale: 100}
 	u2 := Unit{Symbol: "JPY", Scale: 1}
 	a := Balance{
-		u2: Number{3200, 0},
-		u:  Number{0, 0},
+		u2: big.NewInt(3200),
+		u:  big.NewInt(0),
 	}
 	b := Balance{
-		u2: Number{3200, 0},
+		u2: big.NewInt(3200),
 	}
 	if !a.Equal(b) {
 		t.Errorf("a.Equal(b) returned false")
@@ -157,9 +153,9 @@ func TestBalance_Equal_ignore_zero(t *testing.T) {
 func TestBalance_String(t *testing.T) {
 	t.Parallel()
 	b := Balance{
-		Unit{Symbol: "AAA", Scale: 1000}: Number{-123, 0},
-		Unit{Symbol: "BBB", Scale: 1000}: Number{-321, 0},
-		Unit{Symbol: "CCC", Scale: 1000}: Number{0, 0},
+		Unit{Symbol: "AAA", Scale: 1000}: big.NewInt(-123),
+		Unit{Symbol: "BBB", Scale: 1000}: big.NewInt(-321),
+		Unit{Symbol: "CCC", Scale: 1000}: big.NewInt(0),
 	}
 	got := b.String()
 	want := "-0.123 AAA, -0.321 BBB"
@@ -171,14 +167,14 @@ func TestBalance_String(t *testing.T) {
 func TestBalance_Amounts(t *testing.T) {
 	t.Parallel()
 	b := Balance{
-		Unit{Symbol: "AAA", Scale: 1000}: Number{-123, 0},
-		Unit{Symbol: "BBB", Scale: 1000}: Number{-321, 0},
-		Unit{Symbol: "CCC", Scale: 1000}: Number{0, 0},
+		Unit{Symbol: "AAA", Scale: 1000}: big.NewInt(-123),
+		Unit{Symbol: "BBB", Scale: 1000}: big.NewInt(-321),
+		Unit{Symbol: "CCC", Scale: 1000}: big.NewInt(0),
 	}
 	got := b.Amounts()
-	want := []Amount{
-		Amount{Unit: Unit{Symbol: "AAA", Scale: 1000}, Number: Number{-123, 0}},
-		Amount{Unit: Unit{Symbol: "BBB", Scale: 1000}, Number: Number{-321, 0}},
+	want := []*Amount{
+		amnt(-123, Unit{Symbol: "AAA", Scale: 1000}),
+		amnt(-321, Unit{Symbol: "BBB", Scale: 1000}),
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("Amounts() mismatch (-want +got):\n%s", diff)
@@ -192,4 +188,10 @@ func TestBalance_Copy_nil(t *testing.T) {
 	if got == nil {
 		t.Errorf("Got nil Balance copy")
 	}
+}
+
+func amnt(n int64, u Unit) *Amount {
+	a := &Amount{Unit: u}
+	a.Number.SetInt64(n)
+	return a
 }

@@ -16,6 +16,7 @@ package journal
 
 import (
 	"fmt"
+	"math/big"
 	"testing"
 
 	"cloud.google.com/go/civil"
@@ -42,21 +43,15 @@ end
 			EntryDate: civil.Date{2001, 2, 3},
 			EntryPos:  token.Position{Offset: 13, Line: 2, Column: 1},
 			Account:   "Some:account",
-			Declared:  Balance{u: Number{-120, 0}},
+			Declared:  Balance{u: big.NewInt(-120)},
 		},
 		&Transaction{
 			EntryDate:   civil.Date{2001, 2, 3},
 			EntryPos:    token.Position{Offset: 55, Line: 3, Column: 1},
 			Description: "Buy stuff",
 			Splits: []Split{
-				{
-					Account: "Some:account",
-					Amount:  Amount{Number: Number{-120, 0}, Unit: u},
-				},
-				{
-					Account: "Expenses:Stuff",
-					Amount:  Amount{Number: Number{120, 0}, Unit: u},
-				},
+				split("Some:account", -120, u),
+				split("Expenses:Stuff", 120, u),
 			},
 		},
 	}

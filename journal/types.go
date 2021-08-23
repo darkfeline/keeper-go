@@ -18,88 +18,34 @@ import (
 	"math/big"
 	"sort"
 	"strings"
-	"sync"
 )
-
-// A Number is n[0] + n[1] * (1 << 63)
-type Number [2]int64
-
-const numWidth = 1 << 63
-
-// Neg returns the number with its sign negated.
-func (n Number) Neg() Number {
-	for i := range n {
-		n[i] = -n[i]
-	}
-	return n
-}
-
-// IsNeg returns true if the number is negative.
-func (n Number) IsNeg() bool {
-	for i := range n {
-		if n[i] < 0 {
-			return true
-		}
-	}
-	return false
-}
-
-// Zero returns true if the number is zero.
-func (n Number) Zero() bool {
-	for i := range n {
-		if n[i] != 0 {
-			return false
-		}
-	}
-	return true
-}
-
-func (n Number) setRat(r *big.Rat) {
-	r2 := newRat()
-	defer ratPool.Put(r2)
-	r.SetInt64(n[1])
-	r.Mul(r, r2.SetUint64(numWidth))
-	r.Add(r, r2.SetInt64(n[0]))
-}
-
-// modifies input
-func numberFromInt(i *big.Int) (Number, bool) {
-	i2 := newInt()
-	defer intPool.Put(i2)
-	i3 := newInt()
-	defer intPool.Put(i3)
-	i.QuoRem(i, i2.SetUint64(numWidth), i3)
-	if !i3.IsInt64() {
-		panic(i3)
-	}
-	if !i.IsInt64() {
-		return Number{}, false
-	}
-	return Number{i3.Int64(), i.Int64()}, true
-}
 
 // An Amount is an amount of a certain unit, e.g., currency or commodity.
 type Amount struct {
-	Number Number
+	Number big.Int
 	Unit   Unit
 }
 
-// Neg returns the amount with its sign negated.
-func (a Amount) Neg() Amount {
-	a.Number = a.Number.Neg()
-	return a
+// Neg flips the sign of the amount.
+func (a *Amount) Neg() {
+	a.Number.Neg(&a.Number)
+}
+
+// Equal returns true if the amounts are equal.
+func (a *Amount) Equal(b *Amount) bool {
+	return a.Unit == b.Unit && a.Number.Cmp(&b.Number) == 0
 }
 
 // Scalar returns the amount number without the unit as a formatted string.
-func (a Amount) Scalar() string {
-	return decFormat(a.Number, a.Unit.Scale)
+func (a *Amount) Scalar() string {
+	return decFormat(&a.Number, a.Unit.Scale)
 }
 
-func (a Amount) String() string {
+func (a *Amount) String() string {
 	if (a.Unit == Unit{}) {
 		return decFormat(&a.Number, 1) + " NOUNIT"
 	}
-	return decFormat(a.Number, a.Unit.Scale) + " " + a.Unit.Symbol
+	return decFormat(&a.Number, a.Unit.Scale) + " " + a.Unit.Symbol
 }
 
 // Unit describes a unit, e.g., currency or commodity.
@@ -118,43 +64,49 @@ func (u Unit) String() string {
 }
 
 // A Balance represents a balance of amounts of various units.
-type Balance map[Unit]Number
+type Balance map[Unit]*big.Int
+
+// Gets the Int for a Unit, initializing it if needed.
+func (b Balance) get(u Unit) *big.Int {
+	n := b[u]
+	if n == nil {
+		n = newInt()
+		b[u] = n
+	}
+	return n
+}
 
 // Add adds an amount to the balance.
-func (b Balance) Add(a Amount) {
-	v := b[a.Unit]
-	for i := range v {
-		v[i] += a.Number[i]
-	}
-	b[a.Unit] = v
+func (b Balance) Add(a *Amount) {
+	n := b.get(a.Unit)
+	n.Add(n, &a.Number)
 }
 
 // AddBal adds the amounts of the argument balance.
 func (b Balance) AddBal(b2 Balance) {
 	for k, v := range b2 {
-		b.Add(Amount{
-			Number: v,
-			Unit:   k,
-		})
+		n := b.get(k)
+		n.Add(n, v)
 	}
 }
 
 // Sub subtracts an amount from the balance.
-func (b Balance) Sub(a Amount) {
-	b.Add(a.Neg())
+func (b Balance) Sub(a *Amount) {
+	n := b.get(a.Unit)
+	n.Sub(n, &a.Number)
 }
 
 // Neg negates the sign of the balance.
 func (b Balance) Neg() {
-	for k, v := range b {
-		b[k] = v.Neg()
+	for _, v := range b {
+		v.Neg(v)
 	}
 }
 
 // Empty returns true if the balance is empty/zero.
 func (b Balance) Empty() bool {
 	for _, v := range b {
-		if !v.Zero() {
+		if !isZero(v) {
 			return false
 		}
 	}
@@ -168,19 +120,31 @@ func (b Balance) Clear() {
 	}
 }
 
+// Has returns true if the balance has a non-zero amount for the unit.
+func (b Balance) Has(u Unit) bool {
+	n := b[u]
+	return n != nil && !isZero(n)
+}
+
 // Amount returns the amount of the given unit in the balance.
-func (b Balance) Amount(u Unit) Amount {
-	return Amount{Number: b[u], Unit: u}
+func (b Balance) Amount(u Unit) *Amount {
+	a := &Amount{Unit: u}
+	n := b[u]
+	if n != nil {
+		a.Number.Set(n)
+	}
+	return a
 }
 
 // Amounts returns the amounts in the balance.
 // The amounts are sorted by unit.
-func (b Balance) Amounts() []Amount {
-	var as []Amount
+func (b Balance) Amounts() []*Amount {
+	var as []*Amount
 	for k, v := range b {
-		if !v.Zero() {
-			as = append(as, Amount{Unit: k, Number: v})
+		if isZero(v) {
+			continue
 		}
+		as = append(as, b.Amount(k))
 	}
 	sort.Slice(as, func(i, j int) bool {
 		return as[i].Unit.Symbol < as[j].Unit.Symbol
@@ -202,8 +166,8 @@ func (b Balance) Equal(b2 Balance) bool {
 func (b Balance) Copy() Balance {
 	new := make(Balance)
 	for k, v := range b {
-		if !v.Zero() {
-			new[k] = v
+		if !isZero(v) {
+			new.get(k).Set(v)
 		}
 	}
 	return new
@@ -226,7 +190,7 @@ type Balances map[Account]Balance
 
 // Add adds an amount to an account, even if the account is not yet in
 // the map.
-func (b Balances) Add(a Account, am Amount) {
+func (b Balances) Add(a Account, am *Amount) {
 	bal, ok := b[a]
 	if !ok {
 		bal = make(Balance)
@@ -255,10 +219,6 @@ func (b Balances) Accounts() []Account {
 	return new
 }
 
-// An AccountInfo holds account information.
-type AccountInfo struct {
-	// If the account is disabled, points to the entry that
-	// disabled the account.  Otherwise this is nil.
-	Disabled *DisableAccount
-	Metadata map[string]string
+func isZero(n *big.Int) bool {
+	return len(n.Bits()) == 0
 }

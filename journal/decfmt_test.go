@@ -16,26 +16,26 @@ package journal
 
 import (
 	"fmt"
+	"math/big"
 	"testing"
 )
 
 func TestDecFormat(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		n     Number
+		n     *big.Int
 		scale int64
 		want  string
 	}{
-		{Number{1234, 0}, 1, "1,234"},
-		{Number{12345, 0}, 100, "123.45"},
-		{Number{-12345, 0}, 100, "-123.45"},
-		{Number{-12345678, 0}, 100, "-123,456.78"},
-		{Number{10000, 0}, 100, "100.00"},
-		{Number{12345678, 0}, 1, "12,345,678"},
-		{Number{4, 0}, 100, "0.04"},
-		{Number{0, 0}, 1, "0"},
-		{Number{0, 0}, 100, "0.00"},
-		{Number{0, 1}, 1, "9,223,372,036,854,775,808"},
+		{big.NewInt(1234), 1, "1,234"},
+		{big.NewInt(12345), 100, "123.45"},
+		{big.NewInt(-12345), 100, "-123.45"},
+		{big.NewInt(-12345678), 100, "-123,456.78"},
+		{big.NewInt(10000), 100, "100.00"},
+		{big.NewInt(12345678), 1, "12,345,678"},
+		{big.NewInt(4), 100, "0.04"},
+		{big.NewInt(0), 1, "0"},
+		{big.NewInt(0), 100, "0.00"},
 	}
 	for _, c := range cases {
 		c := c

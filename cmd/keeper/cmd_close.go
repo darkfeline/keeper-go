@@ -83,7 +83,8 @@ func printClosingTx(w io.Writer, j *journal.Journal, d civil.Date, dst journal.A
 	b := make(journal.Balance)
 	for _, a := range a {
 		for _, am := range j.Balances[a].Amounts() {
-			fmt.Fprintf(bw, "%s %s\n", a, am.Neg())
+			am.Neg()
+			fmt.Fprintf(bw, "%s %s\n", a, am)
 			b.Add(am)
 		}
 	}
