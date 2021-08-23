@@ -91,12 +91,6 @@ func (b *Balance) AddBal(b2 *Balance) {
 	}
 }
 
-// Sub subtracts an amount from the balance.
-func (b *Balance) Sub(a *Amount) {
-	n := b.get(a.Unit)
-	n.Sub(n, &a.Number)
-}
-
 // Neg negates the sign of the balance.
 func (b *Balance) Neg() {
 	for _, v := range b.m {
