@@ -97,7 +97,7 @@ func (a Amount) Scalar() string {
 
 func (a Amount) String() string {
 	if (a.Unit == Unit{}) {
-		return decFormat(a.Number, 1)
+		return decFormat(&a.Number, 1) + " NOUNIT"
 	}
 	return decFormat(a.Number, a.Unit.Scale) + " " + a.Unit.Symbol
 }
