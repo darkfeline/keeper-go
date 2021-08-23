@@ -17,18 +17,7 @@ package journal
 import (
 	"math/big"
 	"strings"
-	"sync"
 )
-
-var ratPool = sync.Pool{
-	New: func() interface{} { return big.NewRat(0, 1) },
-}
-
-func newRat() *big.Rat {
-	r := ratPool.Get().(*big.Rat)
-	r.SetInt64(0)
-	return r
-}
 
 // decFormat does decimal formatting for n/scale.
 // scale must be a positive multiple of 10.

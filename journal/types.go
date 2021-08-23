@@ -100,16 +100,6 @@ func (n Number) setRat(r *big.Rat) {
 	r.Add(r, r2.SetInt64(n[0]))
 }
 
-var intPool = sync.Pool{
-	New: func() interface{} { return big.NewInt(0) },
-}
-
-func newInt() *big.Int {
-	r := intPool.Get().(*big.Int)
-	r.SetInt64(0)
-	return r
-}
-
 // modifies input
 func numberFromInt(i *big.Int) (Number, bool) {
 	i2 := newInt()
