@@ -80,7 +80,7 @@ var closeCmd = &command{
 func printClosingTx(w io.Writer, j *journal.Journal, d civil.Date, dst journal.Account, a []journal.Account) error {
 	bw := bufio.NewWriter(w)
 	fmt.Fprintf(bw, "tx %s \"Closing\"\n", d)
-	b := make(journal.Balance)
+	var b journal.Balance
 	for _, a := range a {
 		for _, am := range j.Balances[a].Amounts() {
 			am.Neg()

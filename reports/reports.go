@@ -36,13 +36,6 @@ type PairBalance struct {
 	Credit journal.Balance
 }
 
-func NewPairBalance() PairBalance {
-	return PairBalance{
-		Debit:  make(journal.Balance),
-		Credit: make(journal.Balance),
-	}
-}
-
 type TrialBalance struct {
 	Rows  []TrialBalanceRow
 	Total PairBalance
@@ -55,7 +48,7 @@ type TrialBalanceRow struct {
 
 func NewTrialBalance(j *journal.Journal) *TrialBalance {
 	b := j.Balances
-	total := NewPairBalance()
+	var total PairBalance
 	var r []TrialBalanceRow
 	for _, a := range sortedAccounts(j) {
 		e := TrialBalanceRow{

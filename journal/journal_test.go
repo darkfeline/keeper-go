@@ -15,11 +15,9 @@
 package journal
 
 import (
-	"math/big"
 	"testing"
 
 	"cloud.google.com/go/civil"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestCompile(t *testing.T) {
@@ -37,7 +35,7 @@ func TestCompile(t *testing.T) {
 		&BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Cash",
-			Declared:  Balance{u: big.NewInt(-232)},
+			Declared:  new(balFac).add(u, -232).bal(),
 		},
 	}
 	got, err := compile(e)
@@ -57,19 +55,19 @@ func TestCompile(t *testing.T) {
 			&BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 2},
 				Account:   "Assets:Cash",
-				Declared:  Balance{u: big.NewInt(-232)},
-				Actual:    Balance{u: big.NewInt(-123)},
-				Diff:      Balance{u: big.NewInt(109)},
+				Declared:  new(balFac).add(u, -232).bal(),
+				Actual:    new(balFac).add(u, -123).bal(),
+				Diff:      new(balFac).add(u, 109).bal(),
 			},
 		}
-		if diff := cmp.Diff(want, got.Entries); diff != "" {
+		if diff := cmpdiff(want, got.Entries); diff != "" {
 			t.Errorf("entry mismatch (-want +got):\n%s", diff)
 		}
 	})
 	t.Run("balance", func(t *testing.T) {
 		want := Balances{
-			"Assets:Cash":   Balance{u: big.NewInt(-123)},
-			"Expenses:Food": Balance{u: big.NewInt(123)},
+			"Assets:Cash":   new(balFac).add(u, -123).pbal(),
+			"Expenses:Food": new(balFac).add(u, 123).pbal(),
 		}
 		compareBalances(t, want, got.Balances)
 	})
@@ -90,7 +88,7 @@ func TestCompile_balances(t *testing.T) {
 		&BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Cash",
-			Declared:  Balance{u: big.NewInt(-232)},
+			Declared:  new(balFac).add(u, -232).bal(),
 		},
 		&Transaction{
 			EntryDate:   civil.Date{2000, 1, 3},
@@ -103,7 +101,7 @@ func TestCompile_balances(t *testing.T) {
 		&BalanceAssert{
 			EntryDate: civil.Date{2000, 1, 3},
 			Account:   "Assets:Cash",
-			Declared:  Balance{u: big.NewInt(-232)},
+			Declared:  new(balFac).add(u, -232).bal(),
 		},
 	}
 	got, err := compile(e)
@@ -123,9 +121,9 @@ func TestCompile_balances(t *testing.T) {
 			&BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 2},
 				Account:   "Assets:Cash",
-				Declared:  Balance{u: big.NewInt(-232)},
-				Actual:    Balance{u: big.NewInt(-123)},
-				Diff:      Balance{u: big.NewInt(109)},
+				Declared:  new(balFac).add(u, -232).bal(),
+				Actual:    new(balFac).add(u, -123).bal(),
+				Diff:      new(balFac).add(u, 109).bal(),
 			},
 			&Transaction{
 				EntryDate:   civil.Date{2000, 1, 3},
@@ -138,20 +136,20 @@ func TestCompile_balances(t *testing.T) {
 			&BalanceAssert{
 				EntryDate: civil.Date{2000, 1, 3},
 				Account:   "Assets:Cash",
-				Declared:  Balance{u: big.NewInt(-232)},
-				Actual:    Balance{u: big.NewInt(-246)},
-				Diff:      Balance{u: big.NewInt(-14)},
+				Declared:  new(balFac).add(u, -232).bal(),
+				Actual:    new(balFac).add(u, -246).bal(),
+				Diff:      new(balFac).add(u, -14).bal(),
 			},
 		}
-		if diff := cmp.Diff(want, got.Entries); diff != "" {
+		if diff := cmpdiff(want, got.Entries); diff != "" {
 			t.Errorf("entries mismatch (-want +got):\n%s", diff)
 		}
 	})
 	t.Run("balance", func(t *testing.T) {
 		want := Balances{
-			"Assets:Cash":    Balance{u: big.NewInt(-246)},
-			"Expenses:Food":  Balance{u: big.NewInt(123)},
-			"Expenses:Drink": Balance{u: big.NewInt(123)},
+			"Assets:Cash":    new(balFac).add(u, -246).pbal(),
+			"Expenses:Food":  new(balFac).add(u, 123).pbal(),
+			"Expenses:Drink": new(balFac).add(u, 123).pbal(),
 		}
 		compareBalances(t, want, got.Balances)
 	})
@@ -176,7 +174,7 @@ func TestCompile_treebal(t *testing.T) {
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Bar",
 			Tree:      true,
-			Declared:  Balance{u: big.NewInt(410)},
+			Declared:  new(balFac).add(u, 410).bal(),
 		},
 	}
 	got, err := compile(e)
@@ -199,12 +197,12 @@ func TestCompile_treebal(t *testing.T) {
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Bar",
 			Tree:      true,
-			Declared:  Balance{u: big.NewInt(410)},
-			Actual:    Balance{u: big.NewInt(420)},
-			Diff:      Balance{u: big.NewInt(10)},
+			Declared:  new(balFac).add(u, 410).bal(),
+			Actual:    new(balFac).add(u, 420).bal(),
+			Diff:      new(balFac).add(u, 10).bal(),
 		},
 	}
-	if diff := cmp.Diff(want, got.Entries); diff != "" {
+	if diff := cmpdiff(want, got.Entries); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -257,11 +255,11 @@ func TestCompile_disable_nonempty_account(t *testing.T) {
 		{
 			EntryDate: civil.Date{2000, 1, 2},
 			Account:   "Assets:Cash",
-			Actual:    Balance{u: big.NewInt(123)},
-			Diff:      Balance{u: big.NewInt(123)},
+			Actual:    new(balFac).add(u, 123).bal(),
+			Diff:      new(balFac).add(u, 123).bal(),
 		},
 	}
-	if diff := cmp.Diff(got.BalanceErrors, want); diff != "" {
+	if diff := cmpdiff(got.BalanceErrors, want); diff != "" {
 		t.Errorf("balance errors mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -270,34 +268,20 @@ func TestTreeBalance(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
 	b := Balances{
-		"Assets:Foo":         {u: big.NewInt(120)},
-		"Assets:Bar":         {u: big.NewInt(150)},
-		"Assets:Bar:Eriko":   {u: big.NewInt(130)},
-		"Assets:Bar:Shizuru": {u: big.NewInt(140)},
+		"Assets:Foo":         new(balFac).add(u, 120).pbal(),
+		"Assets:Bar":         new(balFac).add(u, 150).pbal(),
+		"Assets:Bar:Eriko":   new(balFac).add(u, 130).pbal(),
+		"Assets:Bar:Shizuru": new(balFac).add(u, 140).pbal(),
 	}
-	got := treeBalance(b, "Assets:Bar")
-	want := Balance{u: big.NewInt(420)}
+	got := new(Balance)
+	addTreeBalance(got, b, "Assets:Bar")
+	want := new(balFac).add(u, 420).pbal()
 	if !got.Equal(want) {
 		t.Errorf("treeBalance() = %s; want %s", got, want)
 	}
 }
 
-func TestBalanceDiff(t *testing.T) {
-	t.Parallel()
-	t.Run("bug", func(t *testing.T) {
-		t.Parallel()
-		u := Unit{Symbol: "USD", Scale: 100}
-		actual := Balance{}
-		declared := Balance{u: big.NewInt(-200)}
-		got := balanceDiff(actual, declared)
-		want := Balance{u: big.NewInt(200)}
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("balance mismatch (-want +got):\n%s", diff)
-		}
-	})
-}
-
-func compareBalances(t *testing.T, want, got map[Account]Balance) {
+func compareBalances(t *testing.T, want, got map[Account]*Balance) {
 	t.Helper()
 	wantKeys := make(map[Account]struct{})
 	for k := range want {

@@ -134,7 +134,8 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 			s.addAccount(a, b[a])
 		}
 	}
-	income := s.bal.Copy()
+	var income journal.Balance
+	income.Set(&s.bal)
 	s.addTotal("Total Income")
 
 	s.addSection("Expenses")
@@ -145,13 +146,14 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 			s.addAccount(a, b[a])
 		}
 	}
-	expenses := s.bal.Copy()
+	var expenses journal.Balance
+	expenses.Set(&s.bal)
 	s.addTotal("Total Expenses")
 
 	expenses.Neg()
-	income.AddBal(expenses)
+	income.AddBal(&expenses)
 	s.addSection("Net Profit")
-	s.addBalanceRows(templates.StmtRow{Description: "Total Net Profit"}, income)
+	s.addBalanceRows(templates.StmtRow{Description: "Total Net Profit"}, &income)
 	h.execute(w, templates.Stmt, s.StmtData)
 }
 
@@ -198,7 +200,8 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 			s.addAccount(a, b[a])
 		}
 	}
-	liabilities := s.bal.Copy()
+	var liabilities journal.Balance
+	liabilities.Set(&s.bal)
 	s.addTotal("Total Liabilities")
 
 	s.addSection("Equity")
@@ -208,12 +211,13 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 			s.addAccount(a, b[a])
 		}
 	}
-	equity := s.bal.Copy()
+	var equity journal.Balance
+	equity.Set(&s.bal)
 	s.addTotal("Total Equity")
 
-	equity.AddBal(liabilities)
+	equity.AddBal(&liabilities)
 	s.addRows(templates.StmtRow{})
-	s.addBalanceRows(templates.StmtRow{Description: "Total Liabilities & Equity"}, equity)
+	s.addBalanceRows(templates.StmtRow{Description: "Total Liabilities & Equity"}, &equity)
 
 	h.execute(w, templates.Stmt, s.StmtData)
 }
@@ -322,9 +326,8 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	d := templates.LedgerData{Account: a}
-	b := make(journal.Balance)
 	for _, e := range accountEntries(j.Entries, a) {
-		d.Rows = append(d.Rows, makeLedgerRows(b, e, a)...)
+		d.Rows = append(d.Rows, makeLedgerRows(e, a)...)
 	}
 	h.execute(w, templates.Ledger, d)
 }
@@ -393,8 +396,8 @@ func makeTrialData(t *reports.TrialBalance) templates.TrialData {
 	return templates.TrialData{Rows: rs}
 }
 
-func makeStmtRows(a []journal.Account, b journal.Balances) ([]templates.StmtRow, journal.Balance) {
-	t := make(journal.Balance)
+func makeStmtRows(a []journal.Account, b journal.Balances) ([]templates.StmtRow, *journal.Balance) {
+	t := new(journal.Balance)
 	var r []templates.StmtRow
 	for _, a := range a {
 		for i, amt := range b[a].Amounts() {
@@ -410,10 +413,11 @@ func makeStmtRows(a []journal.Account, b journal.Balances) ([]templates.StmtRow,
 	return r, t
 }
 
-func makeLedgerRows(b journal.Balance, e journal.Entry, a journal.Account) []templates.LedgerRow {
+func makeLedgerRows(e journal.Entry, a journal.Account) []templates.LedgerRow {
+	var b journal.Balance
 	switch e := e.(type) {
 	case *journal.Transaction:
-		return convertTransaction(b, a, e)
+		return convertTransaction(&b, a, e)
 	case *journal.BalanceAssert:
 		return convertBalance(e)
 	case *journal.DisableAccount:
@@ -453,7 +457,7 @@ func convertBalance(e *journal.BalanceAssert) []templates.LedgerRow {
 func balanceUnits(b ...journal.Balance) []journal.Unit {
 	seen := make(map[journal.Unit]bool)
 	for _, b := range b {
-		for u := range b {
+		for _, u := range b.Units() {
 			seen[u] = true
 		}
 	}
@@ -467,7 +471,7 @@ func balanceUnits(b ...journal.Balance) []journal.Unit {
 	return units
 }
 
-func convertTransaction(b journal.Balance, a journal.Account, e *journal.Transaction) []templates.LedgerRow {
+func convertTransaction(b *journal.Balance, a journal.Account, e *journal.Transaction) []templates.LedgerRow {
 	var entries []templates.LedgerRow
 	first := true
 	for _, s := range e.Splits {
@@ -517,7 +521,7 @@ func (s *stmt) addRows(r ...templates.StmtRow) {
 // Since balances have multiple units, this adds multiple rows.
 // The argument row's fields, except for the amount, is used for the
 // first row only.
-func (s *stmt) addBalanceRows(r templates.StmtRow, b journal.Balance) {
+func (s *stmt) addBalanceRows(r templates.StmtRow, b *journal.Balance) {
 	for _, v := range b.Amounts() {
 		r.Amount = v
 		s.addRows(r)
@@ -534,14 +538,11 @@ func (s *stmt) addSection(desc string) {
 
 // Adds rows for an account.
 // The account balance is added to a running total.
-func (s *stmt) addAccount(a journal.Account, b journal.Balance) {
+func (s *stmt) addAccount(a journal.Account, b *journal.Balance) {
 	s.addBalanceRows(templates.StmtRow{
 		Description: string(a),
 		Account:     true,
 	}, b)
-	if s.bal == nil {
-		s.bal = make(journal.Balance)
-	}
 	s.bal.AddBal(b)
 }
 
@@ -552,18 +553,12 @@ func (s *stmt) addAccountAmount(a journal.Account, am *journal.Amount) {
 		Amount:      am,
 		Account:     true,
 	})
-	if s.bal == nil {
-		s.bal = make(journal.Balance)
-	}
 	s.bal.Add(am)
 }
 
 // Add the current balance as a total.
 func (s *stmt) addTotal(desc string) {
-	if s.bal == nil {
-		s.bal = make(journal.Balance)
-	}
-	s.addBalanceRows(templates.StmtRow{Description: desc}, s.bal)
+	s.addBalanceRows(templates.StmtRow{Description: desc}, &s.bal)
 	s.bal.Clear()
 }
 

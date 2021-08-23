@@ -169,11 +169,13 @@ func (j *Journal) addBalanceAssert(e *BalanceAssert) error {
 		return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 	}
 	if e.Tree {
-		e.Actual = treeBalance(j.Balances, e.Account)
+		addTreeBalance(&e.Actual, j.Balances, e.Account)
 	} else {
-		e.Actual = j.Balances[e.Account].Copy()
+		e.Actual.Set(j.Balances[e.Account])
 	}
-	e.Diff = balanceDiff(e.Actual, e.Declared)
+	e.Diff.Set(&e.Declared)
+	e.Diff.Neg()
+	e.Diff.AddBal(&e.Actual)
 
 	j.Entries = append(j.Entries, e)
 	if !e.Diff.Empty() {
@@ -188,14 +190,14 @@ func (j *Journal) addDisableAccount(e *DisableAccount) error {
 		return fmt.Errorf("add entry %T at %s: %s", e, e.Position(), err)
 	}
 	if bal := j.Balances[e.Account]; bal != nil && !bal.Empty() {
-		j.BalanceErrors = append(j.BalanceErrors, &BalanceAssert{
+		ba := &BalanceAssert{
 			EntryPos:  e.EntryPos,
 			EntryDate: e.EntryDate,
 			Account:   e.Account,
-			Declared:  Balance{},
-			Actual:    bal,
-			Diff:      bal,
-		})
+		}
+		ba.Actual.Set(bal)
+		ba.Diff.Set(bal)
+		j.BalanceErrors = append(j.BalanceErrors, ba)
 	}
 	j.Accounts[e.Account].Disabled = e
 	j.Entries = append(j.Entries, e)
@@ -216,21 +218,12 @@ func (j *Journal) ensureAccount(a Account) {
 	}
 }
 
-// Return total balance for account tree.
-func treeBalance(b Balances, a Account) Balance {
-	bal := b[a].Copy()
-	for a2, b2 := range b {
+// total balance for account tree.
+func addTreeBalance(b *Balance, bals Balances, a Account) {
+	b.AddBal(bals[a])
+	for a2, b2 := range bals {
 		if a2.Under(a) {
-			bal.AddBal(b2)
+			b.AddBal(b2)
 		}
 	}
-	return bal
-}
-
-func balanceDiff(x, y Balance) Balance {
-	diff := x.Copy()
-	for _, a := range y.Amounts() {
-		diff.Sub(a)
-	}
-	return diff
 }

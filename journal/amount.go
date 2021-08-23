@@ -56,48 +56,57 @@ func (u Unit) String() string {
 }
 
 // A Balance represents a balance of amounts of various units.
-type Balance map[Unit]*big.Int
+// The zero value is ready for use.
+type Balance struct {
+	m map[Unit]*big.Int
+}
 
 // Gets the Int for a Unit, initializing it if needed.
-func (b Balance) get(u Unit) *big.Int {
-	n := b[u]
+func (b *Balance) get(u Unit) *big.Int {
+	if b.m == nil {
+		b.m = make(map[Unit]*big.Int)
+	}
+	n := b.m[u]
 	if n == nil {
 		n = newInt()
-		b[u] = n
+		b.m[u] = n
 	}
 	return n
 }
 
 // Add adds an amount to the balance.
-func (b Balance) Add(a *Amount) {
+func (b *Balance) Add(a *Amount) {
 	n := b.get(a.Unit)
 	n.Add(n, &a.Number)
 }
 
 // AddBal adds the amounts of the argument balance.
-func (b Balance) AddBal(b2 Balance) {
-	for k, v := range b2 {
+func (b *Balance) AddBal(b2 *Balance) {
+	for k, v := range b2.m {
+		if isZero(v) {
+			continue
+		}
 		n := b.get(k)
 		n.Add(n, v)
 	}
 }
 
 // Sub subtracts an amount from the balance.
-func (b Balance) Sub(a *Amount) {
+func (b *Balance) Sub(a *Amount) {
 	n := b.get(a.Unit)
 	n.Sub(n, &a.Number)
 }
 
 // Neg negates the sign of the balance.
-func (b Balance) Neg() {
-	for _, v := range b {
+func (b *Balance) Neg() {
+	for _, v := range b.m {
 		v.Neg(v)
 	}
 }
 
 // Empty returns true if the balance is empty/zero.
-func (b Balance) Empty() bool {
-	for _, v := range b {
+func (b *Balance) Empty() bool {
+	for _, v := range b.m {
 		if !isZero(v) {
 			return false
 		}
@@ -106,37 +115,50 @@ func (b Balance) Empty() bool {
 }
 
 // Clear clears the balance, making it empty/zero.
-func (b Balance) Clear() {
-	for k := range b {
-		delete(b, k)
+func (b *Balance) Clear() {
+	for k := range b.m {
+		delete(b.m, k)
 	}
 }
 
 // Has returns true if the balance has a non-zero amount for the unit.
-func (b Balance) Has(u Unit) bool {
-	n := b[u]
+func (b *Balance) Has(u Unit) bool {
+	n := b.m[u]
 	return n != nil && !isZero(n)
 }
 
 // Amount returns the amount of the given unit in the balance.
-func (b Balance) Amount(u Unit) *Amount {
+func (b *Balance) Amount(u Unit) *Amount {
 	a := &Amount{Unit: u}
-	n := b[u]
-	if n != nil {
+	if n := b.m[u]; n != nil && !isZero(n) {
 		a.Number.Set(n)
 	}
 	return a
 }
 
-// Amounts returns the amounts in the balance.
-// The amounts are sorted by unit.
-func (b Balance) Amounts() []*Amount {
-	var as []*Amount
-	for k, v := range b {
+// Units returns the units in the balance
+func (b *Balance) Units() []Unit {
+	var us []Unit
+	for k, v := range b.m {
 		if isZero(v) {
 			continue
 		}
-		as = append(as, b.Amount(k))
+		us = append(us, k)
+	}
+	return us
+}
+
+// Amounts returns the amounts in the balance.
+// The amounts are sorted by unit.
+func (b *Balance) Amounts() []*Amount {
+	var as []*Amount
+	for k, v := range b.m {
+		if isZero(v) {
+			continue
+		}
+		a := &Amount{Unit: k}
+		a.Number.Set(v)
+		as = append(as, a)
 	}
 	sort.Slice(as, func(i, j int) bool {
 		return as[i].Unit.Symbol < as[j].Unit.Symbol
@@ -145,31 +167,29 @@ func (b Balance) Amounts() []*Amount {
 }
 
 // Equal returns true if the two balances are equal.
-func (b Balance) Equal(b2 Balance) bool {
-	b = b.Copy()
-	for _, a := range b2.Amounts() {
-		b.Sub(a)
-	}
-	return b.Empty()
+func (b *Balance) Equal(b2 *Balance) bool {
+	var b3 Balance
+	b3.Set(b)
+	b3.Neg()
+	b3.AddBal(b2)
+	return b3.Empty()
 }
 
-// Copy returns a copy of the balance.
-// If called with a nil receiver, returns an empty initialized Balance.
-func (b Balance) Copy() Balance {
-	new := make(Balance)
-	for k, v := range b {
+// Set sets the receiver balance to the argument balance.
+func (b *Balance) Set(b2 *Balance) {
+	b.Clear()
+	for k, v := range b2.m {
 		if !isZero(v) {
-			new.get(k).Set(v)
+			b.get(k).Set(v)
 		}
 	}
-	return new
 }
 
-func (b Balance) String() string {
-	if len(b) == 0 {
+func (b *Balance) String() string {
+	amts := b.Amounts()
+	if len(amts) == 0 {
 		return "0"
 	}
-	amts := b.Amounts()
 	s := make([]string, len(amts))
 	for i, a := range amts {
 		s[i] = a.String()
@@ -178,14 +198,14 @@ func (b Balance) String() string {
 }
 
 // A Balances maps multiple accounts to their balances.
-type Balances map[Account]Balance
+type Balances map[Account]*Balance
 
 // Add adds an amount to an account, even if the account is not yet in
 // the map.
 func (b Balances) Add(a Account, am *Amount) {
 	bal, ok := b[a]
 	if !ok {
-		bal = make(Balance)
+		bal = new(Balance)
 		b[a] = bal
 	}
 	bal.Add(am)

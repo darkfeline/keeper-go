@@ -16,7 +16,6 @@ package journal
 
 import (
 	"fmt"
-	"math/big"
 	"testing"
 
 	"cloud.google.com/go/civil"
@@ -43,7 +42,7 @@ end
 			EntryDate: civil.Date{2001, 2, 3},
 			EntryPos:  token.Position{Offset: 13, Line: 2, Column: 1},
 			Account:   "Some:account",
-			Declared:  Balance{u: big.NewInt(-120)},
+			Declared:  new(balFac).add(u, -120).bal(),
 		},
 		&Transaction{
 			EntryDate:   civil.Date{2001, 2, 3},
@@ -55,7 +54,7 @@ end
 			},
 		},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmpdiff(want, got); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -111,7 +110,7 @@ func TestBuildEntries_disable(t *testing.T) {
 			Account:   "Some:account",
 		},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmpdiff(want, got); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -139,4 +138,34 @@ func TestIsPower10(t *testing.T) {
 			}
 		})
 	}
+}
+
+func cmpdiff(x, y interface{}) string {
+	return cmp.Diff(x, y, cmpopts...)
+}
+
+var cmpopts = []cmp.Option{
+	cmp.Comparer(func(x, y Balance) bool {
+		return x.Equal(&y)
+	}),
+}
+
+// Balance factory
+type balFac struct {
+	b Balance
+}
+
+func (f *balFac) bal() Balance {
+	return f.b
+}
+
+func (f *balFac) pbal() *Balance {
+	return &f.b
+}
+
+func (f *balFac) add(u Unit, n int64) *balFac {
+	a := &Amount{Unit: u}
+	a.Number.SetInt64(n)
+	f.b.Add(a)
+	return f
 }

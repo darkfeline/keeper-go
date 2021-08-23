@@ -143,10 +143,6 @@ func (b *builder) buildBalanceHeader(n *ast.BalanceHeader) (*BalanceAssert, erro
 	a := &BalanceAssert{
 		EntryPos: b.nodePos(n),
 		Account:  Account(n.Account.Value),
-		Declared: make(Balance),
-		// Actual and Diff get set when the entries are added
-		// to the Journal, so we don't have to initialize them
-		// now.
 	}
 	switch n.Token {
 	case token.BALANCE:
@@ -181,7 +177,7 @@ func (b *builder) buildTransaction(n *ast.Transaction) (*Transaction, error) {
 	}
 
 	var empty *Split
-	bal := make(Balance)
+	var bal Balance
 	t.Splits = make([]Split, len(n.Splits))
 	for i, n := range n.Splits {
 		n := n.(*ast.SplitLine)
@@ -206,14 +202,14 @@ func (b *builder) buildTransaction(n *ast.Transaction) (*Transaction, error) {
 	switch empty {
 	case nil:
 		if !bal.Empty() {
-			b.errorf(n.Pos(), "transaction doesn't balance (off by %s)", bal)
-			return t, fmt.Errorf("transaction doesn't balance (off by %s)", bal)
+			b.errorf(n.Pos(), "transaction doesn't balance (off by %s)", &bal)
+			return t, fmt.Errorf("transaction doesn't balance (off by %s)", &bal)
 		}
 	default:
 		amounts := bal.Amounts()
 		if len(amounts) != 1 {
-			b.errorf(n.Pos(), "cannot infer missing split amount with balance %s", bal)
-			return t, fmt.Errorf("cannot infer missing split amount with balance %s", bal)
+			b.errorf(n.Pos(), "cannot infer missing split amount with balance %s", &bal)
+			return t, fmt.Errorf("cannot infer missing split amount with balance %s", &bal)
 		}
 		a := amounts[0]
 		a.Neg()

@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	"cloud.google.com/go/civil"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestSortEntries(t *testing.T) {
@@ -34,7 +33,7 @@ func TestSortEntries(t *testing.T) {
 		&BalanceAssert{EntryDate: civil.Date{2000, 1, 5}},
 		&DisableAccount{EntryDate: civil.Date{2000, 1, 5}},
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmpdiff(want, got); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
 }
