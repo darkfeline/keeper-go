@@ -36,11 +36,6 @@ func (a *Amount) Equal(b *Amount) bool {
 	return a.Unit == b.Unit && a.Number.Cmp(&b.Number) == 0
 }
 
-// Scalar returns the amount number without the unit as a formatted string.
-func (a *Amount) Scalar() string {
-	return decFormat(&a.Number, a.Unit.Scale)
-}
-
 func (a *Amount) String() string {
 	return decFormat(&a.Number, a.Unit.Scale) + " " + a.Unit.Symbol
 }
