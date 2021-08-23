@@ -15,19 +15,10 @@
 package journal
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
-
-func ExampleBalance_Add() {
-	var b Balance
-	b.Add(amnt(500, Unit{Symbol: "USD", Scale: 100}))
-	fmt.Println(&b)
-	// Output:
-	// 5.00 USD
-}
 
 func TestBalance_Neg(t *testing.T) {
 	t.Parallel()
