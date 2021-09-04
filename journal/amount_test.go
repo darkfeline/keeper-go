@@ -20,6 +20,25 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func TestBalance_Add(t *testing.T) {
+	t.Parallel()
+	u := Unit{Symbol: "USD", Scale: 100}
+	var b Balance
+	b.Add(amnt(123, u))
+	got := b.Amount(u)
+	want := amnt(123, u)
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("amount mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestBalance_AddBal_nil(t *testing.T) {
+	t.Parallel()
+	var b, b2 Balance
+	// Should not panic
+	b.AddBal(&b2)
+}
+
 func TestBalance_Neg(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
