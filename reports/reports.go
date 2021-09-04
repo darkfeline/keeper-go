@@ -36,6 +36,7 @@ type PairBalance struct {
 	Credit journal.Balance
 }
 
+// A TrialBalance represents a trial balance report
 type TrialBalance struct {
 	Rows  []TrialBalanceRow
 	Total PairBalance
@@ -46,6 +47,7 @@ type TrialBalanceRow struct {
 	Pairs   []Pair
 }
 
+// NewTrialBalance creates a trial balance report.
 func NewTrialBalance(j *journal.Journal) *TrialBalance {
 	b := j.Balances
 	var total PairBalance
