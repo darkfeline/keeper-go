@@ -442,7 +442,7 @@ func convertBalance(e *journal.BalanceAssert) []templates.LedgerRow {
 			Entry:   e,
 			Balance: e.Actual.Amount(u),
 		}
-		if e.Diff.Has(u) {
+		if !e.Diff.Has(u) {
 			le.Description = "(" + n + ")"
 		} else {
 			le.Description = fmt.Sprintf("(%s error, declared %s, diff %s)",
