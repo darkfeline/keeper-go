@@ -26,6 +26,11 @@ type Amount struct {
 	Unit   Unit
 }
 
+// Zero returns whether the amount is zero.
+func (a *Amount) Zero() bool {
+	return isZero(&a.Number)
+}
+
 // Neg flips the sign of the amount.
 func (a *Amount) Neg() {
 	a.Number.Neg(&a.Number)
