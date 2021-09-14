@@ -103,6 +103,9 @@ func (b *Balance) Neg() {
 
 // Empty returns true if the balance is empty/zero.
 func (b *Balance) Empty() bool {
+	if b == nil {
+		return true
+	}
 	for _, v := range b.m {
 		if !isZero(v) {
 			return false

@@ -101,6 +101,14 @@ func TestBalance_Empty_ignore_zero(t *testing.T) {
 	}
 }
 
+func TestBalance_Empty_nil(t *testing.T) {
+	t.Parallel()
+	var b *Balance
+	if !b.Empty() {
+		t.Errorf("Expected b.Empty()")
+	}
+}
+
 func TestBalance_String(t *testing.T) {
 	t.Parallel()
 	var b Balance
