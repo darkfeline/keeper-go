@@ -18,9 +18,9 @@
       <td>{{.Position}}</td>
       <td>{{.Date}}</td>
       <td><a href="/ledger?account={{.Account}}">{{.Account}}</a></td>
-      <td class="amount">{{.Declared}}</td>
-      <td class="amount">{{.Actual}}</td>
-      <td class="amount">{{.Diff}}</td>
+      <td class="amount">{{.Declared.String}}</td>
+      <td class="amount">{{.Actual.String}}</td>
+      <td class="amount">{{.Diff.String}}</td>
       <tr>
     {{- end}}
   </tbody>
