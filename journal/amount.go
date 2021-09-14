@@ -133,6 +133,7 @@ func (b *Balance) Has(u Unit) bool {
 }
 
 // Amount returns the amount of the given unit in the balance.
+// The returned amount is independent memory from the balance.
 func (b *Balance) Amount(u Unit) *Amount {
 	a := &Amount{Unit: u}
 	if n := b.m[u]; n != nil && !isZero(n) {

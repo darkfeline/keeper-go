@@ -326,8 +326,9 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	d := templates.LedgerData{Account: a}
+	var b journal.Balance
 	for _, e := range accountEntries(j.Entries, a) {
-		d.Rows = append(d.Rows, makeLedgerRows(e, a)...)
+		d.Rows = append(d.Rows, makeLedgerRows(&b, e, a)...)
 	}
 	h.execute(w, templates.Ledger, d)
 }
@@ -413,11 +414,10 @@ func makeStmtRows(a []journal.Account, b journal.Balances) ([]templates.StmtRow,
 	return r, t
 }
 
-func makeLedgerRows(e journal.Entry, a journal.Account) []templates.LedgerRow {
-	var b journal.Balance
+func makeLedgerRows(b *journal.Balance, e journal.Entry, a journal.Account) []templates.LedgerRow {
 	switch e := e.(type) {
 	case *journal.Transaction:
-		return convertTransaction(&b, a, e)
+		return convertTransaction(b, a, e)
 	case *journal.BalanceAssert:
 		return convertBalance(e)
 	case *journal.DisableAccount:
@@ -482,24 +482,11 @@ func convertTransaction(b *journal.Balance, a journal.Account, e *journal.Transa
 			Amount: s.Amount,
 		}
 		b.Add(s.Amount)
+		le.Balance = b.Amount(s.Amount.Unit)
 		if first {
 			le.Entry = e
 			le.Description = e.Description
 			first = false
-		}
-		entries = append(entries, le)
-	}
-	if len(entries) == 0 {
-		return entries
-	}
-	amts := b.Amounts()
-	if len(amts) == 0 {
-		return entries
-	}
-	entries[len(entries)-1].Balance = amts[0]
-	for _, a := range amts[1:] {
-		le := templates.LedgerRow{
-			Balance: a,
 		}
 		entries = append(entries, le)
 	}
