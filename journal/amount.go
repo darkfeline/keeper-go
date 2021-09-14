@@ -82,6 +82,9 @@ func (b *Balance) Add(a *Amount) {
 
 // AddBal adds the amounts of the argument balance.
 func (b *Balance) AddBal(b2 *Balance) {
+	if b2 == nil {
+		return
+	}
 	for k, v := range b2.m {
 		if isZero(v) {
 			continue

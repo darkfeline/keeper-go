@@ -34,9 +34,9 @@ func TestBalance_Add(t *testing.T) {
 
 func TestBalance_AddBal_nil(t *testing.T) {
 	t.Parallel()
-	var b, b2 Balance
+	var b Balance
 	// Should not panic
-	b.AddBal(&b2)
+	b.AddBal(nil)
 }
 
 func TestBalance_Set(t *testing.T) {
