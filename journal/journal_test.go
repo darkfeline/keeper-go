@@ -155,6 +155,40 @@ func TestCompile_balances(t *testing.T) {
 	})
 }
 
+func TestCompile_balance_assert_new_account(t *testing.T) {
+	t.Parallel()
+	u := Unit{Symbol: "USD", Scale: 100}
+	e := []Entry{
+		&BalanceAssert{
+			EntryDate: civil.Date{2000, 1, 2},
+			Account:   "Assets:Cash",
+			Declared:  new(balFac).add(u, 0).bal(),
+		},
+	}
+	got, err := compile(e)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Run("entries", func(t *testing.T) {
+		want := []Entry{
+			&BalanceAssert{
+				EntryDate: civil.Date{2000, 1, 2},
+				Account:   "Assets:Cash",
+				Declared:  new(balFac).add(u, 0).bal(),
+				Actual:    new(balFac).add(u, 0).bal(),
+				Diff:      new(balFac).add(u, 0).bal(),
+			},
+		}
+		if diff := cmpdiff(want, got.Entries); diff != "" {
+			t.Errorf("entries mismatch (-want +got):\n%s", diff)
+		}
+	})
+	t.Run("balance", func(t *testing.T) {
+		want := Balances{}
+		compareBalances(t, want, got.Balances)
+	})
+}
+
 func TestCompile_treebal(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}

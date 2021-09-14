@@ -172,6 +172,9 @@ func (b *Balance) Equal(b2 *Balance) bool {
 // Set sets the receiver balance to the argument balance.
 func (b *Balance) Set(b2 *Balance) {
 	b.Clear()
+	if b2 == nil {
+		return
+	}
 	for k, v := range b2.m {
 		if !isZero(v) {
 			b.get(k).Set(v)

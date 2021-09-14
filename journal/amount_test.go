@@ -39,6 +39,32 @@ func TestBalance_AddBal_nil(t *testing.T) {
 	b.AddBal(&b2)
 }
 
+func TestBalance_Set(t *testing.T) {
+	t.Parallel()
+	u := Unit{Symbol: "USD", Scale: 100}
+	var b, b2 Balance
+	b2.Add(amnt(123, u))
+	b.Set(&b2)
+	got := b.Amount(u)
+	want := amnt(123, u)
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("amount mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestBalance_Set_to_nil(t *testing.T) {
+	t.Parallel()
+	u := Unit{Symbol: "USD", Scale: 100}
+	var b Balance
+	b.Add(amnt(123, u))
+	b.Set(nil)
+	got := b.Amount(u)
+	want := amnt(0, u)
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("amount mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestBalance_Neg(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
