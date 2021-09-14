@@ -112,6 +112,10 @@ type LedgerRow struct {
 	Balance     *journal.Amount
 }
 
+func (e LedgerRow) HasAmount() bool {
+	return e.Amount != nil && !e.Amount.Zero()
+}
+
 func (e LedgerRow) HasBalance() bool {
 	return e.Balance != nil && !e.Balance.Zero()
 }

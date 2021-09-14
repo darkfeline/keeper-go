@@ -20,7 +20,7 @@
       <td>{{.Date}}</td>
       <td>{{.Description}}</td>
       <td>{{.Position}}</td>
-      {{- if .Amount.Zero}}
+      {{- if not .HasAmount}}
       <td></td>
       <td></td>
       {{else if eq .Amount.Number.Sign 0}}
