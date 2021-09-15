@@ -17,7 +17,7 @@
     <tr>
       <td>{{.Position}}</td>
       <td>{{.Date}}</td>
-      <td><a href="/ledger?account={{.Account}}">{{.Account}}</a></td>
+      <td><a href="/ledger?account={{.Account}}">{{.Account}}</a>{{if .Tree}} (tree){{end}}</td>
       <td class="amount">{{.Declared.String}}</td>
       <td class="amount">{{.Actual.String}}</td>
       <td class="amount">{{.Diff.String}}</td>
