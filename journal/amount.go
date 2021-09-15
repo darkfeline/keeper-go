@@ -121,6 +121,9 @@ func (b *Balance) Empty() bool {
 
 // Clear clears the balance, making it empty/zero.
 func (b *Balance) Clear() {
+	if b == nil {
+		return
+	}
 	for k := range b.m {
 		delete(b.m, k)
 	}
@@ -128,6 +131,9 @@ func (b *Balance) Clear() {
 
 // Has returns true if the balance has a non-zero amount for the unit.
 func (b *Balance) Has(u Unit) bool {
+	if b == nil {
+		return false
+	}
 	n := b.m[u]
 	return n != nil && !isZero(n)
 }
@@ -136,6 +142,9 @@ func (b *Balance) Has(u Unit) bool {
 // The returned amount is independent memory from the balance.
 func (b *Balance) Amount(u Unit) *Amount {
 	a := &Amount{Unit: u}
+	if b == nil {
+		return a
+	}
 	if n := b.m[u]; n != nil && !isZero(n) {
 		a.Number.Set(n)
 	}
@@ -145,6 +154,9 @@ func (b *Balance) Amount(u Unit) *Amount {
 // Units returns the units in the balance
 func (b *Balance) Units() []Unit {
 	var us []Unit
+	if b == nil {
+		return us
+	}
 	for k, v := range b.m {
 		if isZero(v) {
 			continue
@@ -158,6 +170,9 @@ func (b *Balance) Units() []Unit {
 // The amounts are sorted by unit.
 func (b *Balance) Amounts() []*Amount {
 	var as []*Amount
+	if b == nil {
+		return as
+	}
 	for k, v := range b.m {
 		if isZero(v) {
 			continue
