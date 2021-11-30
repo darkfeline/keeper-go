@@ -88,8 +88,9 @@ func printClosingTx(w io.Writer, j *journal.Journal, d civil.Date, dst journal.A
 			b.Add(am)
 		}
 	}
+	b.Neg()
 	for _, am := range b.Amounts() {
-		fmt.Fprintf(bw, "%s %s\n", dst, am.Neg())
+		fmt.Fprintf(bw, "%s %s\n", dst, am)
 	}
 	fmt.Fprintf(bw, "end\n")
 	return bw.Flush()
