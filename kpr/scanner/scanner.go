@@ -347,9 +347,6 @@ func lexLower(s *Scanner) stateFn {
 	case "balance":
 		s.emit(token.BALANCE)
 		return lexExprEnd
-	case "treebal":
-		s.emit(token.TREEBAL)
-		return lexExprEnd
 	case "unit":
 		s.emit(token.UNIT)
 		return lexExprEnd
@@ -358,6 +355,9 @@ func lexLower(s *Scanner) stateFn {
 		return lexExprEnd
 	case "account":
 		s.emit(token.ACCOUNT)
+		return lexExprEnd
+	case "treebal":
+		s.emit(token.TREEBAL)
 		return lexExprEnd
 	}
 	if s.accept(digits + ":_") {
