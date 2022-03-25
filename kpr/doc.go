@@ -58,6 +58,7 @@ There are some keywords:
  unit
  disable
  account
+ treebal
 
 Comments are supported:
 
