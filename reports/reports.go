@@ -24,41 +24,35 @@ import (
 	"go.felesatra.moe/keeper/journal"
 )
 
-// A Pair is a Debit-Credit amount pair (one unit).
-type Pair struct {
-	Debit  *journal.Amount
-	Credit *journal.Amount
-}
-
-// A PairBalance is a Debit-Credit balance pair (multiple units).
-type PairBalance struct {
-	Debit  journal.Balance
-	Credit journal.Balance
+// A Pair is a Debit-Credit pair.
+type Pair[T any] struct {
+	Debit  T
+	Credit T
 }
 
 // A TrialBalance represents a trial balance report.
 type TrialBalance struct {
 	Rows  []TrialBalanceRow
-	Total PairBalance
+	Total Pair[journal.Balance]
 }
 
 // A TrialBalanceRow represents a row in a TrialBalance.
 type TrialBalanceRow struct {
 	Account journal.Account
-	Pairs   []Pair
+	Pairs   []Pair[*journal.Amount]
 }
 
 // NewTrialBalance creates a trial balance report.
 func NewTrialBalance(j *journal.Journal) *TrialBalance {
 	b := j.Balances
-	var total PairBalance
+	var total Pair[journal.Balance]
 	var r []TrialBalanceRow
 	for _, a := range sortedAccounts(j) {
 		e := TrialBalanceRow{
 			Account: a,
 		}
 		for _, amt := range b[a].Amounts() {
-			p := Pair{}
+			p := Pair[*journal.Amount]{}
 			switch amt.Number.Sign() {
 			case -1:
 				p.Credit = amt
