@@ -36,7 +36,7 @@ type PairBalance struct {
 	Credit journal.Balance
 }
 
-// A TrialBalance represents a trial balance report
+// A TrialBalance represents a trial balance report.
 type TrialBalance struct {
 	Rows  []TrialBalanceRow
 	Total PairBalance
