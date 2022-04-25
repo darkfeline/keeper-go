@@ -23,6 +23,10 @@ import (
 )
 
 // A lineParser parses lines in a keeper file.
+// Basically, this implements an intermediary parsing step, where
+// tokens are grouped into lines of tokens.
+// Due to keeper's line oriented format, this simplifies the parsing
+// implementation.
 type lineParser struct {
 	s scanner.Scanner
 }
