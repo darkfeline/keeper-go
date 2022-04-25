@@ -24,11 +24,12 @@ func _() {
 	_ = x[DISABLE-13]
 	_ = x[ACCOUNT-14]
 	_ = x[TREEBAL-15]
+	_ = x[META-16]
 }
 
-const _Token_name = "ILLEGALEOFCOMMENTNEWLINESTRINGUSYMBOLACCTNAMEDECIMALDATETXENDBALANCEUNITDISABLEACCOUNTTREEBAL"
+const _Token_name = "ILLEGALEOFCOMMENTNEWLINESTRINGUSYMBOLACCTNAMEDECIMALDATETXENDBALANCEUNITDISABLEACCOUNTTREEBALMETA"
 
-var _Token_index = [...]uint8{0, 7, 10, 17, 24, 30, 37, 45, 52, 56, 58, 61, 68, 72, 79, 86, 93}
+var _Token_index = [...]uint8{0, 7, 10, 17, 24, 30, 37, 45, 52, 56, 58, 61, 68, 72, 79, 86, 93, 97}
 
 func (i Token) String() string {
 	if i < 0 || i >= Token(len(_Token_index)-1) {

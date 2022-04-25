@@ -359,6 +359,9 @@ func lexLower(s *Scanner) stateFn {
 	case "treebal":
 		s.emit(token.TREEBAL)
 		return lexExprEnd
+	case "meta":
+		s.emit(token.META)
+		return lexExprEnd
 	}
 	if s.accept(digits + ":_") {
 		return lexAccountName
