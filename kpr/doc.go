@@ -106,7 +106,7 @@ Disable account entries disable an account for use:
 Account declarations provide account metadata:
 
  account Some:account
- "my key" "my value"
+ meta "my key" "my value"
  end
 */
 package kpr

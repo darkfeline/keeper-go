@@ -276,15 +276,16 @@ func (p *parser) parseDeclareAccount(l *line) ast.Entry {
 			e.EndTok = &ast.End{TokPos: l.Pos()}
 			return e
 		}
-		if err := matchTokens(l.tokens, token.STRING, token.STRING); err != nil {
+		if err := matchTokens(l.tokens, token.META, token.STRING, token.STRING); err != nil {
 			p.errorf(l.Pos(), "%s", err)
 			n := &ast.BadLine{From: l.Pos(), To: l.End()}
 			e.Metadata = append(e.Metadata, n)
 			continue
 		}
 		n := &ast.MetadataLine{
-			Key: tokVal(l.tokens[0]),
-			Val: tokVal(l.tokens[1]),
+			TokPos: l.tokens[0].pos,
+			Key:    tokVal(l.tokens[1]),
+			Val:    tokVal(l.tokens[2]),
 		}
 		e.Metadata = append(e.Metadata, n)
 	}

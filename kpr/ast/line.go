@@ -66,12 +66,13 @@ func (*AmountLine) lineNode() {}
 
 // A MetadataLine node represents a metadata line.
 type MetadataLine struct {
-	Key *BasicValue // STRING
-	Val *BasicValue // STRING
+	TokPos token.Pos
+	Key    *BasicValue // STRING
+	Val    *BasicValue // STRING
 }
 
 func (v *MetadataLine) Pos() token.Pos {
-	return v.Key.Pos()
+	return v.TokPos
 }
 
 func (v *MetadataLine) End() token.Pos {

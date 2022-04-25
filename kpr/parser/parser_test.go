@@ -295,7 +295,7 @@ func TestParseBytes_disable(t *testing.T) {
 func TestParseBytes_account(t *testing.T) {
 	t.Parallel()
 	const input = `account Some:account
-"foo" "bar"
+meta "foo" "bar"
 end
 `
 	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
@@ -308,11 +308,12 @@ end
 			Account: val(9, token.ACCTNAME, "Some:account"),
 			Metadata: []ast.LineNode{
 				&ast.MetadataLine{
-					Key: val(22, token.STRING, `"foo"`),
-					Val: val(28, token.STRING, `"bar"`),
+					TokPos: 22,
+					Key:    val(27, token.STRING, `"foo"`),
+					Val:    val(33, token.STRING, `"bar"`),
 				},
 			},
-			EndTok: &ast.End{TokPos: 34},
+			EndTok: &ast.End{TokPos: 39},
 		},
 	}
 	if diff := cmp.Diff(want, got.Entries); diff != "" {
@@ -338,6 +339,31 @@ end
 				&ast.BadLine{From: 22, To: 40},
 			},
 			EndTok: &ast.End{TokPos: 40},
+		},
+	}
+	if diff := cmp.Diff(want, got.Entries); diff != "" {
+		t.Errorf("entries mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestParseBytes_account_metadata_no_keyword(t *testing.T) {
+	t.Parallel()
+	const input = `account Some:account
+"foo" "bar"
+end
+`
+	got, err := ParseBytes(token.NewFileSet(), "", []byte(input), 0)
+	if err == nil {
+		t.Errorf("Expected error")
+	}
+	want := []ast.Entry{
+		&ast.DeclareAccount{
+			TokPos:  1,
+			Account: val(9, token.ACCTNAME, "Some:account"),
+			Metadata: []ast.LineNode{
+				&ast.BadLine{From: 22, To: 34},
+			},
+			EndTok: &ast.End{TokPos: 34},
 		},
 	}
 	if diff := cmp.Diff(want, got.Entries); diff != "" {
