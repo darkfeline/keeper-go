@@ -42,6 +42,7 @@ type TrialBalance struct {
 	Total PairBalance
 }
 
+// A TrialBalanceRow represents a row in a TrialBalance.
 type TrialBalanceRow struct {
 	Account journal.Account
 	Pairs   []Pair
