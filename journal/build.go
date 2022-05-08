@@ -32,7 +32,7 @@ import (
 // Each transaction must still balance to zero however.
 func buildEntries(fset *token.FileSet, e []ast.Entry) ([]Entry, error) {
 	b := newBuilder(fset)
-	e2, err := b.build(e)
+	e2, err := b.build(e...)
 	if err != nil {
 		return nil, fmt.Errorf("build entries: %s", err)
 	}
@@ -53,7 +53,7 @@ func newBuilder(fset *token.FileSet) *builder {
 	}
 }
 
-func (b *builder) build(t []ast.Entry) ([]Entry, error) {
+func (b *builder) build(t ...ast.Entry) ([]Entry, error) {
 	var entries []Entry
 	for _, n := range t {
 		// BUG(darkfeline): Account declarations aren't supported by the journal builder yet.
