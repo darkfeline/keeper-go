@@ -39,6 +39,7 @@ func buildEntries(fset *token.FileSet, e []ast.Entry) ([]Entry, error) {
 	return e2, nil
 }
 
+// builder builds ast entries into journal entries.
 type builder struct {
 	fset  *token.FileSet
 	units map[string]Unit
