@@ -22,7 +22,6 @@ import (
 
 	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/kpr/ast"
-	"go.felesatra.moe/keeper/kpr/parser"
 	"go.felesatra.moe/keeper/kpr/scanner"
 	"go.felesatra.moe/keeper/kpr/token"
 )
@@ -31,26 +30,13 @@ import (
 // This is done in a single pass on an entry by entry basis, so
 // balances are not tracked.
 // Each transaction must still balance to zero however.
-func buildEntries(inputs ...input) ([]Entry, error) {
-	fset := token.NewFileSet()
+func buildEntries(fset *token.FileSet, e []ast.Entry) ([]Entry, error) {
 	b := newBuilder(fset)
-	var entries []Entry
-	for _, i := range inputs {
-		src, err := i.Src()
-		if err != nil {
-			return nil, fmt.Errorf("build entries: %s", err)
-		}
-		f, err := parser.ParseBytes(fset, i.Filename(), src, 0)
-		if err != nil {
-			return nil, fmt.Errorf("build entries: %s", err)
-		}
-		e, err := b.build(f.Entries)
-		if err != nil {
-			return entries, fmt.Errorf("build entries: %s", err)
-		}
-		entries = append(entries, e...)
+	e2, err := b.build(e)
+	if err != nil {
+		return nil, fmt.Errorf("build entries: %s", err)
 	}
-	return entries, nil
+	return e2, nil
 }
 
 type builder struct {

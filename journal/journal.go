@@ -44,6 +44,9 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/civil"
+	"go.felesatra.moe/keeper/kpr/ast"
+	"go.felesatra.moe/keeper/kpr/parser"
+	"go.felesatra.moe/keeper/kpr/token"
 )
 
 // A Journal represents bookkeeping information compiled from keeper file source.
@@ -82,19 +85,40 @@ func (j *Journal) BalancesEnding(d civil.Date) Balances {
 // caller to inspect the transactions to identify the error.
 func Compile(o ...Option) (*Journal, error) {
 	opts := makeOptions(o)
-	e, err := buildEntries(opts.inputs...)
+	fset := token.NewFileSet()
+	e, err := parseEntries(fset, opts.inputs...)
 	if err != nil {
 		return nil, fmt.Errorf("compile journal: %s", err)
 	}
-	sortEntries(e)
-	if d := opts.ending; d.IsValid() {
-		e = entriesEnding(e, d)
+	e2, err := buildEntries(fset, e)
+	if err != nil {
+		return nil, fmt.Errorf("compile journal: %s", err)
 	}
-	j, err := compile(e)
+	sortEntries(e2)
+	if d := opts.ending; d.IsValid() {
+		e2 = entriesEnding(e2, d)
+	}
+	j, err := compile(e2)
 	if err != nil {
 		return nil, fmt.Errorf("compile journal: %s", err)
 	}
 	return j, nil
+}
+
+func parseEntries(fset *token.FileSet, inputs ...input) ([]ast.Entry, error) {
+	var e []ast.Entry
+	for _, i := range inputs {
+		src, err := i.Src()
+		if err != nil {
+			return nil, fmt.Errorf("build entries: %s", err)
+		}
+		f, err := parser.ParseBytes(fset, i.Filename(), src, 0)
+		if err != nil {
+			return nil, fmt.Errorf("build entries: %s", err)
+		}
+		e = append(e, f.Entries...)
+	}
+	return e, nil
 }
 
 // compile compiles a Journal from entries.

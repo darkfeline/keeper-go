@@ -32,7 +32,7 @@ Some:account -1.2 USD
 Expenses:Stuff
 end
 `
-	got, err := buildEntries(inputBytes{"", []byte(input)})
+	got, err := parseAndBuild(inputBytes{"", []byte(input)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ Some:account -1.2 USD
 Expenses:Stuff 1.3 USD
 end
 `
-	_, err := buildEntries(inputBytes{"", []byte(input)})
+	_, err := parseAndBuild(inputBytes{"", []byte(input)})
 	if err == nil {
 		t.Errorf("Expected errors")
 	}
@@ -78,7 +78,7 @@ func TestBuildEntries_same_duplicate_unit(t *testing.T) {
 	const input = `unit USD 100
 unit USD 100
 `
-	_, err := buildEntries(inputBytes{"", []byte(input)})
+	_, err := parseAndBuild(inputBytes{"", []byte(input)})
 	if err != nil {
 		t.Errorf("Got unexpected error: %s", err)
 	}
@@ -89,7 +89,7 @@ func TestBuildEntries_diff_duplicate_unit(t *testing.T) {
 	const input = `unit USD 100
 unit USD 10
 `
-	_, err := buildEntries(inputBytes{"", []byte(input)})
+	_, err := parseAndBuild(inputBytes{"", []byte(input)})
 	if err == nil {
 		t.Errorf("Expected error")
 	}
@@ -99,7 +99,7 @@ func TestBuildEntries_disable(t *testing.T) {
 	t.Parallel()
 	const input = `disable 2001-02-03 Some:account
 `
-	got, err := buildEntries(inputBytes{"", []byte(input)})
+	got, err := parseAndBuild(inputBytes{"", []byte(input)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,6 +138,19 @@ func TestIsPower10(t *testing.T) {
 			}
 		})
 	}
+}
+
+func parseAndBuild(inputs ...input) ([]Entry, error) {
+	fset := token.NewFileSet()
+	e, err := parseEntries(fset, inputs...)
+	if err != nil {
+		return nil, err
+	}
+	e2, err := buildEntries(fset, e)
+	if err != nil {
+		return nil, err
+	}
+	return e2, nil
 }
 
 func cmpdiff(x, y interface{}) string {
