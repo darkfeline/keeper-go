@@ -36,6 +36,15 @@ func (a *Amount) Neg() {
 	a.Number.Neg(&a.Number)
 }
 
+// Sign returns:
+//
+//	-1 if amount <  0
+//	 0 if amount == 0
+//	+1 if amount >  0
+func (a *Amount) Sign() int {
+	return a.Number.Sign()
+}
+
 // Equal returns true if the amounts are equal.
 func (a *Amount) Equal(b *Amount) bool {
 	return a.Unit == b.Unit && a.Number.Cmp(&b.Number) == 0

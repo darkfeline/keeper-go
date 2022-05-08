@@ -23,7 +23,7 @@
       {{- if not .HasAmount}}
       <td></td>
       <td></td>
-      {{else if eq .Amount.Number.Sign 0}}
+      {{else if eq .Amount.Sign 0}}
       <td></td>
       <td class="amount">{{.Amount}}</td>
       {{else}}
