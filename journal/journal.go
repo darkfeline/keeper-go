@@ -81,8 +81,9 @@ func (j *Journal) BalancesEnding(d civil.Date) Balances {
 }
 
 // Compile compiles keeper file source into a Journal.
-// Balance assertion errors are not returned here, to enable the
-// caller to inspect the transactions to identify the error.
+// Balance assertion errors are stored in the returned Journal rather
+// than returned as errors here, to enable the caller to inspect the
+// transactions to identify the error.
 func Compile(o ...Option) (*Journal, error) {
 	opts := makeOptions(o)
 	fset := token.NewFileSet()
@@ -105,6 +106,7 @@ func Compile(o ...Option) (*Journal, error) {
 	return j, nil
 }
 
+// parseEntries parses inputs into ast entries.
 func parseEntries(fset *token.FileSet, inputs ...input) ([]ast.Entry, error) {
 	var e []ast.Entry
 	for _, i := range inputs {
