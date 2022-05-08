@@ -85,6 +85,10 @@ func (j *Journal) BalancesEnding(d civil.Date) Balances {
 // than returned as errors here, to enable the caller to inspect the
 // transactions to identify the error.
 func Compile(o ...Option) (*Journal, error) {
+	// Compiling a journal happens in three stages:
+	//  1. parse inputs into ast entries
+	//  2. convert ast entries into journal entries ("building")
+	//  3. go through entries adding up balances and checking things ("compiling")
 	opts := makeOptions(o)
 	fset := token.NewFileSet()
 	e, err := parseEntries(fset, opts.inputs...)
