@@ -19,22 +19,10 @@
     <tr{{if .Date }} class="section"{{end}}>
       <td>{{.Date}}</td>
       <td>{{.Description}}</td>
-      <td>{{.Position}}</td>
-      {{- if not .HasAmount}}
-      <td></td>
-      <td></td>
-      {{else if eq .Amount.Sign 0}}
-      <td></td>
-      <td class="amount">{{.Amount}}</td>
-      {{else}}
-      <td class="amount">{{.Amount}}</td>
-      <td></td>
-      {{- end}}
-      {{- if .HasBalance}}
-      <td class="amount">{{.Balance}}</td>
-      {{else}}
-      <td></td>
-      {{- end}}
+      <td>{{.Ref}}</td>
+      <td class="amount">{{if .Pair.Debit}}{{.Pair.Debit}}{{end}}</td>
+      <td class="amount">{{if .Pair.Credit}}{{.Pair.Credit}}{{end}}</td>
+      <td class="amount">{{if .Balance}}{{.Balance}}{{end}}</td>
       <tr>
     {{- end}}
   </tbody>

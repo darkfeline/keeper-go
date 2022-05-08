@@ -19,8 +19,10 @@ from bookkeeping data.
 package reports
 
 import (
+	"fmt"
 	"sort"
 
+	"cloud.google.com/go/civil"
 	"go.felesatra.moe/keeper/journal"
 )
 
@@ -69,6 +71,99 @@ func NewTrialBalance(j *journal.Journal) *TrialBalance {
 		Rows:  r,
 		Total: total,
 	}
+}
+
+// An AccountLedger represents the ledger for one account.
+type AccountLedger struct {
+	Account journal.Account
+	Rows    []LedgerRow
+}
+
+// A LedgerRow represents a row in an AccountLedger.
+type LedgerRow struct {
+	Date        civil.Date
+	Description string
+	// A reference to the file location for the transaction split.
+	Ref  string
+	Pair Pair[*journal.Amount]
+	// Running balance for the account.
+	Balance journal.Balance
+}
+
+func NewAccountLedger(j *journal.Journal, a journal.Account) *AccountLedger {
+	l := &AccountLedger{Account: a}
+	var b journal.Balance
+	for _, e := range j.Entries {
+		r := LedgerRow{
+			Date: e.Date(),
+			Ref:  e.Position().String(),
+		}
+		switch e := e.(type) {
+		case *journal.Transaction:
+			r.Description = e.Description
+			for _, s := range e.Splits {
+				if s.Account != a {
+					continue
+				}
+				switch s.Amount.Sign() {
+				case -1:
+					r.Pair.Credit = s.Amount
+				case 1:
+					r.Pair.Debit = s.Amount
+				}
+				b.Add(s.Amount)
+				r.Balance.Set(&b)
+				l.Rows = append(l.Rows, r)
+			}
+		case *journal.BalanceAssert:
+			if e.Account != a {
+				break
+			}
+			units := balanceUnits(e.Actual, e.Declared, e.Diff)
+			t := "balance"
+			if e.Tree {
+				t = "tree balance"
+			}
+			for _, u := range units {
+				if !e.Diff.Has(u) {
+					r.Description = "(" + t + ")"
+				} else {
+					r.Description = fmt.Sprintf("(%s error, declared %s, diff %s)",
+						t, e.Declared.Amount(u), e.Diff.Amount(u))
+				}
+				r.Balance.Set(&b)
+				l.Rows = append(l.Rows, r)
+			}
+		case *journal.DisableAccount:
+			if e.Account != a {
+				break
+			}
+			r.Description = "(disabled)"
+			r.Balance.Set(&b)
+			l.Rows = append(l.Rows, r)
+		default:
+			panic(e)
+		}
+	}
+	return l
+}
+
+// balanceUnits returns all of the units in the balances.
+func balanceUnits(b ...journal.Balance) []journal.Unit {
+	seen := make(map[journal.Unit]bool)
+	for _, b := range b {
+		for _, u := range b.Units() {
+			seen[u] = true
+		}
+	}
+	var units []journal.Unit
+	for u, v := range seen {
+		if v {
+			units = append(units, u)
+		}
+	}
+	sort.Slice(units, func(i, j int) bool { return units[i].Symbol < units[j].Symbol })
+	return units
 }
 
 func sortedAccounts(j *journal.Journal) []journal.Account {

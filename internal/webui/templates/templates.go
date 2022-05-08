@@ -23,6 +23,7 @@ import (
 	_ "embed"
 
 	"go.felesatra.moe/keeper/journal"
+	"go.felesatra.moe/keeper/reports"
 )
 
 //go:embed style.css
@@ -106,32 +107,11 @@ func (d LedgerData) Title() string {
 }
 
 type LedgerRow struct {
-	Entry       journal.Entry
+	Date        string
 	Description string
-	Amount      *journal.Amount
+	Ref         string
+	Pair        reports.Pair[*journal.Amount]
 	Balance     *journal.Amount
-}
-
-func (e LedgerRow) HasAmount() bool {
-	return e.Amount != nil && !e.Amount.Zero()
-}
-
-func (e LedgerRow) HasBalance() bool {
-	return e.Balance != nil && !e.Balance.Zero()
-}
-
-func (e LedgerRow) Position() string {
-	if e.Entry == nil {
-		return ""
-	}
-	return e.Entry.Position().String()
-}
-
-func (e LedgerRow) Date() string {
-	if e.Entry == nil {
-		return ""
-	}
-	return e.Entry.Date().String()
 }
 
 func clone(t *template.Template) *template.Template {

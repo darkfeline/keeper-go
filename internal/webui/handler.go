@@ -325,10 +325,26 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	d := templates.LedgerData{Account: a}
-	var b journal.Balance
-	for _, e := range accountEntries(j.Entries, a) {
-		d.Rows = append(d.Rows, makeLedgerRows(&b, e, a)...)
+	l := reports.NewAccountLedger(j, a)
+	d := templates.LedgerData{Account: l.Account}
+	for _, r := range l.Rows {
+		// BUG(darkfeline): Rows from the same split aren't
+		// grouped together due to how the reports package
+		// emits them.
+		r2 := templates.LedgerRow{
+			Date:        r.Date.String(),
+			Description: r.Description,
+			Ref:         r.Ref,
+			Pair:        r.Pair,
+		}
+		if r.Pair.Debit != nil {
+			r2.Balance = r.Balance.Amount(r.Pair.Debit.Unit)
+		} else if r.Pair.Credit != nil {
+			r2.Balance = r.Balance.Amount(r.Pair.Credit.Unit)
+		} else if u := r.Balance.Units(); len(u) == 1 {
+			r2.Balance = r.Balance.Amount(u[0])
+		}
+		d.Rows = append(d.Rows, r2)
 	}
 	h.execute(w, templates.Ledger, d)
 }
@@ -414,45 +430,6 @@ func makeStmtRows(a []journal.Account, b journal.Balances) ([]templates.StmtRow,
 	return r, t
 }
 
-func makeLedgerRows(b *journal.Balance, e journal.Entry, a journal.Account) []templates.LedgerRow {
-	switch e := e.(type) {
-	case *journal.Transaction:
-		return convertTransaction(b, a, e)
-	case *journal.BalanceAssert:
-		return convertBalance(e)
-	case *journal.DisableAccount:
-		return []templates.LedgerRow{{
-			Entry:       e,
-			Description: "(disabled)",
-		}}
-	default:
-		panic(fmt.Sprintf("unknown entry %T", e))
-	}
-}
-
-func convertBalance(e *journal.BalanceAssert) []templates.LedgerRow {
-	units := balanceUnits(e.Actual, e.Declared, e.Diff)
-	var entries []templates.LedgerRow
-	n := "balance"
-	if e.Tree {
-		n = "tree balance"
-	}
-	for _, u := range units {
-		le := templates.LedgerRow{
-			Entry:   e,
-			Balance: e.Actual.Amount(u),
-		}
-		if !e.Diff.Has(u) {
-			le.Description = "(" + n + ")"
-		} else {
-			le.Description = fmt.Sprintf("(%s error, declared %s, diff %s)",
-				n, e.Declared.Amount(u), e.Diff.Amount(u))
-		}
-		entries = append(entries, le)
-	}
-	return entries
-}
-
 // balanceUnits returns all of the units in the balances.
 func balanceUnits(b ...journal.Balance) []journal.Unit {
 	seen := make(map[journal.Unit]bool)
@@ -469,28 +446,6 @@ func balanceUnits(b ...journal.Balance) []journal.Unit {
 	}
 	sort.Slice(units, func(i, j int) bool { return units[i].Symbol < units[j].Symbol })
 	return units
-}
-
-func convertTransaction(b *journal.Balance, a journal.Account, e *journal.Transaction) []templates.LedgerRow {
-	var entries []templates.LedgerRow
-	first := true
-	for _, s := range e.Splits {
-		if s.Account != a {
-			continue
-		}
-		le := templates.LedgerRow{
-			Amount: s.Amount,
-		}
-		b.Add(s.Amount)
-		le.Balance = b.Amount(s.Amount.Unit)
-		if first {
-			le.Entry = e
-			le.Description = e.Description
-			first = false
-		}
-		entries = append(entries, le)
-	}
-	return entries
 }
 
 // A stmt helps construct StmtData and add rows.
