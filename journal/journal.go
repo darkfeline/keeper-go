@@ -50,6 +50,9 @@ import (
 )
 
 // A Journal represents bookkeeping information compiled from keeper file source.
+//
+// Be careful; journals contains a lot of shared pointers internally.
+// Modifying anything in a journal is not recommended.
 type Journal struct {
 	// Entries are all of the entries, sorted chronologically.
 	Entries []Entry
