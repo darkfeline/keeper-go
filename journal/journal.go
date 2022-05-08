@@ -64,6 +64,13 @@ type Journal struct {
 	BalanceErrors []*BalanceAssert
 }
 
+func newJournal() *Journal {
+	return &Journal{
+		Accounts: make(map[Account]*AccountInfo),
+		Balances: make(Balances),
+	}
+}
+
 // BalancesEnding returns the balances of all accounts at the close of
 // the given date.
 func (j *Journal) BalancesEnding(d civil.Date) Balances {
@@ -133,10 +140,7 @@ func parseEntries(fset *token.FileSet, inputs ...input) ([]ast.Entry, error) {
 // compile compiles a Journal from entries.
 // Entries should be sorted.
 func compile(e []Entry) (*Journal, error) {
-	j := &Journal{
-		Accounts: make(map[Account]*AccountInfo),
-		Balances: make(Balances),
-	}
+	j := newJournal()
 	for _, e := range e {
 		if err := j.addEntry(e); err != nil {
 			return nil, err
