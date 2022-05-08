@@ -15,6 +15,9 @@
 package journal
 
 import (
+	"io/ioutil"
+	"path/filepath"
+
 	"cloud.google.com/go/civil"
 )
 
@@ -36,9 +39,10 @@ func makeOptions(o []Option) options {
 	return op
 }
 
-// An input defines an input source for compiling a journal, e.g., bytes or a file.
+// An input defines an input source for compiling a journal.
 type input interface {
-	input()
+	Filename() string
+	Src() ([]byte, error)
 }
 
 type inputBytes struct {
@@ -46,7 +50,13 @@ type inputBytes struct {
 	src      []byte
 }
 
-func (inputBytes) input() {}
+func (o inputBytes) Filename() string {
+	return o.filename
+}
+
+func (o inputBytes) Src() ([]byte, error) {
+	return o.src, nil
+}
 
 func (o inputBytes) setOptions(opt *options) {
 	opt.inputs = append(opt.inputs, o)
@@ -72,7 +82,17 @@ type inputFile struct {
 	filename string
 }
 
-func (inputFile) input() {}
+func (o inputFile) Filename() string {
+	return filepath.Base(o.filename)
+}
+
+func (o inputFile) Src() ([]byte, error) {
+	src, err := ioutil.ReadFile(o.filename)
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
 
 func (o inputFile) setOptions(opt *options) {
 	opt.inputs = append(opt.inputs, o)

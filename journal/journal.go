@@ -42,8 +42,6 @@ package journal
 
 import (
 	"fmt"
-	"io/ioutil"
-	"path/filepath"
 
 	"cloud.google.com/go/civil"
 )
@@ -84,8 +82,7 @@ func (j *Journal) BalancesEnding(d civil.Date) Balances {
 // caller to inspect the transactions to identify the error.
 func Compile(o ...Option) (*Journal, error) {
 	opts := makeOptions(o)
-	inputs, err := openInputFiles(opts.inputs)
-	e, err := buildEntries(inputs...)
+	e, err := buildEntries(opts.inputs...)
 	if err != nil {
 		return nil, fmt.Errorf("compile journal: %s", err)
 	}
@@ -98,29 +95,6 @@ func Compile(o ...Option) (*Journal, error) {
 		return nil, fmt.Errorf("compile journal: %s", err)
 	}
 	return j, nil
-}
-
-// openInputFiles reads inputFiles and replaces them with their contents.
-func openInputFiles(inputs []input) ([]inputBytes, error) {
-	var ib []inputBytes
-	for _, i := range inputs {
-		switch i := i.(type) {
-		case inputBytes:
-			ib = append(ib, i)
-		case inputFile:
-			src, err := ioutil.ReadFile(i.filename)
-			if err != nil {
-				return nil, err
-			}
-			ib = append(ib, inputBytes{
-				filename: filepath.Base(i.filename),
-				src:      src,
-			})
-		default:
-			panic(fmt.Sprintf("unknown type %T", i))
-		}
-	}
-	return ib, nil
 }
 
 // compile compiles a Journal from entries.

@@ -31,12 +31,16 @@ import (
 // This is done in a single pass on an entry by entry basis, so
 // balances are not tracked.
 // Each transaction must still balance to zero however.
-func buildEntries(inputs ...inputBytes) ([]Entry, error) {
+func buildEntries(inputs ...input) ([]Entry, error) {
 	fset := token.NewFileSet()
 	b := newBuilder(fset)
 	var entries []Entry
 	for _, i := range inputs {
-		f, err := parser.ParseBytes(fset, i.filename, i.src, 0)
+		src, err := i.Src()
+		if err != nil {
+			return nil, fmt.Errorf("build entries: %s", err)
+		}
+		f, err := parser.ParseBytes(fset, i.Filename(), src, 0)
 		if err != nil {
 			return nil, fmt.Errorf("build entries: %s", err)
 		}
