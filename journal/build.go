@@ -26,19 +26,6 @@ import (
 	"go.felesatra.moe/keeper/kpr/token"
 )
 
-// buildEntries builds entries from keeper file source.
-// This is done in a single pass on an entry by entry basis, so
-// balances are not tracked.
-// Each transaction must still balance to zero however.
-func buildEntries(fset *token.FileSet, e []ast.Entry) ([]Entry, error) {
-	b := newBuilder(fset)
-	e2, err := b.build(e...)
-	if err != nil {
-		return nil, fmt.Errorf("build entries: %s", err)
-	}
-	return e2, nil
-}
-
 // builder builds ast entries into journal entries.
 // This is done in a single pass on an entry by entry basis, so
 // balances are not tracked.

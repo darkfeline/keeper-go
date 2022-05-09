@@ -146,7 +146,8 @@ func parseAndBuild(inputs ...input) ([]Entry, error) {
 	if err != nil {
 		return nil, err
 	}
-	e2, err := buildEntries(fset, e)
+	b := newBuilder(fset)
+	e2, err := b.build(e...)
 	if err != nil {
 		return nil, err
 	}

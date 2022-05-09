@@ -105,7 +105,8 @@ func Compile(o ...Option) (*Journal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("compile journal: %s", err)
 	}
-	e2, err := buildEntries(fset, e)
+	c := newCompiler(fset)
+	e2, err := c.b.build(e...)
 	if err != nil {
 		return nil, fmt.Errorf("compile journal: %s", err)
 	}
