@@ -40,6 +40,9 @@ func buildEntries(fset *token.FileSet, e []ast.Entry) ([]Entry, error) {
 }
 
 // builder builds ast entries into journal entries.
+// This is done in a single pass on an entry by entry basis, so
+// balances are not tracked.
+// Each transaction must still balance to zero however.
 type builder struct {
 	fset  *token.FileSet
 	units map[string]Unit
