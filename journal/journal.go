@@ -106,8 +106,8 @@ func Compile(o ...Option) (*Journal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("compile journal: %s", err)
 	}
-	c := newCompiler(fset)
-	e2, err := c.b.build(e...)
+	b := newBuilder(fset)
+	e2, err := b.build(e...)
 	if err != nil {
 		return nil, fmt.Errorf("compile journal: %s", err)
 	}
@@ -142,15 +142,13 @@ func parseEntries(fset *token.FileSet, inputs ...input) ([]ast.Entry, error) {
 // compile compiles a Journal from entries.
 // Entries should be sorted.
 func compile(e []Entry) (*Journal, error) {
-	// Placeholder fset.
-	fset := token.NewFileSet()
-	c := newCompiler(fset)
+	j := newJournal()
 	for _, e := range e {
-		if err := c.j.addEntry(e); err != nil {
+		if err := j.addEntry(e); err != nil {
 			return nil, err
 		}
 	}
-	return c.j, nil
+	return j, nil
 }
 
 func (j *Journal) addEntry(e Entry) error {
