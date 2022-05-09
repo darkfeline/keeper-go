@@ -91,7 +91,10 @@ func (b *builder) build(t ...ast.Entry) ([]Entry, error) {
 			panic(fmt.Sprintf("unknown entry node %T", n))
 		}
 	}
-	return entries, b.errs.Err()
+	if err := b.errs.Err(); err != nil {
+		return entries, fmt.Errorf("build entries: %w", b.errs.Err())
+	}
+	return entries, nil
 }
 
 func (b *builder) nodePos(e ast.Node) token.Position {
