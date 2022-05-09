@@ -140,7 +140,9 @@ func parseEntries(fset *token.FileSet, inputs ...input) ([]ast.Entry, error) {
 // compile compiles a Journal from entries.
 // Entries should be sorted.
 func compile(e []Entry) (*Journal, error) {
-	c := newCompiler()
+	// Placeholder fset.
+	fset := token.NewFileSet()
+	c := newCompiler(fset)
 	for _, e := range e {
 		if err := c.j.addEntry(e); err != nil {
 			return nil, err

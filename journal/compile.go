@@ -21,8 +21,7 @@ type compiler struct {
 	b *builder
 }
 
-func newCompiler() *compiler {
-	fset := token.NewFileSet()
+func newCompiler(fset *token.FileSet) *compiler {
 	c := &compiler{
 		j: newJournal(),
 		b: newBuilder(fset),
