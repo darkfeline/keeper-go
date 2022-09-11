@@ -46,7 +46,6 @@ func newBuilder(fset *token.FileSet) *builder {
 func (b *builder) build(t ...ast.Entry) ([]Entry, error) {
 	var entries []Entry
 	for _, n := range t {
-		// BUG(darkfeline): Account declarations aren't supported by the journal builder yet.
 		switch n := n.(type) {
 		case *ast.SingleBalance:
 			e, err := b.buildSingleBalance(n)
@@ -68,6 +67,10 @@ func (b *builder) build(t ...ast.Entry) ([]Entry, error) {
 			entries = append(entries, e)
 		case *ast.UnitDecl:
 			b.addUnit(n)
+		case *ast.DeclareAccount:
+			// BUG(darkfeline): Account declarations
+			// aren't supported by the journal builder
+			// yet.
 		case *ast.DisableAccount:
 			e, err := b.buildDisableAccount(n)
 			if err != nil {
