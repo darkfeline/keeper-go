@@ -73,6 +73,9 @@ func (b *builder) build(t ...ast.Entry) ([]Entry, error) {
 			if err != nil {
 				continue
 			}
+			// Do not update account disabled info here
+			// because entries are not date sorted during
+			// the build phase.
 			entries = append(entries, e)
 		default:
 			panic(fmt.Sprintf("unknown entry node %T", n))
