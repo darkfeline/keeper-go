@@ -47,6 +47,12 @@ func (a *Amount) Sign() int {
 
 // Equal returns true if the amounts are equal.
 func (a *Amount) Equal(b *Amount) bool {
+	if a == nil {
+		return b == nil
+	}
+	if b == nil {
+		return a == nil
+	}
 	return a.Unit == b.Unit && a.Number.Cmp(&b.Number) == 0
 }
 
