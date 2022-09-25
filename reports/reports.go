@@ -102,6 +102,7 @@ func NewAccountLedger(j *journal.Journal, a journal.Account) *AccountLedger {
 		case *journal.Transaction:
 			r.Description = e.Description
 			for _, s := range e.Splits {
+				r := r
 				if s.Account != a {
 					continue
 				}
