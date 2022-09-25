@@ -31,9 +31,10 @@ import (
 // balances are not tracked.
 // Each transaction must still balance to zero however.
 type builder struct {
-	fset  *token.FileSet
-	units map[string]Unit
-	errs  scanner.ErrorList
+	fset     *token.FileSet
+	units    map[string]Unit
+	accounts map[Account]*AccountInfo
+	errs     scanner.ErrorList
 }
 
 func newBuilder(fset *token.FileSet) *builder {
