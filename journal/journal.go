@@ -94,15 +94,14 @@ func (j *Journal) BalancesEnding(d civil.Date) Balances {
 // Balance assertion errors are stored in the returned Journal rather
 // than returned as errors here, to enable the caller to inspect the
 // transactions to identify the error.
-func Compile(o ...Option) (*Journal, error) {
+func Compile(a *CompileArgs) (*Journal, error) {
 	// Compiling a journal happens in three stages:
 	//  1. Parse inputs into ast entries
 	//  2. Convert ast entries into journal entries ("building")
 	//  3. Sort entries by date
 	//  4. Go through entries adding up balances and checking things ("compiling")
-	opts := makeOptions(o)
 	fset := token.NewFileSet()
-	e, err := parseEntries(fset, opts.inputs...)
+	e, err := parseEntries(fset, a.Inputs...)
 	if err != nil {
 		return nil, fmt.Errorf("compile journal: %s", err)
 	}
@@ -112,7 +111,7 @@ func Compile(o ...Option) (*Journal, error) {
 		return nil, fmt.Errorf("compile journal: %s", err)
 	}
 	sortEntries(e2)
-	if d := opts.ending; d.IsValid() {
+	if d := a.Ending; d.IsValid() {
 		e2 = entriesEnding(e2, d)
 	}
 	j, err := compile(e2)
@@ -123,7 +122,7 @@ func Compile(o ...Option) (*Journal, error) {
 }
 
 // parseEntries parses inputs into ast entries.
-func parseEntries(fset *token.FileSet, inputs ...input) ([]ast.Entry, error) {
+func parseEntries(fset *token.FileSet, inputs ...CompileInput) ([]ast.Entry, error) {
 	var e []ast.Entry
 	for _, i := range inputs {
 		src, err := i.Src()

@@ -21,26 +21,16 @@ import (
 	"cloud.google.com/go/civil"
 )
 
-// An Option is passed to Compile to configure compilation.
-type Option interface {
-	setOptions(*options)
+// A CompileArgs describes arguments to Compile.
+type CompileArgs struct {
+	Inputs []CompileInput
+	// If set, only consider entries up to and including the
+	// specified date.
+	Ending civil.Date
 }
 
-type options struct {
-	inputs []input
-	ending civil.Date
-}
-
-func makeOptions(o []Option) options {
-	var op options
-	for _, o := range o {
-		o.setOptions(&op)
-	}
-	return op
-}
-
-// An input defines an input source for compiling a journal.
-type input interface {
+// A CompileInput defines an input source for Compile.
+type CompileInput interface {
 	Filename() string
 	Src() ([]byte, error)
 }
@@ -58,23 +48,11 @@ func (o inputBytes) Src() ([]byte, error) {
 	return o.src, nil
 }
 
-func (o inputBytes) setOptions(opt *options) {
-	opt.inputs = append(opt.inputs, o)
-}
-
 // Bytes returns an option that specifies input bytes.
-func Bytes(filename string, src []byte) Option {
+func Bytes(filename string, src []byte) CompileInput {
 	return inputBytes{
 		filename: filename,
 		src:      src,
-	}
-}
-
-type multiOpt []Option
-
-func (o multiOpt) setOptions(opt *options) {
-	for _, o := range o {
-		o.setOptions(opt)
 	}
 }
 
@@ -94,31 +72,11 @@ func (o inputFile) Src() ([]byte, error) {
 	return src, nil
 }
 
-func (o inputFile) setOptions(opt *options) {
-	opt.inputs = append(opt.inputs, o)
-}
-
 // File returns an option that specifies input files.
-func File(filename ...string) Option {
-	var o multiOpt
+func File(filename ...string) []CompileInput {
+	var i []CompileInput
 	for _, f := range filename {
-		o = append(o, inputFile{filename: f})
+		i = append(i, inputFile{filename: f})
 	}
-	return o
-}
-
-type endingOpt struct {
-	date civil.Date
-}
-
-func (o endingOpt) setOptions(opt *options) {
-	opt.ending = o.date
-}
-
-// Ending returns an option that limits a compiled journal to entries
-// ending on or before the given date.
-func Ending(d civil.Date) Option {
-	return endingOpt{
-		date: d,
-	}
+	return i
 }

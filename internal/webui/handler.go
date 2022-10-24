@@ -32,10 +32,10 @@ import (
 	"go.felesatra.moe/keeper/reports"
 )
 
-func NewHandler(configPath string, o []journal.Option) http.Handler {
+func NewHandler(configPath string, a *journal.CompileArgs) http.Handler {
 	h := handler{
 		configPath: configPath,
-		o:          o,
+		a:          a,
 	}
 	m := http.NewServeMux()
 	m.HandleFunc("/", h.handleIndex)
@@ -52,7 +52,7 @@ func NewHandler(configPath string, o []journal.Option) http.Handler {
 
 type handler struct {
 	configPath string
-	o          []journal.Option
+	a          *journal.CompileArgs
 }
 
 func (h handler) handleIndex(w http.ResponseWriter, req *http.Request) {
@@ -106,7 +106,7 @@ func (h handler) handleTrial(w http.ResponseWriter, req *http.Request) {
 
 func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 	end := month.LastDay(getQueryMonth(req))
-	j, err := h.compile(journal.Ending(end))
+	j, err := h.compileEnding(end)
 	if err != nil {
 		h.writeError(w, err)
 		return
@@ -163,7 +163,7 @@ func (h handler) handleCapital(w http.ResponseWriter, req *http.Request) {
 
 func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 	end := month.LastDay(getQueryMonth(req))
-	j, err := h.compile(journal.Ending(end))
+	j, err := h.compileEnding(end)
 	if err != nil {
 		h.writeError(w, err)
 		return
@@ -224,7 +224,7 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 
 func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
 	end := month.LastDay(getQueryMonth(req))
-	j, err := h.compile(journal.Ending(end))
+	j, err := h.compileEnding(end)
 	if err != nil {
 		h.writeError(w, err)
 		return
@@ -349,11 +349,14 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 	h.execute(w, templates.Ledger, d)
 }
 
-func (h handler) compile(o ...journal.Option) (*journal.Journal, error) {
-	var o2 []journal.Option
-	o2 = append(o2, h.o...)
-	o2 = append(o2, o...)
-	return journal.Compile(o2...)
+func (h handler) compile() (*journal.Journal, error) {
+	return journal.Compile(h.a)
+}
+
+func (h handler) compileEnding(d civil.Date) (*journal.Journal, error) {
+	a2 := *h.a
+	a2.Ending = d
+	return journal.Compile(&a2)
 }
 
 func (h handler) config() (*config.Config, error) {

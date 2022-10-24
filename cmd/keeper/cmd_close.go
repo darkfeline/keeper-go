@@ -51,11 +51,10 @@ var closeCmd = &command{
 			d = month.Prev(month.Now())
 		}
 
-		o := []journal.Option{
-			journal.File(fs.Args()...),
-			journal.Ending(month.LastDay(d)),
-		}
-		j, err := journal.Compile(o...)
+		j, err := journal.Compile(&journal.CompileArgs{
+			Inputs: journal.File(fs.Args()...),
+			Ending: month.LastDay(d),
+		})
 		if err != nil {
 			log.Fatal(err)
 		}

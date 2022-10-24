@@ -28,7 +28,9 @@ Assets:Cash 100 USD
 Equity:Capital
 end
 `)
-	j, err := journal.Compile(journal.Bytes("input", input))
+	j, err := journal.Compile(&journal.CompileArgs{
+		Inputs: []journal.CompileInput{journal.Bytes("input", input)},
+	})
 	if err != nil {
 		panic(err)
 	}

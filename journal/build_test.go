@@ -140,7 +140,7 @@ func TestIsPower10(t *testing.T) {
 	}
 }
 
-func parseAndBuild(inputs ...input) ([]Entry, error) {
+func parseAndBuild(inputs ...CompileInput) ([]Entry, error) {
 	fset := token.NewFileSet()
 	e, err := parseEntries(fset, inputs...)
 	if err != nil {

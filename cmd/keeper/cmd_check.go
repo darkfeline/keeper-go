@@ -25,8 +25,9 @@ var checkCmd = &command{
 	run: func(cmd *command, args []string) {
 		fs := cmd.flagSet()
 		fs.Parse(args)
-		o := []journal.Option{journal.File(fs.Args()...)}
-		j, err := journal.Compile(o...)
+		j, err := journal.Compile(&journal.CompileArgs{
+			Inputs: journal.File(fs.Args()...),
+		})
 		if err != nil {
 			log.Fatal(err)
 		}
