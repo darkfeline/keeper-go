@@ -31,8 +31,11 @@ tx 2001-02-03 "Buy stuff"
 Some:account -1.2 USD
 Expenses:Stuff
 end
+account Some:account
+meta "nilou" "nahida"
+end
 `
-	got, err := parseAndBuild(inputBytes{"", []byte(input)})
+	b, got, err := parseAndBuild(inputBytes{"", []byte(input)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,6 +60,43 @@ end
 	if diff := cmpdiff(want, got); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
+	want2 := map[Account]*AccountInfo{
+		"Some:account": {
+			Metadata: map[string]string{"nilou": "nahida"},
+		},
+	}
+	if diff := cmpdiff(want2, b.accounts); diff != "" {
+		t.Errorf("account info mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestBuildEntries_account_merge(t *testing.T) {
+	t.Parallel()
+	const input = `account Some:account
+meta "bocchi" "rock"
+meta "nilou" "nahida"
+end
+account Some:account
+meta "mir" "jakuri"
+meta "nilou" "kokomi"
+end
+`
+	b, _, err := parseAndBuild(inputBytes{"", []byte(input)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[Account]*AccountInfo{
+		"Some:account": {
+			Metadata: map[string]string{
+				"bocchi": "rock",
+				"mir":    "jakuri",
+				"nilou":  "kokomi",
+			},
+		},
+	}
+	if diff := cmpdiff(want, b.accounts); diff != "" {
+		t.Errorf("account info mismatch (-want +got):\n%s", diff)
+	}
 }
 
 func TestBuildEntries_unbalanced(t *testing.T) {
@@ -67,7 +107,7 @@ Some:account -1.2 USD
 Expenses:Stuff 1.3 USD
 end
 `
-	_, err := parseAndBuild(inputBytes{"", []byte(input)})
+	_, _, err := parseAndBuild(inputBytes{"", []byte(input)})
 	if err == nil {
 		t.Errorf("Expected errors")
 	}
@@ -78,7 +118,7 @@ func TestBuildEntries_same_duplicate_unit(t *testing.T) {
 	const input = `unit USD 100
 unit USD 100
 `
-	_, err := parseAndBuild(inputBytes{"", []byte(input)})
+	_, _, err := parseAndBuild(inputBytes{"", []byte(input)})
 	if err != nil {
 		t.Errorf("Got unexpected error: %s", err)
 	}
@@ -89,7 +129,7 @@ func TestBuildEntries_diff_duplicate_unit(t *testing.T) {
 	const input = `unit USD 100
 unit USD 10
 `
-	_, err := parseAndBuild(inputBytes{"", []byte(input)})
+	_, _, err := parseAndBuild(inputBytes{"", []byte(input)})
 	if err == nil {
 		t.Errorf("Expected error")
 	}
@@ -99,7 +139,7 @@ func TestBuildEntries_disable(t *testing.T) {
 	t.Parallel()
 	const input = `disable 2001-02-03 Some:account
 `
-	got, err := parseAndBuild(inputBytes{"", []byte(input)})
+	_, got, err := parseAndBuild(inputBytes{"", []byte(input)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,18 +180,18 @@ func TestIsPower10(t *testing.T) {
 	}
 }
 
-func parseAndBuild(inputs ...CompileInput) ([]Entry, error) {
+func parseAndBuild(inputs ...CompileInput) (*builder, []Entry, error) {
 	fset := token.NewFileSet()
 	e, err := parseEntries(fset, inputs...)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	b := newBuilder(fset)
 	e2, err := b.build(e...)
 	if err != nil {
-		return nil, err
+		return b, nil, err
 	}
-	return e2, nil
+	return b, e2, nil
 }
 
 func cmpdiff(x, y interface{}) string {

@@ -30,16 +30,20 @@ import (
 // This is done in a single pass on an entry by entry basis, so
 // balances are not tracked.
 // Each transaction must still balance to zero however.
+//
+// Account metadata is also accumulated internally.
 type builder struct {
-	fset  *token.FileSet
-	units map[string]Unit
-	errs  scanner.ErrorList
+	fset     *token.FileSet
+	units    map[string]Unit
+	accounts map[Account]*AccountInfo
+	errs     scanner.ErrorList
 }
 
 func newBuilder(fset *token.FileSet) *builder {
 	return &builder{
-		fset:  fset,
-		units: make(map[string]Unit),
+		fset:     fset,
+		units:    make(map[string]Unit),
+		accounts: make(map[Account]*AccountInfo),
 	}
 }
 
@@ -68,9 +72,7 @@ func (b *builder) build(t ...ast.Entry) ([]Entry, error) {
 		case *ast.UnitDecl:
 			b.addUnit(n)
 		case *ast.DeclareAccount:
-			// BUG(darkfeline): Account declarations
-			// aren't supported by the journal builder
-			// yet.
+			b.buildDeclareAccount(n)
 		case *ast.DisableAccount:
 			e, err := b.buildDisableAccount(n)
 			if err != nil {
@@ -263,6 +265,24 @@ func (b *builder) buildDisableAccount(n *ast.DisableAccount) (*DisableAccount, e
 		return e, err
 	}
 	return e, nil
+}
+
+func (b *builder) buildDeclareAccount(n *ast.DeclareAccount) {
+	assertKind(n.Account, token.ACCTNAME)
+	a := Account(n.Account.Value)
+	ai := b.accounts[a]
+	if ai == nil {
+		ai = &AccountInfo{
+			Metadata: make(map[string]string),
+		}
+		b.accounts[a] = ai
+	}
+	for _, n := range n.Metadata {
+		m := n.(*ast.MetadataLine)
+		assertKind(m.Key, token.STRING)
+		assertKind(m.Val, token.STRING)
+		ai.Metadata[parseString(m.Key.Value)] = parseString(m.Val.Value)
+	}
 }
 
 func (b *builder) addUnit(n *ast.UnitDecl) {
