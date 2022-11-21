@@ -54,7 +54,7 @@ import (
 // Be careful; a Journal contains a lot of shared pointers internally.
 // Modifying anything in a journal is not recommended.
 type Journal struct {
-	// Entries are all of the entries, sorted chronologically.
+	// Entries are the journal entries, sorted chronologically.
 	Entries []Entry
 	// Accounts contains all accounts and the associated account information.
 	Accounts map[Account]*AccountInfo
