@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"cloud.google.com/go/civil"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestCompile(t *testing.T) {
@@ -298,6 +299,24 @@ func TestCompile_disable_nonempty_account(t *testing.T) {
 	}
 }
 
+func TestCompile_account_metadata(t *testing.T) {
+	t.Parallel()
+	got, err := compileText(`account Some:account
+meta "nilou" "nahida"
+end`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := AccountMap{
+		"Some:account": &AccountInfo{
+			Metadata: map[string]string{"nilou": "nahida"},
+		},
+	}
+	if diff := cmp.Diff(want, got.Accounts); diff != "" {
+		t.Errorf("accounts mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestTreeBalance(t *testing.T) {
 	t.Parallel()
 	u := Unit{Symbol: "USD", Scale: 100}
@@ -313,6 +332,12 @@ func TestTreeBalance(t *testing.T) {
 	if !got.Equal(want) {
 		t.Errorf("treeBalance() = %s; want %s", got, want)
 	}
+}
+
+func compileText(s string) (*Journal, error) {
+	return Compile(&CompileArgs{
+		Inputs: []CompileInput{Bytes("testfile", []byte(s))},
+	})
 }
 
 func compareBalances(t *testing.T, want, got map[Account]*Balance) {
