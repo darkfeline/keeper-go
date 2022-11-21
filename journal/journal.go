@@ -249,7 +249,8 @@ func (j *Journal) ensureAccount(a Account) {
 	}
 }
 
-// total balance for account tree.
+// addTreeBalance returns the total balance for an account and
+// sub-accounts.
 func addTreeBalance(b *Balance, bals Balances, a Account) {
 	b.AddBal(bals[a])
 	for a2, b2 := range bals {
