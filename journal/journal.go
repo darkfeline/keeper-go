@@ -245,7 +245,7 @@ func (j *Journal) checkAccountDisabled(a Account) error {
 // Ensure account is present in accounts map.
 func (j *Journal) ensureAccount(a Account) {
 	if j.Accounts[a] == nil {
-		j.Accounts[a] = &AccountInfo{}
+		j.Accounts[a] = newAccountInf()
 	}
 }
 
