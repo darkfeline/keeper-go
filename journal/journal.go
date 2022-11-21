@@ -57,7 +57,7 @@ type Journal struct {
 	// Entries are the journal entries, sorted chronologically.
 	Entries []Entry
 	// Accounts contains all accounts and the associated account information.
-	Accounts map[Account]*AccountInfo
+	Accounts AccountMap
 	// Balances is the final balance for all accounts.
 	Balances Balances
 	// BalanceErrors contains the balance assertion entries that failed.
@@ -67,7 +67,7 @@ type Journal struct {
 // newJournal makes a new Journal.
 func newJournal() *Journal {
 	return &Journal{
-		Accounts: make(map[Account]*AccountInfo),
+		Accounts: make(AccountMap),
 		Balances: make(Balances),
 	}
 }

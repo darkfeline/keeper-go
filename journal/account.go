@@ -54,10 +54,13 @@ func (a Account) Under(parent Account) bool {
 	return strings.HasPrefix(string(a), string(parent)+":")
 }
 
-// An AccountInfo holds account information.
+// An AccountInfo represents account information.
 type AccountInfo struct {
 	// If the account is disabled, points to the entry that
 	// disabled the account.  Otherwise this is nil.
 	Disabled *DisableAccount
 	Metadata map[string]string
 }
+
+// An AccountMap holds account information for multiple accounts.
+type AccountMap map[Account]*AccountInfo

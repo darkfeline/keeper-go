@@ -35,7 +35,7 @@ import (
 type builder struct {
 	fset     *token.FileSet
 	units    map[string]Unit
-	accounts map[Account]*AccountInfo
+	accounts AccountMap
 	errs     scanner.ErrorList
 }
 
@@ -43,7 +43,7 @@ func newBuilder(fset *token.FileSet) *builder {
 	return &builder{
 		fset:     fset,
 		units:    make(map[string]Unit),
-		accounts: make(map[Account]*AccountInfo),
+		accounts: make(AccountMap),
 	}
 }
 

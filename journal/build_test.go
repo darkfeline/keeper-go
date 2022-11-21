@@ -60,7 +60,7 @@ end
 	if diff := cmpdiff(want, got); diff != "" {
 		t.Errorf("entries mismatch (-want +got):\n%s", diff)
 	}
-	want2 := map[Account]*AccountInfo{
+	want2 := AccountMap{
 		"Some:account": {
 			Metadata: map[string]string{"nilou": "nahida"},
 		},
@@ -85,7 +85,7 @@ end
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := map[Account]*AccountInfo{
+	want := AccountMap{
 		"Some:account": {
 			Metadata: map[string]string{
 				"bocchi": "rock",
