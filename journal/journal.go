@@ -64,6 +64,7 @@ type Journal struct {
 	BalanceErrors []*BalanceAssert
 }
 
+// newJournal makes a new Journal.
 func newJournal() *Journal {
 	return &Journal{
 		Accounts: make(map[Account]*AccountInfo),
