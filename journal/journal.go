@@ -101,6 +101,7 @@ func Compile(a *CompileArgs) (*Journal, error) {
 	//  2. Convert ast entries into journal entries ("building")
 	//  3. Sort entries by date
 	//  4. Go through entries adding up balances and checking things ("compiling")
+	//  5. Fill in account metadata
 	fset := token.NewFileSet()
 	e, err := parseEntries(fset, a.Inputs...)
 	if err != nil {
@@ -119,6 +120,7 @@ func Compile(a *CompileArgs) (*Journal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("compile journal: %s", err)
 	}
+	copyAccountMetadata(b, j)
 	return j, nil
 }
 
@@ -149,6 +151,22 @@ func compile(e []Entry) (*Journal, error) {
 		}
 	}
 	return j, nil
+}
+
+// copyAccountMetadata copies account metadata from the builder to the
+// journal.
+func copyAccountMetadata(b *builder, j *Journal) {
+	for a, ai := range b.accounts {
+		ai2, ok := j.Accounts[a]
+		if !ok {
+			// TODO(darkfeline): We allocate a map for
+			// metadata that we immediately throw away
+			// below.
+			ai2 = newAccountInfo()
+			j.Accounts[a] = ai2
+		}
+		ai2.Metadata = ai.Metadata
+	}
 }
 
 func (j *Journal) addEntry(e Entry) error {
