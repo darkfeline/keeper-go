@@ -26,7 +26,7 @@ var checkCmd = &command{
 		fs := cmd.flagSet()
 		fs.Parse(args)
 		j, err := journal.Compile(&journal.CompileArgs{
-			Inputs: journal.File(fs.Args()...),
+			Inputs: journal.Files(fs.Args()...),
 		})
 		if err != nil {
 			log.Fatal(err)

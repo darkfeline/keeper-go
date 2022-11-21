@@ -47,7 +47,7 @@ var serveCmd = &command{
 			log.Printf("listening on %s", *addr)
 		}
 		h := webui.NewHandler(*c, &journal.CompileArgs{
-			Inputs: journal.File(fs.Args()...),
+			Inputs: journal.Files(fs.Args()...),
 		})
 		log.Fatal(http.Serve(listener, h))
 	},

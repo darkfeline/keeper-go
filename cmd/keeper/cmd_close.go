@@ -52,7 +52,7 @@ var closeCmd = &command{
 		}
 
 		j, err := journal.Compile(&journal.CompileArgs{
-			Inputs: journal.File(fs.Args()...),
+			Inputs: journal.Files(fs.Args()...),
 			Ending: month.LastDay(d),
 		})
 		if err != nil {

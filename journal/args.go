@@ -72,8 +72,8 @@ func (o inputFile) Src() ([]byte, error) {
 	return src, nil
 }
 
-// File returns an option that specifies input files.
-func File(filename ...string) []CompileInput {
+// Files returns an option that specifies input files.
+func Files(filename ...string) []CompileInput {
 	var i []CompileInput
 	for _, f := range filename {
 		i = append(i, inputFile{filename: f})
