@@ -272,9 +272,7 @@ func (b *builder) buildDeclareAccount(n *ast.DeclareAccount) {
 	a := Account(n.Account.Value)
 	ai := b.accounts[a]
 	if ai == nil {
-		ai = &AccountInfo{
-			Metadata: make(map[string]string),
-		}
+		ai = newAccountInfo()
 		b.accounts[a] = ai
 	}
 	for _, n := range n.Metadata {

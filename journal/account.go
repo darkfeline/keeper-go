@@ -62,5 +62,11 @@ type AccountInfo struct {
 	Metadata map[string]string
 }
 
+func newAccountInfo() *AccountInfo {
+	return &AccountInfo{
+		Metadata: make(map[string]string),
+	}
+}
+
 // An AccountMap holds account information for multiple accounts.
 type AccountMap map[Account]*AccountInfo
