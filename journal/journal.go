@@ -49,48 +49,6 @@ import (
 	"go.felesatra.moe/keeper/kpr/token"
 )
 
-// A Journal represents bookkeeping information compiled from keeper file source.
-//
-// Be careful; a Journal contains a lot of shared pointers internally.
-// Modifying anything in a journal is not recommended.
-type Journal struct {
-	// Entries are the journal entries, sorted chronologically.
-	Entries []Entry
-	// Accounts contains all accounts and the associated account information.
-	Accounts AccountMap
-	// Balances is the final balance for all accounts.
-	Balances Balances
-	// BalanceErrors contains the balance assertion entries that failed.
-	BalanceErrors []*BalanceAssert
-}
-
-// newJournal makes a new Journal.
-func newJournal() *Journal {
-	return &Journal{
-		Accounts: make(AccountMap),
-		Balances: make(Balances),
-	}
-}
-
-// BalancesEnding returns the balances of all accounts at the close of
-// the given date.
-func (j *Journal) BalancesEnding(d civil.Date) Balances {
-	b := make(Balances)
-	for _, e := range j.Entries {
-		t, ok := e.(*Transaction)
-		if !ok {
-			continue
-		}
-		if e.Date().After(d) {
-			break
-		}
-		for _, s := range t.Splits {
-			b.Add(s.Account, s.Amount)
-		}
-	}
-	return b
-}
-
 // Compile compiles keeper file source into a Journal.
 // Balance assertion errors are stored in the returned Journal rather
 // than returned as errors here, to enable the caller to inspect the
@@ -167,6 +125,48 @@ func copyAccountMetadata(b *builder, j *Journal) {
 		}
 		ai2.Metadata = ai.Metadata
 	}
+}
+
+// A Journal represents bookkeeping information compiled from keeper file source.
+//
+// Be careful; a Journal contains a lot of shared pointers internally.
+// Modifying anything in a journal is not recommended.
+type Journal struct {
+	// Entries are the journal entries, sorted chronologically.
+	Entries []Entry
+	// Accounts contains all accounts and the associated account information.
+	Accounts AccountMap
+	// Balances is the final balance for all accounts.
+	Balances Balances
+	// BalanceErrors contains the balance assertion entries that failed.
+	BalanceErrors []*BalanceAssert
+}
+
+// newJournal makes a new Journal.
+func newJournal() *Journal {
+	return &Journal{
+		Accounts: make(AccountMap),
+		Balances: make(Balances),
+	}
+}
+
+// BalancesEnding returns the balances of all accounts at the close of
+// the given date.
+func (j *Journal) BalancesEnding(d civil.Date) Balances {
+	b := make(Balances)
+	for _, e := range j.Entries {
+		t, ok := e.(*Transaction)
+		if !ok {
+			continue
+		}
+		if e.Date().After(d) {
+			break
+		}
+		for _, s := range t.Splits {
+			b.Add(s.Account, s.Amount)
+		}
+	}
+	return b
 }
 
 func (j *Journal) addEntry(e Entry) error {
