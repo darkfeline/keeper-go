@@ -95,7 +95,7 @@ func (j *Journal) BalancesEnding(d civil.Date) Balances {
 // than returned as errors here, to enable the caller to inspect the
 // transactions to identify the error.
 func Compile(a *CompileArgs) (*Journal, error) {
-	// Compiling a journal happens in three stages:
+	// Compiling a journal happens in stages:
 	//  1. Parse inputs into ast entries
 	//  2. Convert ast entries into journal entries ("building")
 	//  3. Sort entries by date
