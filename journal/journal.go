@@ -16,7 +16,7 @@
 Package journal implements the processing of bookkeeping journals from
 keeper files.
 
-File format
+# File format
 
 See the documentation for the kpr package for keeper file syntax.
 This section describes some additional semantics for keeper files as
