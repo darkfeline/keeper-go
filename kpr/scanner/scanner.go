@@ -363,9 +363,6 @@ func lexLower(s *Scanner) stateFn {
 		s.emit(token.META)
 		return lexExprEnd
 	}
-	if s.accept(digits + ":_") {
-		return lexAccountName
-	}
 	s.errorf(s.start, "invalid token")
 	s.emit(token.ILLEGAL)
 	return lexExprEnd
