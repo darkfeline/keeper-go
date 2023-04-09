@@ -96,7 +96,7 @@ func (l *line) End() token.Pos {
 	return token.Pos(int(l.eol.pos) + len(l.eol.lit))
 }
 
-// if line is empty of tokens
+// Empty returns true if line has no tokens.
 func (l *line) Empty() bool {
 	return len(l.tokens) == 0
 }
