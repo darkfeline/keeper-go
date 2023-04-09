@@ -77,20 +77,7 @@ func (h handler) handleAccounts(w http.ResponseWriter, req *http.Request) {
 		h.writeError(w, err)
 		return
 	}
-	var d templates.AccountsData
-	for _, a := range sortedAccounts(j) {
-		if j.Accounts[a].Disabled == nil {
-			d.Accounts = append(d.Accounts, struct {
-				Account journal.Account
-				Empty   bool
-			}{
-				Account: a,
-				Empty:   j.Balances[a].Empty(),
-			})
-		} else {
-			d.Disabled = append(d.Disabled, a)
-		}
-	}
+	d := makeAccountsData(j)
 	h.execute(w, templates.Accounts, d)
 }
 
@@ -394,6 +381,24 @@ func getQueryAccount(req *http.Request) journal.Account {
 		return ""
 	}
 	return journal.Account(v[0])
+}
+
+func makeAccountsData(j *journal.Journal) templates.AccountsData {
+	var d templates.AccountsData
+	for _, a := range sortedAccounts(j) {
+		if j.Accounts[a].Disabled == nil {
+			d.Accounts = append(d.Accounts, struct {
+				Account journal.Account
+				Empty   bool
+			}{
+				Account: a,
+				Empty:   j.Balances[a].Empty(),
+			})
+		} else {
+			d.Disabled = append(d.Disabled, a)
+		}
+	}
+	return d
 }
 
 func makeTrialData(t *reports.TrialBalance) templates.TrialData {
