@@ -120,7 +120,7 @@ func NewAccountLedger(j *journal.Journal, a journal.Account) *AccountLedger {
 			if e.Account != a {
 				break
 			}
-			units := balanceUnits(e.Actual, e.Declared, e.Diff)
+			units := allUnits(e.Actual, e.Declared, e.Diff)
 			t := "balance"
 			if e.Tree {
 				t = "tree balance"
@@ -149,8 +149,8 @@ func NewAccountLedger(j *journal.Journal, a journal.Account) *AccountLedger {
 	return l
 }
 
-// balanceUnits returns all of the units in the balances.
-func balanceUnits(b ...journal.Balance) []journal.Unit {
+// allUnits returns all of the units in the balances.
+func allUnits(b ...journal.Balance) []journal.Unit {
 	seen := make(map[journal.Unit]bool)
 	for _, b := range b {
 		for _, u := range b.Units() {
