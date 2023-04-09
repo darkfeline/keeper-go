@@ -313,27 +313,7 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	l := reports.NewAccountLedger(j, a)
-	d := templates.LedgerData{Account: l.Account}
-	for _, r := range l.Rows {
-		// BUG(darkfeline): Rows from the same split aren't
-		// grouped together because the ledger template groups
-		// based on the presence of a date, and the reports
-		// package emits a date for every split/unit.
-		r2 := templates.LedgerRow{
-			Date:        r.Date.String(),
-			Description: r.Description,
-			Ref:         r.Ref,
-			Pair:        r.Pair,
-		}
-		if r.Pair.Debit != nil {
-			r2.Balance = r.Balance.Amount(r.Pair.Debit.Unit)
-		} else if r.Pair.Credit != nil {
-			r2.Balance = r.Balance.Amount(r.Pair.Credit.Unit)
-		} else if u := r.Balance.Units(); len(u) == 1 {
-			r2.Balance = r.Balance.Amount(u[0])
-		}
-		d.Rows = append(d.Rows, r2)
-	}
+	d := makeLedgerData(l)
 	h.execute(w, templates.Ledger, d)
 }
 
@@ -420,6 +400,31 @@ func makeTrialData(t *reports.TrialBalance) templates.TrialData {
 		r = templates.TrialRow{}
 	}
 	return templates.TrialData{Rows: rs}
+}
+
+func makeLedgerData(l *reports.AccountLedger) templates.LedgerData {
+	d := templates.LedgerData{Account: l.Account}
+	for _, r := range l.Rows {
+		// BUG(darkfeline): Rows from the same split aren't
+		// grouped together because the ledger template groups
+		// based on the presence of a date, and the reports
+		// package emits a date for every split/unit.
+		r2 := templates.LedgerRow{
+			Date:        r.Date.String(),
+			Description: r.Description,
+			Ref:         r.Ref,
+			Pair:        r.Pair,
+		}
+		if r.Pair.Debit != nil {
+			r2.Balance = r.Balance.Amount(r.Pair.Debit.Unit)
+		} else if r.Pair.Credit != nil {
+			r2.Balance = r.Balance.Amount(r.Pair.Credit.Unit)
+		} else if u := r.Balance.Units(); len(u) == 1 {
+			r2.Balance = r.Balance.Amount(u[0])
+		}
+		d.Rows = append(d.Rows, r2)
+	}
+	return d
 }
 
 func makeStmtRows(a []journal.Account, b journal.Balances) ([]templates.StmtRow, *journal.Balance) {
