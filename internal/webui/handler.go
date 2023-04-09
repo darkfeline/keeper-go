@@ -404,16 +404,19 @@ func makeTrialData(t *reports.TrialBalance) templates.TrialData {
 
 func makeLedgerData(l *reports.AccountLedger) templates.LedgerData {
 	d := templates.LedgerData{Account: l.Account}
+	lastRef := ""
 	for _, r := range l.Rows {
-		// BUG(darkfeline): Rows from the same split aren't
-		// grouped together because the ledger template groups
-		// based on the presence of a date, and the reports
-		// package emits a date for every split/unit.
 		r2 := templates.LedgerRow{
-			Date:        r.Date.String(),
-			Description: r.Description,
-			Ref:         r.Ref,
-			Pair:        r.Pair,
+			Pair: r.Pair,
+		}
+		// The ledger template groups based on the date field.
+		// We deduplicate splits/rows from the same
+		// transaction based on the ref.
+		if r.Ref != lastRef {
+			r2.Date = r.Date.String()
+			r2.Description = r.Description
+			r2.Ref = r.Ref
+			lastRef = r.Ref
 		}
 		if r.Pair.Debit != nil {
 			r2.Balance = r.Balance.Amount(r.Pair.Debit.Unit)
