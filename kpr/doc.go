@@ -17,7 +17,7 @@ Package kpr documents the syntax of keeper files.  Keeper files are
 used for recording transactions for bookkeeping.  The semantics of the
 files is not explicitly documented here.
 
-Tokens
+# Tokens
 
 Keeper files consist of some basic token types.
 
@@ -65,7 +65,7 @@ Comments are supported:
 
  # This is a comment.
 
-Entries
+# Entries
 
 Keeper files are comprised of single or multi line entries.
 
