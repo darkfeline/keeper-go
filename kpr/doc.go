@@ -73,7 +73,7 @@ Entries are multi line depending on syntax.
 Multi line entries are terminated by the "end" keyword.
 
 Unit entries declare units and their lowest division.  The following
-declares that the smallest unit of USD is 1/100.  Only decimal
+declares that the smallest unit of USD is 1/100.  Only power of ten
 divisions are supported.
 
  unit USD 100
