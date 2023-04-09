@@ -68,6 +68,9 @@ Comments are supported:
 # Entries
 
 Keeper files are comprised of single or multi line entries.
+Entries start with a keyword followed by some tokens.
+Entries are multi line depending on syntax.
+Multi line entries are terminated by the "end" keyword.
 
 Unit entries declare units and their lowest division.  The following
 declares that the smallest unit of USD is 1/100.  Only decimal
