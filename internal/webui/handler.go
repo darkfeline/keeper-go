@@ -329,8 +329,9 @@ func (h handler) handleLedger(w http.ResponseWriter, req *http.Request) {
 	d := templates.LedgerData{Account: l.Account}
 	for _, r := range l.Rows {
 		// BUG(darkfeline): Rows from the same split aren't
-		// grouped together due to how the reports package
-		// emits them.
+		// grouped together because the ledger template groups
+		// based on the presence of a date, and the reports
+		// package emits a date for every split/unit.
 		r2 := templates.LedgerRow{
 			Date:        r.Date.String(),
 			Description: r.Description,
