@@ -59,6 +59,7 @@ There are some keywords:
  disable
  account
  treebal
+ meta
 
 Comments are supported:
 
