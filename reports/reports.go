@@ -149,6 +149,92 @@ func NewAccountLedger(j *journal.Journal, a journal.Account) *AccountLedger {
 	return l
 }
 
+// A Ledger represents a ledger for one or more accounts.
+type Ledger struct {
+	Accounts []journal.Account
+	Rows     []FreeLedgerRow
+}
+
+// A FreeLedgerRow represents a row in a Ledger.
+type FreeLedgerRow struct {
+	Date        civil.Date
+	Description string
+	// A reference to the file location for the transaction split.
+	Ref     string
+	Account journal.Account
+	Pair    Pair[*journal.Amount]
+	// Running balance for all accounts combined.
+	Balance journal.Balance
+}
+
+// NewLedger creates a Ledger.
+// The account slice is referenced directly in the returned Ledger.
+func NewLedger(j *journal.Journal, a ...journal.Account) *Ledger {
+	l := &Ledger{Accounts: a}
+	accs := make(map[journal.Account]bool)
+	for _, a := range a {
+		accs[a] = true
+	}
+	var b journal.Balance
+	for _, e := range j.Entries {
+		r := FreeLedgerRow{
+			Date: e.Date(),
+			Ref:  e.Position().String(),
+		}
+		switch e := e.(type) {
+		case *journal.Transaction:
+			r.Description = e.Description
+			for _, s := range e.Splits {
+				r := r
+				if !accs[s.Account] {
+					continue
+				}
+				r.Account = s.Account
+				switch s.Amount.Sign() {
+				case -1:
+					r.Pair.Credit = s.Amount
+				case 1:
+					r.Pair.Debit = s.Amount
+				}
+				b.Add(s.Amount)
+				r.Balance.Set(&b)
+				l.Rows = append(l.Rows, r)
+			}
+		case *journal.BalanceAssert:
+			// XXXXXXXX how to handle treebal?
+			if !accs[e.Account] {
+				break
+			}
+			units := allUnits(e.Actual, e.Declared, e.Diff)
+			t := "balance"
+			if e.Tree {
+				t = "tree balance"
+			}
+			for _, u := range units {
+				if !e.Diff.Has(u) {
+					r.Description = "(" + t + ")"
+				} else {
+					r.Description = fmt.Sprintf("(%s error, declared %s, diff %s)",
+						t, e.Declared.Amount(u), e.Diff.Amount(u))
+				}
+				r.Balance.Set(&b)
+				l.Rows = append(l.Rows, r)
+			}
+		case *journal.DisableAccount:
+			if !accs[e.Account] {
+				break
+			}
+			r.Description = "(disabled)"
+			r.Account = e.Account
+			r.Balance.Set(&b)
+			l.Rows = append(l.Rows, r)
+		default:
+			panic(e)
+		}
+	}
+	return l
+}
+
 // allUnits returns all of the units in the balances.
 func allUnits(b ...journal.Balance) []journal.Unit {
 	seen := make(map[journal.Unit]bool)
