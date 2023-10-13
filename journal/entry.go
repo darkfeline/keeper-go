@@ -24,6 +24,12 @@ import (
 )
 
 // All entry types implement Entry.
+//
+// Entry types:
+//
+//  - [Transaction]
+//  - [BalanceAssert]
+//  - [DisableAccount]
 type Entry interface {
 	Date() civil.Date
 	Position() token.Position
