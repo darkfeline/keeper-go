@@ -130,7 +130,7 @@ func copyAccountMetadata(b *builder, j *Journal) {
 // A Journal represents bookkeeping information compiled from keeper file source.
 //
 // Be careful; a Journal contains a lot of shared pointers internally.
-// Modifying anything in a journal is not recommended.
+// Modifying anything in a Journal is not recommended.
 type Journal struct {
 	// Entries are the journal entries, sorted chronologically.
 	Entries []Entry
