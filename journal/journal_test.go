@@ -15,11 +15,29 @@
 package journal
 
 import (
+	"fmt"
 	"testing"
 
 	"cloud.google.com/go/civil"
 	"github.com/google/go-cmp/cmp"
 )
+
+func Example() {
+	const contents = `unit USD 100
+tx 2020-01-02 "Paycheck"
+Income:Salary -12 USD
+Assets:Bank
+end
+`
+	j, _ := Compile(&CompileArgs{
+		Inputs: []CompileInput{
+			Bytes("example", []byte(contents)),
+		},
+	})
+	fmt.Printf("%s", j.Balances["Assets:Bank"])
+	// Output:
+	// 12.00 USD
+}
 
 func TestCompile(t *testing.T) {
 	t.Parallel()
