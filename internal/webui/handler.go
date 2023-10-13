@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package webui implements the Web UI for keeper.
 package webui
 
 import (

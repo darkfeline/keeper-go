@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package templates contains templates for the web UI.
+// Package templates contains templates for the Web UI.
 package templates
 
 import (
