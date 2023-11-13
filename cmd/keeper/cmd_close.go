@@ -73,14 +73,16 @@ var closeCmd = &command{
 		}
 		sort.Slice(accsToClose, func(i, j int) bool { return accsToClose[i] < accsToClose[j] })
 		_ = printClosingTx(os.Stdout, j, d, equity, accsToClose)
-		_ = printClosingBalances(os.Stdout, month.Next(d), accsToClose)
+		_ = printClosingBalances(os.Stdout, j, month.Next(d), accsToClose)
 	},
 }
 
-func printClosingBalances(w io.Writer, d civil.Date, a []journal.Account) error {
+func printClosingBalances(w io.Writer, j *journal.Journal, d civil.Date, a []journal.Account) error {
 	bw := bufio.NewWriter(w)
 	for _, a := range a {
-		fmt.Fprintf(bw, "balance %s %s 0 USD\n", d, a)
+		if de := j.Accounts[a].Disabled; de == nil || d.After(de.EntryDate) {
+			fmt.Fprintf(bw, "balance %s %s 0 USD\n", d, a)
+		}
 	}
 	return bw.Flush()
 }
