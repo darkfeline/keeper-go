@@ -80,7 +80,7 @@ var closeCmd = &command{
 func printClosingBalances(w io.Writer, j *journal.Journal, d civil.Date, a []journal.Account) error {
 	bw := bufio.NewWriter(w)
 	for _, a := range a {
-		if de := j.Accounts[a].Disabled; de == nil || d.After(de.EntryDate) {
+		if de := j.Accounts[a].Disabled; de == nil || d.Before(de.EntryDate) {
 			fmt.Fprintf(bw, "balance %s %s 0 USD\n", d, a)
 		}
 	}
