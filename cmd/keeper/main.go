@@ -37,10 +37,15 @@ func main() {
 	log.Fatalf("unknown command %s", cmd)
 }
 
-var commands = []*command{
-	checkCmd,
-	closeCmd,
-	serveCmd,
+var commands []*command
+
+func init() {
+	commands = []*command{
+		checkCmd,
+		closeCmd,
+		helpCmd,
+		serveCmd,
+	}
 }
 
 type command struct {
