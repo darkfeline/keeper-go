@@ -224,7 +224,7 @@ func (b *Balance) Set(b2 *Balance) {
 	}
 }
 
-func (b *Balance) String() string {
+func (b Balance) String() string {
 	amts := b.Amounts()
 	if len(amts) == 0 {
 		return "0"

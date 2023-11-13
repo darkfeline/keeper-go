@@ -38,7 +38,7 @@ var checkCmd = &command{
 func checkBalanceErrsAndExit(j *journal.Journal) {
 	if len(j.BalanceErrors) > 0 {
 		for _, e := range j.BalanceErrors {
-			log.Printf("%s %s %s declared %s, actual %s (diff %s)",
+			log.Printf("%s %s %s declared %v, actual %v (diff %v)",
 				e.EntryPos, e.EntryDate, e.Account,
 				e.Declared, e.Actual, e.Diff)
 		}
