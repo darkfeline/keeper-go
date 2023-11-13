@@ -59,23 +59,35 @@ var closeCmd = &command{
 			log.Fatal(err)
 		}
 		checkBalanceErrsAndExit(j)
-		var a []journal.Account
+		var accsToClose []journal.Account
 		var equity journal.Account
 		for ac := range j.Accounts {
 			switch {
 			case c.IsIncome(ac), c.IsExpenses(ac):
-				a = append(a, ac)
+				accsToClose = append(accsToClose, ac)
 			case *t && c.IsTrading(ac):
-				a = append(a, ac)
+				accsToClose = append(accsToClose, ac)
 			case equity == "" && c.IsEquity(ac):
 				equity = ac
 			}
 		}
-		sort.Slice(a, func(i, j int) bool { return a[i] < a[j] })
-		_ = printClosingTx(os.Stdout, j, month.Next(d), equity, a)
+		sort.Slice(accsToClose, func(i, j int) bool { return accsToClose[i] < accsToClose[j] })
+		_ = printClosingTx(os.Stdout, j, d, equity, accsToClose)
+		_ = printClosingBalances(os.Stdout, month.Next(d), accsToClose)
 	},
 }
 
+func printClosingBalances(w io.Writer, d civil.Date, a []journal.Account) error {
+	bw := bufio.NewWriter(w)
+	for _, a := range a {
+		fmt.Fprintf(bw, "balance %s %s 0 USD\n", d, a)
+	}
+	return bw.Flush()
+}
+
+// printClosingTx prints a transaction entry that moves everything
+// from the given accounts (usually income, etc. accounts) into the
+// destination account (usually equity account).
 func printClosingTx(w io.Writer, j *journal.Journal, d civil.Date, dst journal.Account, a []journal.Account) error {
 	bw := bufio.NewWriter(w)
 	fmt.Fprintf(bw, "tx %s \"Closing\"\n", d)
@@ -92,9 +104,6 @@ func printClosingTx(w io.Writer, j *journal.Journal, d civil.Date, dst journal.A
 		fmt.Fprintf(bw, "%s %s\n", dst, am)
 	}
 	fmt.Fprintf(bw, "end\n")
-	for _, a := range a {
-		fmt.Fprintf(bw, "balance %s %s 0 USD\n", d, a)
-	}
 	return bw.Flush()
 }
 
