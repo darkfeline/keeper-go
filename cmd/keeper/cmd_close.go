@@ -72,7 +72,7 @@ var closeCmd = &command{
 			}
 		}
 		sort.Slice(accsToClose, func(i, j int) bool { return accsToClose[i] < accsToClose[j] })
-		_ = printClosingTx(os.Stdout, j, d, equity, accsToClose)
+		_ = printClosingTx(os.Stdout, j, month.LastDay(d), equity, accsToClose)
 		_ = printClosingBalances(os.Stdout, j, month.Next(d), accsToClose)
 	},
 }
