@@ -73,16 +73,25 @@ var closeCmd = &command{
 		}
 		sort.Slice(accsToClose, func(i, j int) bool { return accsToClose[i] < accsToClose[j] })
 		bals := closingBalances(j, accsToClose)
-		_ = printClosingTx(os.Stdout, month.LastDay(d), equity, bals)
-		_ = printClosingBalances(os.Stdout, j, month.Next(d), accsToClose)
+		_ = printClosingBalances(os.Stdout, j, month.LastDay(d), bals)
+		_ = printClosingTx(os.Stdout, month.Next(d), equity, bals)
 	},
 }
 
-func printClosingBalances(w io.Writer, j *journal.Journal, d civil.Date, a []journal.Account) error {
+func printClosingBalances(w io.Writer, j *journal.Journal, d civil.Date, b journal.Balances) error {
 	bw := bufio.NewWriter(w)
-	for _, a := range a {
-		if de := j.Accounts[a].Disabled; de == nil || d.Before(de.EntryDate) {
+	for a, b := range b {
+		switch x := len(b.Units()); true {
+		case x == 0:
 			fmt.Fprintf(bw, "balance %s %s 0 USD\n", d, a)
+		case x == 1:
+			fmt.Fprintf(bw, "balance %s %s %v\n", d, a, b)
+		default:
+			fmt.Fprintf(bw, "balance %s %s\n", d, a)
+			for _, a := range b.Amounts() {
+				fmt.Fprintf(bw, "%v\n", a)
+			}
+			fmt.Fprintf(bw, "end\n")
 		}
 	}
 	return bw.Flush()
@@ -92,7 +101,11 @@ func printClosingBalances(w io.Writer, j *journal.Journal, d civil.Date, a []jou
 func closingBalances(j *journal.Journal, a []journal.Account) journal.Balances {
 	bals := make(journal.Balances)
 	for _, a := range a {
-		bals[a] = j.Balances[a]
+		if j.Accounts[a].Disabled == nil {
+			bals[a] = j.Balances[a]
+		} else if !j.Balances[a].Empty() {
+			panic(fmt.Sprintf("Disabled account %q is not empty: %v", a, j.Balances[a]))
+		}
 	}
 	return bals
 }
