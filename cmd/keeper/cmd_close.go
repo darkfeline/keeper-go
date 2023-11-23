@@ -72,7 +72,8 @@ var closeCmd = &command{
 			}
 		}
 		sort.Slice(accsToClose, func(i, j int) bool { return accsToClose[i] < accsToClose[j] })
-		_ = printClosingTx(os.Stdout, j, month.LastDay(d), equity, accsToClose)
+		bals := closingBalances(j, accsToClose)
+		_ = printClosingTx(os.Stdout, month.LastDay(d), equity, bals)
 		_ = printClosingBalances(os.Stdout, j, month.Next(d), accsToClose)
 	},
 }
@@ -87,22 +88,30 @@ func printClosingBalances(w io.Writer, j *journal.Journal, d civil.Date, a []jou
 	return bw.Flush()
 }
 
+// closingBalances returns the final balances of the given accounts.
+func closingBalances(j *journal.Journal, a []journal.Account) journal.Balances {
+	bals := make(journal.Balances)
+	for _, a := range a {
+		bals[a] = j.Balances[a]
+	}
+	return bals
+}
+
 // printClosingTx prints a transaction entry that moves everything
 // from the given accounts (usually income, etc. accounts) into the
 // destination account (usually equity account).
-func printClosingTx(w io.Writer, j *journal.Journal, d civil.Date, dst journal.Account, a []journal.Account) error {
+func printClosingTx(w io.Writer, d civil.Date, dst journal.Account, b journal.Balances) error {
 	bw := bufio.NewWriter(w)
 	fmt.Fprintf(bw, "tx %s \"Closing\"\n", d)
-	var b journal.Balance
-	for _, a := range a {
-		for _, am := range j.Balances[a].Amounts() {
+	var total journal.Balance
+	for a, b := range b {
+		for _, am := range b.Amounts() {
+			total.Add(am)
 			am.Neg()
 			fmt.Fprintf(bw, "%s %s\n", a, am)
-			b.Add(am)
 		}
 	}
-	b.Neg()
-	for _, am := range b.Amounts() {
+	for _, am := range total.Amounts() {
 		fmt.Fprintf(bw, "%s %s\n", dst, am)
 	}
 	fmt.Fprintf(bw, "end\n")
