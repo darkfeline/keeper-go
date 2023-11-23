@@ -98,19 +98,6 @@ func printClosingBalances(w io.Writer, j *journal.Journal, d civil.Date, b journ
 	return bw.Flush()
 }
 
-// closingBalances returns the final balances of the given accounts.
-func closingBalances(j *journal.Journal, a []journal.Account) journal.Balances {
-	bals := make(journal.Balances)
-	for _, a := range a {
-		if j.Accounts[a].Disabled == nil {
-			bals[a] = j.Balances[a]
-		} else if !j.Balances[a].Empty() {
-			panic(fmt.Sprintf("Disabled account %q is not empty: %v", a, j.Balances[a]))
-		}
-	}
-	return bals
-}
-
 // printClosingTx prints a transaction entry that moves everything
 // from the given accounts (usually income, etc. accounts) into the
 // destination account (usually equity account).
@@ -131,6 +118,19 @@ func printClosingTx(w io.Writer, d civil.Date, dst journal.Account, b journal.Ba
 	}
 	fmt.Fprintf(bw, "end\n")
 	return bw.Flush()
+}
+
+// closingBalances returns the final balances of the given accounts.
+func closingBalances(j *journal.Journal, a []journal.Account) journal.Balances {
+	bals := make(journal.Balances)
+	for _, a := range a {
+		if j.Accounts[a].Disabled == nil {
+			bals[a] = j.Balances[a]
+		} else if !j.Balances[a].Empty() {
+			panic(fmt.Sprintf("Disabled account %q is not empty: %v", a, j.Balances[a]))
+		}
+	}
+	return bals
 }
 
 func filter(a []journal.Account, f func(a journal.Account) bool) []journal.Account {
