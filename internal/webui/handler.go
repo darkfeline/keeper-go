@@ -226,6 +226,8 @@ func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
 	start := month.FirstDay(end)
 	a := cashAccounts(c, sortedAccounts(j))
 	delta := accountFlows(j.Entries, a, start)
+	// We want amounts to represent flow away from cash accounts.
+	delta.Neg()
 	type fl struct {
 		a  journal.Account
 		am *journal.Amount
@@ -508,8 +510,6 @@ func (s *stmt) addTotal(desc string) {
 // flowed to or from.
 func accountFlows(e []journal.Entry, a []journal.Account, start civil.Date) journal.Balances {
 	delta := accountDeltas(e, a, start)
-	// We want to represent flow away from the given accounts.
-	delta.Neg()
 	for _, a := range a {
 		delta.Delete(a)
 	}
