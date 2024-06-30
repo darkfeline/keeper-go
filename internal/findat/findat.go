@@ -20,8 +20,25 @@ import (
 	"github.com/piquette/finance-go/quote"
 )
 
-type Client struct{}
+type Client struct {
+	cache map[string]*finance.Quote
+}
 
-func (Client) Get(symbol string) (*finance.Quote, error) {
-	return quote.Get(symbol)
+func NewClient() *Client {
+	return &Client{
+		cache: make(map[string]*finance.Quote),
+	}
+}
+
+func (c *Client) GetQuote(symbol string) (*finance.Quote, error) {
+	q, ok := c.cache[symbol]
+	if ok {
+		return q, nil
+	}
+	q, err := quote.Get(symbol)
+	if err != nil {
+		return nil, err
+	}
+	c.cache[symbol] = q
+	return q, nil
 }
