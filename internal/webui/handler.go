@@ -225,20 +225,7 @@ func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
 
 	start := month.FirstDay(end)
 	a := cashAccounts(c, sortedAccounts(j))
-	e := filterEntries(j.Entries, newAccountPred(a).match)
-	delta := make(journal.Balances)
-	for _, e := range e {
-		t, ok := e.(*journal.Transaction)
-		if !ok {
-			continue
-		}
-		if e.Date().Before(start) {
-			continue
-		}
-		for _, s := range t.Splits {
-			delta.Add(s.Account, s.Amount)
-		}
-	}
+	delta := accountDeltas(j.Entries, a, start)
 	// We want to represent flow away from cash accounts.
 	delta.Neg()
 	type fl struct {
@@ -520,6 +507,26 @@ func (s *stmt) addAccountAmount(a journal.Account, am *journal.Amount) {
 func (s *stmt) addTotal(desc string) {
 	s.addBalanceRows(templates.StmtRow{Description: desc}, &s.bal)
 	s.bal.Clear()
+}
+
+// accountDeltas returns the accumulated balance changes of all
+// transactions that affect the given accounts.
+func accountDeltas(e []journal.Entry, a []journal.Account, start civil.Date) journal.Balances {
+	e = filterEntries(e, newAccountPred(a).match)
+	delta := make(journal.Balances)
+	for _, e := range e {
+		t, ok := e.(*journal.Transaction)
+		if !ok {
+			continue
+		}
+		if e.Date().Before(start) {
+			continue
+		}
+		for _, s := range t.Splits {
+			delta.Add(s.Account, s.Amount)
+		}
+	}
+	return delta
 }
 
 // Filter entries related to the given account.
