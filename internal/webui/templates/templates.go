@@ -93,6 +93,7 @@ type StmtRow struct {
 	// link to the account's ledger page.
 	Account bool
 	Amount  *journal.Amount
+	Amount2 *journal.Amount
 }
 
 var Ledger = extendBase("ledger.html")

@@ -73,3 +73,7 @@ func (c *Account) IsCash(a journal.Account) bool {
 	}
 	return false
 }
+
+func (c *Account) BaseUnitSymbol() string {
+	return "USD"
+}

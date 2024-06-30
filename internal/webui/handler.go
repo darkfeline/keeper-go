@@ -19,13 +19,16 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
 	"os"
 	"sort"
 	"time"
 
 	"cloud.google.com/go/civil"
+	"github.com/piquette/finance-go"
 	"go.felesatra.moe/keeper/internal/config"
+	"go.felesatra.moe/keeper/internal/findat"
 	"go.felesatra.moe/keeper/internal/month"
 	"go.felesatra.moe/keeper/internal/webui/templates"
 	"go.felesatra.moe/keeper/journal"
@@ -234,6 +237,8 @@ func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
 			Title: "Balance Sheet",
 			Month: month.Format(end),
 		},
+		cfg:  c,
+		finC: findat.NewClient(),
 	}
 
 	s.addSection("Assets")
@@ -520,10 +525,34 @@ type stmt struct {
 	*templates.StmtData
 	// Tracks the running total
 	bal journal.Balance
+
+	cfg  *config.Config
+	finC *findat.Client
 }
 
 func (s *stmt) addRows(r ...templates.StmtRow) {
+	for i := range r {
+		s.addConversion(&r[i])
+	}
 	s.Rows = append(s.Rows, r...)
+}
+
+// Adds unit conversion.
+func (s *stmt) addConversion(r *templates.StmtRow) {
+	if s.cfg == nil || s.finC == nil || r.Amount == nil {
+		return
+	}
+	sym := r.Amount.Unit.Symbol
+	if sym == s.cfg.BaseUnitSymbol() {
+		return
+	}
+	q, err := s.finC.GetQuote(sym)
+	if err != nil {
+		slog.Warn("Error getting symbol quote",
+			"symbol", sym, "error", err)
+		return
+	}
+	r.Amount2 = convertAmount(r.Amount, q)
 }
 
 // Adds a stmtRow with a balance.
@@ -538,6 +567,7 @@ func (s *stmt) addBalanceRows(r templates.StmtRow, b *journal.Balance) {
 	}
 }
 
+// Adds a section row.
 func (s *stmt) addSection(desc string) {
 	s.addRows(templates.StmtRow{
 		Description: desc,
@@ -569,6 +599,27 @@ func (s *stmt) addAccountAmount(a journal.Account, am *journal.Amount) {
 func (s *stmt) addTotal(desc string) {
 	s.addBalanceRows(templates.StmtRow{Description: desc}, &s.bal)
 	s.bal.Clear()
+}
+
+func convertAmount(a *journal.Amount, q *finance.Quote) *journal.Amount {
+	a2 := &journal.Amount{Unit: journal.Unit{
+		Symbol: "USD",
+		Scale:  100,
+	}}
+	f := newFloat().SetFloat64(q.RegularMarketPrice)
+	defer floatPool.Put(f)
+	f2 := newFloat().SetInt(&a.Number)
+	defer floatPool.Put(f2)
+	f.Mul(f, f2)
+	f2.SetUint64(100)
+	f.Mul(f, f2)
+	f2.SetUint64(a.Unit.Scale)
+	f.Quo(f, f2)
+	// Since this always truncates int toward zero
+	f2.SetFloat64(0.5)
+	f.Add(f, f2)
+	f.Int(&a2.Number)
+	return a2
 }
 
 // accountFlows returns where the balances of the given accounts

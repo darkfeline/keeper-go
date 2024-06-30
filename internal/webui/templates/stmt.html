@@ -16,11 +16,11 @@
     {{- range .Rows}}
     {{- if .Section}}
     <tr class="section">
-      <td colspan="2"><strong>{{.Description}}</strong></td>
+      <td colspan="3"><strong>{{.Description}}</strong></td>
     <tr>
     {{else if and (not .Description) (not .Amount) }}
     <tr>
-      <td colspan="2">&nbsp;</td>
+      <td colspan="3">&nbsp;</td>
     <tr>
     {{else}}
     <tr{{if .Description}} class="section"{{end}}>
@@ -32,6 +32,7 @@
         {{- end -}}
       </td>
       <td class="amount">{{if .Amount}}{{.Amount}}{{end}}</td>
+      <td class="amount">{{if .Amount2}}{{.Amount2}}{{end}}</td>
     <tr>
     {{end}}
     {{- end}}
