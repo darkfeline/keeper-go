@@ -249,7 +249,7 @@ func (h handler) handleCash(w http.ResponseWriter, req *http.Request) {
 		},
 	}
 	s.addSection("Starting Balances")
-	starting := j.BalancesEnding(start)
+	starting := j.BalancesEnding(start.AddDays(-1))
 	for _, a := range a {
 		s.addAccount(a, starting[a])
 	}
