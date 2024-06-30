@@ -257,6 +257,11 @@ func (b Balances) Neg() {
 	}
 }
 
+// Delete deletes all amounts for the account.
+func (b Balances) Delete(a Account) {
+	delete(b, a)
+}
+
 // Accounts returns all of the accounts with balances in sorted order.
 func (b Balances) Accounts() []Account {
 	var new []Account
