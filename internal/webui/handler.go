@@ -17,7 +17,6 @@ package webui
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -146,7 +145,73 @@ func (h handler) handleIncome(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h handler) handleCapital(w http.ResponseWriter, req *http.Request) {
-	h.writeError(w, errors.New("not implemented"))
+	end := month.LastDay(getQueryMonth(req))
+	j, err := h.compileEnding(end)
+	if err != nil {
+		h.writeError(w, err)
+		return
+	}
+	c, err := h.config()
+	if err != nil {
+		h.writeError(w, err)
+		return
+	}
+
+	start := month.FirstDay(end)
+	a := equityAccounts(c, sortedAccounts(j))
+	delta := accountFlows(j.Entries, a, start)
+	type fl struct {
+		a  journal.Account
+		am *journal.Amount
+	}
+	var infl, outfl []fl
+	for _, a := range delta.Accounts() {
+		for _, am := range delta[a].Amounts() {
+			switch am.Number.Sign() {
+			case -1:
+				outfl = append(outfl, fl{a, am})
+			case 1:
+				infl = append(infl, fl{a, am})
+			}
+		}
+	}
+
+	s := stmt{
+		StmtData: &templates.StmtData{
+			Title: "Capital Statement",
+			Month: month.Format(end),
+		},
+	}
+	s.addSection("Starting Balances")
+	starting := j.BalancesEnding(start.AddDays(-1))
+	// Use positive equity
+	starting.Neg()
+	for _, a := range a {
+		s.addAccount(a, starting[a])
+	}
+	s.addTotal("Total Starting")
+
+	s.addSection("Increases")
+	for _, v := range infl {
+		s.addAccountAmount(v.a, v.am)
+	}
+	s.addTotal("Total Increases")
+
+	s.addSection("Decreases")
+	for _, v := range outfl {
+		s.addAccountAmount(v.a, v.am)
+	}
+	s.addTotal("Total Decreases")
+
+	s.addSection("Ending Balances")
+	// Use positive equity
+	j.Balances.Neg()
+	for _, a := range a {
+		s.addAccount(a, j.Balances[a])
+	}
+	s.addTotal("Total Ending")
+
+	h.execute(w, templates.Stmt, s.StmtData)
 }
 
 func (h handler) handleBalance(w http.ResponseWriter, req *http.Request) {
@@ -583,6 +648,16 @@ func newAccountPred(a []journal.Account) accountPred {
 
 func (p accountPred) match(a journal.Account) bool {
 	return p[a]
+}
+
+func equityAccounts(c *config.Config, a []journal.Account) []journal.Account {
+	var new []journal.Account
+	for _, a := range a {
+		if c.IsEquity(a) || c.IsIncome(a) || c.IsExpenses(a) {
+			new = append(new, a)
+		}
+	}
+	return new
 }
 
 func cashAccounts(c *config.Config, a []journal.Account) []journal.Account {
